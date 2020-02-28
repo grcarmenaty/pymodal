@@ -24,3 +24,18 @@ taking advantage of those yet though.
 - Bullet points
 - Are intuitive
 - And simple too
+
+Installation
+============
+
+Installation info should go here.
+
+Dev Installation
+----------------
+
+Installation for developpement should go here.
+
+Usage
+=====
+
+Use example should go here

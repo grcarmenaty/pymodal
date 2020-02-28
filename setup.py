@@ -10,7 +10,6 @@ setuptools.setup(
     author_email="grcarmenaty@gmail.com",
     description="Modal analysis data management and storage tool",
     long_description=long_description,
-    long_description_content_type="text/markdown",
     url="https://github.com/grcarmenaty/pymodal",
     packages=setuptools.find_packages(),
     classifiers=[
@@ -18,5 +17,18 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License ",
         "Operating System :: OS Independent",
     ],
+    # Should be as lax as possible
+    install_requires=[
+        "numpy>=1.18.1",
+        "scipy>=1.4.1",
+        "matplotlib>=3.1.3",
+        "pandas>=1.0.1"
+    ],
+    # Should be as specific as possible
+    extras_require={
+        "dev": [
+            "pytest>=3.7",
+        ],
+    },
     python_requires='>=3.6',
 )
