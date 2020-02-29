@@ -12,8 +12,6 @@ setuptools.setup(
     long_description=long_description,
     url="https://github.com/grcarmenaty/pymodal",
     packages=setuptools.find_packages(),
-    # py_modules = ["pymodal"],
-    # package_dir={"": "src"},
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License ",
