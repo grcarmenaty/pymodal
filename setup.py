@@ -22,12 +22,15 @@ setuptools.setup(
         "numpy>=1.18.1",
         "scipy>=1.4.1",
         "matplotlib>=3.1.3",
-        "pandas>=1.0.1"
+        "pandas>=1.0.1",
+        "compress-json>=1.0.0",
     ],
     # Should be as specific as possible
     extras_require={
         "dev": [
             "pytest>=3.7",
+            "docutils>=0.16",
+            "doc8>=0.8.0",
         ],
     },
     python_requires='>=3.6',
