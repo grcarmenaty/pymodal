@@ -1,13 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.core import defchararray
 import ntpath
 import warnings
 
-from .FRF_utils import (
-    unpack_FRF_mat,
-    load,
-    plot,
-)
+import pymodal
 
 class FRF():
 
@@ -17,7 +14,7 @@ class FRF():
     (FRF) file, a list of paths to FRF files (as ['path/to/file_1', ...,
     'path/to/file_n']), a single 2D array or a 3D array where the third
     dimension designates diferent FRFs, and turns it into a list of FRFs
-    where each element is one of the 2D arrays that consitute a FRF.
+    where each item is one of the 2D arrays that consitute a FRF.
     
     Resolution, bandwidth, max_freq (maximum frequency) and min_freq 
     (minimum frequency) are assumed to be in Hertz (Hz) and HAVE TO be 
@@ -34,6 +31,7 @@ class FRF():
     """
 
     def __init__(self,
+                 *,
                  frf:list,
                  resolution:float=None,
                  bandwidth:float=None,
@@ -49,21 +47,21 @@ class FRF():
         # If frf is a string, it is assumed it is a path to file
         if isinstance(frf, str):
             # Value will be a one-length list with the unpacked frf 2D array
-            self.value = [unpack_FRF_mat(frf)]
+            self.value = [pymodal.unpack_FRF_mat(frf)]
             # Name will have the name of the file
             if name is None:
                 self.name = [ntpath.split(frf)[-1]]
         elif isinstance(frf, list):
-            #If the first element of the frf list is a string, it is assumed to
+            #If the first item of the frf list is a string, it is assumed to
             # be a list of file locations
             if isinstance(frf[0], str):
                 self.value = []
                 if name is None:
                     self.name = []
-                for element in frf:
-                    self.value.append(unpack_FRF_mat(element))
+                for item in frf:
+                    self.value.append(pymodal.unpack_FRF_mat(item))
                     if name is None:
-                        self.name.append(ntpath.split(element)[-1])
+                        self.name.append(ntpath.split(item)[-1])
             # If it is not a list of file locations, then it is assumed to be a
             # list of arrays.
             else:
@@ -101,7 +99,7 @@ class FRF():
             # If else it is considered to be a list
             else:
                 self.name = name
-        # For every additional element value has versus the length of name, 
+        # For every additional item value has versus the length of name, 
         # append an 'Unknown name' entry.
         for i in range(len(self.name), len(self)):
             self.name.append('Unknown name' + str(i + 1))
@@ -149,15 +147,15 @@ class FRF():
         calculated_bandwidth = self.max_freq - self.min_freq
         bandwidth_error = not(self.bandwidth == calculated_bandwidth)
         if resolution_error or bandwidth_error:
-            raise Exception((f"""The resolution ({resolution} Hz), bandwidth
+            raise Exception((f"The resolution ({resolution} Hz), bandwidth
                 ({bandwidth} Hz), min_freq ({min_freq} Hz) and/or max_freq
                 ({max_freq} Hz) values introduced were not coherent with each 
-                other."""))
+                other."))
         for i in range(len(self)):
             if not(self.value[i].shape == self.value[0].shape):
-                raise Exception((f"""One of the FRFs in the provided list has a 
+                raise Exception((f"One of the FRFs in the provided list has a 
                     different resolution, bandwidth, min_freq and/or max_freq. 
-                    The offending entry is: {i}"""))
+                    The offending entry is: {i}"))
 
         self.part = part 
 
@@ -238,15 +236,16 @@ class FRF():
         to the closest multiple of the original resolution, since 
         interpolation is undesirable.
         """
-        
-        new_resolution = int(np.around(new_resolution / self.resolution))
+
+        step = int(np.around(new_resolution / self.resolution))
         if new_resolution % self.resolution != 0:
-            warnings.warn(f"""The specified new resolution is not divisible by 
-                the old resolution.
-                The new reolution will be {new_resolution} Hz instead.""")
-        new_value = self.value
-        for element in new_value:
-            element = element[0::new_resolution, :]
+            warnings.warn(f"The specified new resolution is not divisible by 
+                the old resolution. The new reolution will be:
+                {step * self.resolution} Hz")
+        new_resolution = step * self.resolution
+        new_value = list(self.value)
+        for index, item in enumerate(new_value):
+            new_value[index] = item[0::step, :]
 
         return FRF(frf=new_value,
                    resolution=new_resolution,
@@ -269,9 +268,8 @@ class FRF():
 
         line_selection = list(line_selection) # Line selection must be a list
         new_value = self.value
-        for element in new_value:
-            for i in line_selection:
-                element = element[:, i]
+        for index, item in enumerate(new_value):
+            new_value[index] = [item[:, i] for i in line_selection]
         new_value = np.asarray(new_value).conj().T
 
         return FRF(frf=new_value,
@@ -282,11 +280,11 @@ class FRF():
                    name=self.name,
                    part=self.part)
 
-    def change_frequencies(self, frequencies:tuple):
+    def change_frequencies(self, frequencies:list):
         
         """
         
-        This function takes a list, tuple or array with two elements, 
+        This function takes a list, tuple or array with two items, 
         the first referring to the new minimum frequency, and the second
         referring to the new maximum frequency, and returns a new 
         instance of the class with the previous instance's FRFs between 
@@ -294,16 +292,19 @@ class FRF():
         """
 
         frequencies = list(frequencies) # Make sure frequencies is a list
-        if not(len(frequencies) == 2): # frequencies should have 2 elements
-            raise Exception("""frequencies should be a list, tuple or array 
-                with two elements, the first referring to the minimum 
-                frequency, and the second referring to the maximum frequency.
-                """)
+        if not(len(frequencies) == 2): # frequencies should have 2 items
+            raise Exception(f"frequencies should be a list, tuple or array with
+                two items, the first referring to the minimum frequency, and 
+                the second referring to the maximum frequency.")
         new_value = self.value
         frequency_start = int(np.around(frequencies[0] / self.resolution))
         frequency_end = int(np.around(frequencies[-1] / self.resolution) + 1)
-        for element in new_value:
-            element = element[frequency_start:frequency_end, :]
+        print(frequency_start)
+        print(type(frequency_start))
+        print(frequency_end)
+        print(type(frequency_end))
+        for index, item in enumerate(new_value):
+            new_value[index] = item[frequency_start:frequency_end, :]
 
         return FRF(frf=new_value,
                    resolution=self.resolution,
@@ -322,8 +323,8 @@ class FRF():
         """
 
         new_value = self.value
-        for element in new_value:
-            element = np.absolute(element.real)
+        for index, item in enumerate(new_value):
+            new_value[index] = np.absolute(item.real)
         
         return FRF(frf=new_value,
                    resolution=self.resolution,
@@ -342,8 +343,8 @@ class FRF():
         """
 
         new_value = self.value
-        for element in new_value:
-            element = np.absolute(element.imag)
+        for index, item in enumerate(new_value):
+            new_value[index] = np.absolute(item.imag)
         
         return FRF(frf=new_value,
                    resolution=self.resolution,
@@ -362,8 +363,8 @@ class FRF():
         """
 
         new_value = self.value
-        for element in new_value:
-            element = np.absolute(element)
+        for index, item in enumerate(new_value):
+            new_value[index] = np.absolute(item)
         
         return FRF(frf=new_value,
                    resolution=self.resolution,
@@ -382,8 +383,8 @@ class FRF():
         """
 
         new_value = self.value
-        for element in new_value:
-            element = np.angle(element)
+        for index, item in enumerate(new_value):
+            new_value[index] = np.angle(item)
         
         return FRF(frf=new_value,
                    resolution=self.resolution,
@@ -393,110 +394,117 @@ class FRF():
                    name=self.name,
                    part='phase')
 
-    # def plot(self,
-    #          ax = None,
-    #          fontsize:float=12,
-    #          title:str='Frequency Response',
-    #          title_size:float=None,
-    #          major_locator:int=4,
-    #          minor_locator:int=4,
-    #          fontname:str='Times New Roman',
-    #          color:str=None,
-    #          ylabel:str=None,
-    #          bottom_ylim:float=None):
+    def plot(self,
+             ax=None,
+             fontsize:float=12,
+             title:str='Frequency Response',
+             title_size:float=None,
+             major_locator:int=4,
+             minor_locator:int=4,
+             fontname:str='Times New Roman',
+             color:str=None,
+             ylabel:str=None,
+             bottom_ylim:float=None):
 
-    #     """
+        """
         
-    #     This function plots as many FRFs as there are in the instance
-    #     of the class. If no axes are specified, then it plots all of the
-    #     FRFs in the same figure (this makes the most sense since if you
-    #     plotted them into different figures, you could only save the 
-    #     last one). If axes are specified, then there should be as many
-    #     axes as there are FRFs, otherwise behaviour turns unpredictable.
+        This function plots as many FRFs as there are in the instance
+        of the class. If no axes are specified, then it plots all of the
+        FRFs in the same figure (this makes the most sense since if you
+        plotted them into different figures, you could only save the 
+        last one). If axes are specified, then there should be as many
+        axes as there are FRFs, otherwise behaviour turns unpredictable.
         
-    #     Font size and family can be specified, as well as a special size
-    #     for the title. A list of colors can be specified, it is assumed
-    #     that these colors are assigned to the axes in order, and if
-    #     there are less colors than there are axes then color for the
-    #     remaining axes will be assumed to be blue. The amount of major
-    #     and minor divisions can be manually changed, as well as label
-    #     of the y axis (which is assumed to represent the response
-    #     acceleration normalized to the input force) and the bottom limit
-    #     of the y axis. The top limit will be a decade higher than the
-    #     highest represented value.
+        Font size and family can be specified, as well as a special size
+        for the title. A list of colors can be specified, it is assumed
+        that these colors are assigned to the axes in order, and if
+        there are less colors than there are axes then color for the
+        remaining axes will be assumed to be blue. The amount of major
+        and minor divisions can be manually changed, as well as label
+        of the y axis (which is assumed to represent the response
+        acceleration normalized to the input force) and the bottom limit
+        of the y axis. The top limit will be a decade higher than the
+        highest represented value.
         
-    #     If phase is being represented, then a graph with fractions of pi
-    #     in the y axis will be plotted, usually going from -pi to pi and
-    #     a bit more.
-    #     """
+        If phase is being represented, then a graph with fractions of pi
+        in the y axis will be plotted, usually going from -pi to pi and
+        a bit more.
+        """
 
-    #     # The following lines of code create a list of colors. Every FRF in the
-    #     # class instance will be pltted unto the same figure cycling through
-    #     # the list of colors.
-    #     color_list = list(mpl.colors.BASE_COLORS.keys())[0:-1]
-    #     color_list.extend(list(mpl.colors.TABLEAU_COLORS.keys()))
-    #     css_colors = list(mpl.colors.CSS4_COLORS.keys())
-    #     # Randomize the css colors, which are arranged in a color scale, so 
-    #     # that graphs are more readable if it ever comes to representing this 
-    #     # many FRFs.
-    #     random.shuffle(css_colors)
-    #     # Get as many matplotlib named color lists as possible, it is not 
-    #     # reasonable to expect more than these many colors.
-    #     color_list.extend(css_colors)
-    #     # Set red as second color instead of green, and green as third color 
-    #     # instead of red.
-    #     color_list[1] = 'r'
-    #     color_list[2] = 'g'
-    #     # If no color vector is specified, then create a vector of 'b' 
-    #     # (signifying blue color) as long as the amount of FRFs that should 
-    #     # be represented.
-    #     if color is None:
-    #         color = ['b'] * len(self)
-    #     else:
-    #         color = list(color) # Make sure color is a list
-    #         for i in range(len(color), len(self)):
-    #             color.append('b') # Start appending 'b' until the color list is as long as there are FRFs
-    #     # Preallocate lists
-    #     img = []
-    #     ax_list = []
-    #     if isinstance(ax, np.ndarray): # If axis is an array, flatten it to make sure no list of arrays is created in ax
-    #         ax = ax.flatten()
-    #     # If axis is iterable, add its elements to ax_list, else (if it's not iterable), apend ax to ax_list
-    #     try:
-    #         ax_list.extend(ax)
-    #     except:
-    #         ax_list.append(ax)
-    #     ax = ax_list # Once ax_list is a propperly formatted list of axes, assign it to ax
-    #     len_ax = len(ax) # Save ax's original length, it can change while operating with it and the code doesn't work with a list of changing length
-    #     if len_ax == 1 and ax[0] is None: # If no axis was designated
-    #         ax[0] = plt.gca() # Create an axis
-    #     for i in range(len_ax, len(self)):
-    #         if len_ax == 1: # If there is only one axis, either created inside this method or specified outside of it
-    #             ax.append(ax[0]) # Make sure every FRF will be plotted over that same axis
-    #             color[i] = color_list[i] # Change the color of every plot beyond the first according to the matplotlib color list
-    #         else:
-    #             raise Exception('Either specify no axis or specify as many axes as FRFs this instance has in its value.') # If some axes have been specified and some haven't, behaviour can be unexpected, and therefore such a situation is undesirable and of little use. If there is more than one axis but not as many as there are FRFs, then raise an Exception
-    #     for i in range(len(self)):
-    #         img.append(plot_FRF(self.real().value[i] if self.part == 'complex' else self.value[i], self.max_freq, self.min_freq, self.resolution, ax[i], fontsize, title, title_size, major_locator, minor_locator, fontname, color[i], ylabel, bottom_ylim, self.part)) # Add the axis or figure to the output list
-    #     return img
+        # The following lines of code create a list of colors. Every FRF in the
+        # class instance will be pltted unto the same figure cycling through
+        # the list of colors.
+        color_list = list(mpl.colors.BASE_COLORS.keys())[0:-1]
+        color_list.extend(list(mpl.colors.TABLEAU_COLORS.keys()))
+        css_colors = list(mpl.colors.CSS4_COLORS.keys())
+        # Randomize the css colors, which are arranged in a color scale, so 
+        # that graphs are more readable if it ever comes to representing this 
+        # many FRFs.
+        random.shuffle(css_colors)
+        # Get as many matplotlib named color lists as possible, it is not 
+        # reasonable to expect more than these many colors.
+        color_list.extend(css_colors)
+        # Set red as second color instead of green, and green as third color 
+        # instead of red.
+        color_list[1] = 'r'
+        color_list[2] = 'g'
+        # If no color vector is specified, then create a vector of 'b' 
+        # (signifying blue color) as long as the amount of FRFs that should 
+        # be represented.
+        if color is None:
+            color = list(color_list[0:len(self)])
+        else:
+            color = list(color) # Make sure color is a list
+            for i in range(len(color), len(self)):
+                color.append(color_list[i-len(color)])
+        
+        # Make sure ax is a list of axes as long as there are FRFs stored.
+        if ax is None:
+            ax = [plt.gca()]
+        elif isinstance(ax, np.ndarray):
+            ax = ax.flatten()
+        ax = list(ax)
+        for _ in range(len(ax), len(self)):
+            ax.append(plt.gca())
 
-    # def save(self, path: str, decimal_places: int = None):
+        img = self.real().value[i] if self.part == 'complex' else self.value[i]
+        for index, item in enumerate(img):
+            img[index] = pymodal.plot_FRF(frf=item,
+                                          max_freq=self.max_freq,
+                                          min_freq=self.min_freq,
+                                          resolution=self.resolution,
+                                          ax=ax[i],
+                                          fontsize=fontsize,
+                                          title=title,
+                                          title_size=title_size,
+                                          major_locator=major_locator,
+                                          minor_locator=minor_locator,
+                                          fontname=fontname,
+                                          color=color[i],
+                                          ylabel=ylabel,
+                                          bottom_ylim=bottom_ylim,
+                                          part=self.part)
+        return img
 
-    #     """\n\nThis function dumps all data necessary to recreate this instance of the class into a json file, which allows comfortable and safe retrieval of the FRFs.\n"""
+    def save(self, path:str, decimal_places:int=None):
 
-    #     if decimal_places is None:
-    #         decimal_places = '.4' # If no amount of decimal places are designated, then 4 are stored
-    #     else:
-    #         decimal_places = '.' + str(int(decimal_places)) # If an amount of decimal places is specified, then take the number and format it correctly
+        """
+        
+        This function dumps all data necessary to recreate this instance
+        of the class into a json file.\n"""
 
-    #     data = {
-    #         'frf': [np.core.defchararray.add(np.char.mod('%' + decimal_places + 'E', self.value[i].real),np.char.mod('%+' + decimal_places + 'E', self.value[i].imag)).tolist() for i in range(len(self))], # Turn every complex element of the frf array into 'realEx+-imagEy' string format so that it can be stored in a json file. This is done transforming every row in a list, then storing these row lists into frf lists (frf arrays can't be turned dumped to json). finally, these frf lists are stored into a list, which is what is stored into the json file.
-    #         'resolution': self.resolution, 
-    #         'bandwidth': self.bandwidth, 
-    #         'max_freq': self.max_freq, 
-    #         'min_freq': self.min_freq, 
-    #         'name': self.name, 
-    #         'part': self.part,
-    #         } # Prepare a dictionary to dump into a json file. Every entry has the FRF class input it corresponds to as key, and their values as values.
+        decimal_places = 4 if decimal_places is None else decimal_places
+        frf = self.value
+        for index, item in enumerate(frf):
+            real_part = np.char.mod(f'%.{decimal_places}E', item.real)
+            imag_part = np.char.mod(f'+%.{decimal_places}E', item.imag)
+            frf[index] = defchararray.add(real_part, imag_part).tolist()
+        data = {'frf': frf
+                'resolution': self.resolution, 
+                'bandwidth': self.bandwidth, 
+                'max_freq': self.max_freq, 
+                'min_freq': self.min_freq, 
+                'name': self.name, 
+                'part': self.part}
 
-    #     compress_json.dump(data, path) # And dump the dictionary
+        compress_json.dump(data, path)

@@ -5,8 +5,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.core import defchararray
 import os
-import papergraph
 import scipy.io as sio
+
+import papergraph
+import pymodal
 
 def unpack_FRF_mat(path:str):
 
@@ -39,7 +41,7 @@ def load(path:str):
     for i in range(len(frf)):
         frf[i] = defchararray.add(np.asarray(frf[i]), 'j').astype(complex)
     
-    return FRF(frf = frf,
+    return pymodal.FRF(frf = frf,
                resolution = data['resolution'], 
                bandwidth = data['bandwidth'], 
                max_freq = data['max_freq'], 
@@ -49,21 +51,21 @@ def load(path:str):
                )
 
 def plot(*,
-             FRF:np.ndarray,
-             max_freq:float,
-             min_freq:float,
-             resolution:float,
-             ax=None,
-             fontsize:float=12,
-             title:str='Frequency Response',
-             title_size:float=None,
-             major_locator:int=4,
-             minor_locator:int=4,
-             fontname:str='Times New Roman',
-             color:str='blue',
-             ylabel:str="Normalized amplitude ($m·s^{-2}·N^{-1}$)",
-             bottom_ylim:float=None,
-             part:str='complex'):
+         frf:np.ndarray,
+         max_freq:float,
+         min_freq:float,
+         resolution:float,
+         ax=None,
+         fontsize:float=12,
+         title:str='Frequency Response',
+         title_size:float=None,
+         major_locator:int=4,
+         minor_locator:int=4,
+         fontname:str='Times New Roman',
+         color:str='blue',
+         ylabel:str="Normalized amplitude ($m·s^{-2}·N^{-1}$)",
+         bottom_ylim:float=None,
+         part:str='complex'):
 
     """
     
@@ -90,20 +92,21 @@ def plot(*,
             ylabel = "Amplitude normalized to input/$\mathrm{m·s^{-2}·N^{-1}}$"
     xlabel = 'Frequency/Hz'
     freq = np.arange(min_freq, max_freq + resolution / 2, resolution)
-    ax = lineplot(x=freq,
-                  y=FRF,
-                  ax=ax,
-                  fontsize=fontsize,
-                  title=title,
-                  title_size=title_size,
-                  major_x_locator=major_locator,
-                  minor_x_locator=minor_locator,
-                  fontname=fontname,
-                  color=color,
-                  ylabel=ylabel,
-                  xlabel=xlabel,
-                  bottom_ylim=bottom_ylim,
-                  top_ylim=top_ylim)
+    ax = papergraph.lineplot(*,
+                             x=freq,
+                             y=frf,
+                             ax=ax,
+                             fontsize=fontsize,
+                             title=title,
+                             title_size=title_size,
+                             major_x_locator=major_locator,
+                             minor_x_locator=minor_locator,
+                             fontname=fontname,
+                             color=color,
+                             ylabel=ylabel,
+                             xlabel=xlabel,
+                             bottom_ylim=bottom_ylim,
+                             top_ylim=top_ylim)
     if part == 'phase':
         # For y axis: set as many major and minor divisions as specified 
         # (4 major and 4 minor inside each major by default) for each unit of 
@@ -126,8 +129,4 @@ def plot(*,
         ax.yaxis.set_minor_locator(locmin)
     # Minor ticks should have no label
     ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-
-    if ax is None: # If this is not a subplot of a greater figure
-        return fig # Return a figure
-    else:
-        return img # Else return the ax object upon which this was plotted
+    return ax
