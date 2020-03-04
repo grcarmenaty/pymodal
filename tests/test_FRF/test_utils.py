@@ -5,6 +5,7 @@ import pymodal
 import pytest
 import scipy.io as sio
 
+
 def test_unpack_frf():
     path = (r'C:\Users\GuillermoReyes\GoogleDrive'
             r'\Trabajos\Doctorado\BibliotecaPython\pymodal\tests\data\mat_FRFs'
@@ -13,10 +14,11 @@ def test_unpack_frf():
     frf_info = sio.whosmat(os.path.normpath(path))
     frf_info = frf_info[0]
     frf_baseline = frf_baseline[frf_info[0]]
-    frf = pymodal.unpack_FRF_mat(path=
-        (Path(__file__).parent.parent / 'data' / 'mat_FRFs' / '00B_Ref_8.MAT'))
+    frf = pymodal.unpack_FRF_mat(path=(
+        Path(__file__).parent.parent / 'data' / 'mat_FRFs' / '00B_Ref_8.MAT'))
     assert (frf == frf_baseline).all()
-    frf_string = pymodal.unpack_FRF_mat((r'C:\Users\GuillermoReyes\GoogleDrive'
+    frf_string = pymodal.unpack_FRF_mat((
+        r'C:\Users\GuillermoReyes\GoogleDrive'
         r'\Trabajos\Doctorado\BibliotecaPython\pymodal\tests\data\mat_FRFs'
         r'\00B_Ref_8.MAT'))
     assert (frf_string == frf_baseline).all()

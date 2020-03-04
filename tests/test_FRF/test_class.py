@@ -4,13 +4,13 @@ from pathlib import Path
 import pymodal
 import pytest
 
-# Build a list of all FRF.mat files in the data folder. All of the used FRF 
+# Build a list of all FRF.mat files in the data folder. All of the used FRF
 # files have 81 lines of 0Hz to 3200Hz bands with a resolution of 0.5Hz, which
 # implies the shape of the arrays is (6401, 81)
-path = (Path(__file__).parent.parent  / 'data' / 'mat_FRFs').glob('**/*')
+path = (Path(__file__).parent.parent / 'data' / 'mat_FRFs').glob('**/*')
 files = [file for file in path if file.is_file()]
 length = len(files)
-# This is expected to be the list of names in each FRF object in which a list 
+# This is expected to be the list of names in each FRF object in which a list
 # of files is used as input
 name = [ntpath.split(item)[-1] for item in files]
 unknown_name = [f'Unknown name {i + 1}' for i in range(length)]
@@ -18,11 +18,12 @@ unknown_name = [f'Unknown name {i + 1}' for i in range(length)]
 array_list = [pymodal.unpack_FRF_mat(file) for file in files]
 array_3d = np.dstack(array_list)
 
+
 def test_init():
 
     """
 
-    This tests initialization values using the preferred input method: 
+    This tests initialization values using the preferred input method:
     an array list.
     """
 
@@ -43,29 +44,30 @@ def test_init():
     assert frf.max_freq == 7400
     assert frf.min_freq == 1000
     assert frf.bandwidth == 6400
-    assert frf.name == unknown_name # No names specified
+    assert frf.name == unknown_name  # No names specified
     assert frf.part == 'complex'
     # Make sure an impossible definition raises an error
     try:
         frf = pymodal.FRF(frf=array_list, resolution=0.5, max_freq=6400)
         assert False
-    except:
+    except Exception as _:
         assert True
     # Try to give more names than needed
     try:
         frf = pymodal.FRF(frf=array_list[0:2], resolution=0.5, name=name)
         assert False
-    except:
+    except Exception as _:
         assert True
     # Give less names and make sure it still generates names
     frf = pymodal.FRF(frf=array_list, resolution=0.5, name=name[0:2])
     assert len(frf.name) == len(array_list)
 
+
 def test_equality():
 
     """
 
-    This tests that an object of the class is equal to exactly the same 
+    This tests that an object of the class is equal to exactly the same
     object and not equal to any object with any different value.
     """
 
@@ -74,11 +76,13 @@ def test_equality():
     other_frf = pymodal.FRF(frf=array_list[0:2], resolution=0.5)
     other_resolution = pymodal.FRF(frf=array_list[0:4], resolution=1)
     other_max_freq = pymodal.FRF(frf=array_list[0:4], max_freq=6400)
-    other_min_freq = pymodal.FRF(frf=array_list[0:4], resolution=0.5, min_freq=9)
+    other_min_freq = pymodal.FRF(frf=array_list[0:4], resolution=0.5,
+                                 min_freq=9)
     other_bandwidth = pymodal.FRF(frf=array_list[0:4], bandwidth=4200)
-    other_name = pymodal.FRF(frf=array_list[0:4], resolution=0.5, name=name[0:4])
+    other_name = pymodal.FRF(frf=array_list[0:4], resolution=0.5,
+                             name=name[0:4])
     # Doing this is strongly not recommended, part and value should always be
-    # related (e.g. if values correspond to the phase, part should be phase, 
+    # related (e.g. if values correspond to the phase, part should be phase,
     # defining the class this way can lead to easily made mistakes)
     other_part = pymodal.FRF(frf=array_list[0:4], resolution=0.5, part='real')
     assert frf == same_object
@@ -90,21 +94,22 @@ def test_equality():
     assert frf != other_name
     assert frf != other_part
 
+
 def test_input():
 
     """
 
-    This tests that a function created using the four possible input 
-    types in the FRF field (array list, list of .mat file objects, 3D 
+    This tests that a function created using the four possible input
+    types in the FRF field (array list, list of .mat file objects, 3D
     array, 2D array and single .mat file object) yields the same object.
     """
 
-    # All objects are created with the names defined so that they can be equal 
+    # All objects are created with the names defined so that they can be equal
     # to using file path list as input.
     frf_array_list = pymodal.FRF(frf=array_list, resolution=0.5, name=name)
     frf_file_list = pymodal.FRF(frf=files, resolution=0.5)
     frf_3d_array = pymodal.FRF(frf=array_3d, resolution=0.5, name=name)
-    frf_array_list_single = pymodal.FRF(frf=[array_list[2]], resolution=0.5, 
+    frf_array_list_single = pymodal.FRF(frf=[array_list[2]], resolution=0.5,
                                         name=name[2])
     frf_2d_array = pymodal.FRF(frf=array_list[2], resolution=0.5, name=name[2])
     frf_file_object = pymodal.FRF(frf=files[2], resolution=0.5)
@@ -113,37 +118,40 @@ def test_input():
     assert frf_array_list_single == frf_2d_array
     assert frf_array_list_single == frf_file_object
 
+
 def test_getitem():
 
     """
 
-    This tests that slicing an object has the same values as the sliced 
+    This tests that slicing an object has the same values as the sliced
     expected values.
     """
 
     frf = pymodal.FRF(frf=array_list, resolution=0.5, name=name)
     frf_selected = pymodal.FRF(frf=array_list[5], resolution=0.5, name=name[5])
-    frf_sliced = pymodal.FRF(frf=array_list[5:15], resolution=0.5, 
+    frf_sliced = pymodal.FRF(frf=array_list[5:15], resolution=0.5,
                              name=name[5:15])
     assert frf[5] == frf_selected
     assert frf[5:15] == frf_sliced
+
 
 def test_len():
 
     """
 
-    This tests that the length of the object is the same as the length 
+    This tests that the length of the object is the same as the length
     of the value.
     """
 
     frf = pymodal.FRF(frf=array_list, resolution=0.5, name=name)
     assert len(frf) == len(array_list)
 
+
 def test_extend():
 
     """
 
-    This tests that the extended object is the same as an object with 
+    This tests that the extended object is the same as an object with
     the values which were added.
     """
     extended_array_list = list(array_list)
@@ -153,7 +161,7 @@ def test_extend():
 
     # With names
     frf = pymodal.FRF(frf=array_list, resolution=0.5, name=name)
-    frf_extended = pymodal.FRF(frf=extended_array_list, resolution=0.5, 
+    frf_extended = pymodal.FRF(frf=extended_array_list, resolution=0.5,
                                name=extended_name)
     frf.extend(array_list[0:2], name[0:2])
     assert frf == frf_extended
@@ -166,7 +174,7 @@ def test_extend():
 
     # With some names defined in parent object
     frf = pymodal.FRF(frf=array_list, resolution=0.5, name=name[0:15])
-    frf_extended = pymodal.FRF(frf=extended_array_list, resolution=0.5, 
+    frf_extended = pymodal.FRF(frf=extended_array_list, resolution=0.5,
                                name=name[0:15])
     frf.extend(array_list[0:2])
     assert frf == frf_extended
@@ -175,16 +183,17 @@ def test_extend():
     frf = pymodal.FRF(frf=array_list, resolution=0.5)
     extended_unknown_name = list(unknown_name)
     extended_unknown_name.extend(name[0:2])
-    frf_extended = pymodal.FRF(frf=extended_array_list, resolution=0.5, 
+    frf_extended = pymodal.FRF(frf=extended_array_list, resolution=0.5,
                                name=extended_unknown_name)
     frf.extend(array_list[0:2], name[0:2])
     assert frf == frf_extended
+
 
 def test_change_resolution():
 
     """
 
-    This tests whether change resolution actually changes when the 
+    This tests whether change resolution actually changes when the
     method is applied.
     """
 
@@ -194,22 +203,23 @@ def test_change_resolution():
     changed_array_list = list(array_list)
     for index, item in enumerate(changed_array_list):
         changed_array_list[index] = item[0::int(np.around(1.2 / 0.5)), :]
-    value_test = [(frf_changed.value[i] == changed_array_list[i]).all() 
+    value_test = [(frf_changed.value[i] == changed_array_list[i]).all()
                   for i in range(length)]
     assert frf_changed.resolution == 1
     assert all(value_test)
     assert all([element.shape == (3201, 81) for element in frf_changed.value])
 
+
 def test_change_lines():
 
     """
 
-    This tests whether change resolution actually changes when the 
+    This tests whether change resolution actually changes when the
     method is applied.
     """
 
     frf = pymodal.FRF(frf=array_list, resolution=0.5)
-    new_lines = list(range(10,40,5))
+    new_lines = list(range(10, 40, 5))
     new_lines.append(62)
     frf_changed = frf.change_lines(new_lines)
     changed_array_list = list(array_list)
@@ -217,37 +227,38 @@ def test_change_lines():
         changed_array_list[index] = [item[:, i] for i in new_lines]
         changed_array_list[index] = np.asarray(
             changed_array_list[index]).conj().T
-    value_test = [(frf_changed.value[i] == changed_array_list[i]).all() 
+    value_test = [(frf_changed.value[i] == changed_array_list[i]).all()
                   for i in range(length)]
     assert all(value_test)
     assert all([element.shape == (6401, 7) for element in frf_changed.value])
 
+
 def test_change_frequencies():
     frf = pymodal.FRF(frf=array_list, resolution=0.5)
-    
-    try: # Length 3 entry should raise an error
+
+    try:  # Length 3 entry should raise an error
         frf_changed = frf.change_frequencies([1000, 2000, 3000])
         assert False
-    except:
+    except Exception as _:
         assert True
-    
-    try: # Length 1 entry should raise an error
+
+    try:  # Length 1 entry should raise an error
         frf_changed = frf.change_frequencies([1000])
         assert False
-    except:
+    except Exception as _:
         assert True
-    
-    try: # Non-iterable entry should raise an error
+
+    try:  # Non-iterable entry should raise an error
         frf_changed = frf.change_frequencies(1000)
         assert False
-    except:
+    except Exception as _:
         assert True
-    
+
     frf_changed = frf.change_frequencies((1000, 2000))
     changed_array_list = list(array_list)
     for index, item in enumerate(changed_array_list):
         changed_array_list[index] = item[2000:4001, :]
-    value_test = [(frf_changed.value[i] == changed_array_list[i]).all() 
+    value_test = [(frf_changed.value[i] == changed_array_list[i]).all()
                   for i in range(length)]
     assert frf_changed.min_freq == 1000
     assert frf_changed.max_freq == 2000
@@ -255,25 +266,25 @@ def test_change_frequencies():
     assert all(value_test)
     assert all([element.shape == (2001, 81) for element in frf_changed.value])
 
+
 def test_part():
     frf = pymodal.FRF(frf=array_list, resolution=0.5)
-    frf_real = pymodal.FRF(frf=[np.absolute(element.real) 
-                                for element in array_list], 
+    frf_real = pymodal.FRF(frf=[np.absolute(element.real)
+                                for element in array_list],
                            resolution=0.5,
                            part='real')
-    frf_imag = pymodal.FRF(frf=[np.absolute(element.imag) 
-                                for element in array_list], 
+    frf_imag = pymodal.FRF(frf=[np.absolute(element.imag)
+                                for element in array_list],
                            resolution=0.5,
                            part='imag')
-    frf_abs = pymodal.FRF(frf=[np.absolute(element) for element in array_list], 
+    frf_abs = pymodal.FRF(frf=[np.absolute(element) for element in array_list],
                           resolution=0.5,
                           part='abs')
-    frf_phase = pymodal.FRF(frf=[np.angle(element) 
-                                for element in array_list], 
+    frf_phase = pymodal.FRF(frf=[np.angle(element)
+                                 for element in array_list],
                             resolution=0.5,
                             part='phase')
     assert frf.real() == frf_real
     assert frf.imag() == frf_imag
     assert frf.abs() == frf_abs
     assert frf.phase() == frf_phase
-    
