@@ -24,6 +24,7 @@ setuptools.setup(
         "matplotlib>=3.1.3",
         "pandas>=1.0.1",
         "compress-json>=1.0.0",
+        "papergraph>=0.0.1"
     ],
     # Should be as specific as possible
     extras_require={
