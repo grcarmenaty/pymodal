@@ -31,7 +31,6 @@ class FRF():
     """
 
     def __init__(self,
-                 *,
                  frf:list,
                  resolution:float=None,
                  bandwidth:float=None,
@@ -44,17 +43,16 @@ class FRF():
         # correctly processed so that a list of FRFs is composed, and name info
         # is assigned in case no name info was provided.
 
-        # If frf is a string, it is assumed it is a path to file
-        if isinstance(frf, str):
-            # Value will be a one-length list with the unpacked frf 2D array
-            self.value = [pymodal.unpack_FRF_mat(frf)]
-            # Name will have the name of the file
-            if name is None:
-                self.name = [ntpath.split(frf)[-1]]
-        elif isinstance(frf, list):
-            #If the first item of the frf list is a string, it is assumed to
-            # be a list of file locations
-            if isinstance(frf[0], str):
+        if isinstance(frf, list):
+            if isinstance(frf[0], np.ndarray):
+                self.value = list(frf)
+                if name is None:
+                    self.name = []
+                    for i in range(len(frf)):
+                        self.name.append(f'Unknown name {i + 1}')
+            # If it is not a list of arrays, then it is assumed to be a list of
+            # file locations.
+            else:
                 self.value = []
                 if name is None:
                     self.name = []
@@ -62,16 +60,7 @@ class FRF():
                     self.value.append(pymodal.unpack_FRF_mat(item))
                     if name is None:
                         self.name.append(ntpath.split(item)[-1])
-            # If it is not a list of file locations, then it is assumed to be a
-            # list of arrays.
-            else:
-                self.value = frf
-                if name is None:
-                    self.name = []
-                    for i in range(len(frf)):
-                        self.name.append('Unknown name ' + str(i + 1))
-        # If frf is not a string nor it is a list, it is assumed to be an array
-        else:
+        elif isinstance(frf, np.ndarray):
             # Try to use frf as a 3D array, if it is not, the except code will 
             # execute, assuming frf is a 2D array.
             try:
@@ -81,13 +70,17 @@ class FRF():
                 # This should fail if frf is not a 3D array
                 for i in range(frf.shape[2]):
                     if name is None:
-                        self.name.append('Unknown name ' + str(i + 1))
+                        self.name.append(f'Unknown name {i + 1}')
                     # Append every FRF along the third dimension 
                     self.value.append(frf[:,:,i])
             except: # Assuming frf is a 2D array
                 if name is None:
                     self.name = ['Unknown name 1']
                 self.value = [frf]
+        # The last assumption the function makes is that frf is a file path
+        else:
+            self.value = [pymodal.unpack_FRF_mat(frf)]
+            self.name = [ntpath.split(frf)[-1]]
         
         # The following structure makes sure name info is properly assigned if 
         # it is provided
@@ -98,11 +91,15 @@ class FRF():
                 self.name = name.tolist()
             # If else it is considered to be a list
             else:
-                self.name = name
+                self.name = list(name)
         # For every additional item value has versus the length of name, 
         # append an 'Unknown name' entry.
         for i in range(len(self.name), len(self)):
-            self.name.append('Unknown name' + str(i + 1))
+            self.name.append(f'Unknown name {i + 1}')
+
+        if len(self.name) != len(self.value):
+            raise Exception((f"There were {len(self.name)} names for "
+                             f"{len(self.value)} values."))
 
         # The following structure makes sure at least one of max_freq, 
         # resolution or bandwidth is defined (min_freq is assumed to be zero) 
@@ -147,15 +144,15 @@ class FRF():
         calculated_bandwidth = self.max_freq - self.min_freq
         bandwidth_error = not(self.bandwidth == calculated_bandwidth)
         if resolution_error or bandwidth_error:
-            raise Exception((f"The resolution ({resolution} Hz), bandwidth
-                ({bandwidth} Hz), min_freq ({min_freq} Hz) and/or max_freq
-                ({max_freq} Hz) values introduced were not coherent with each 
-                other."))
+            raise Exception((f"The resolution ({resolution} Hz), bandwidth "
+                f"({bandwidth} Hz), min_freq ({min_freq} Hz) and/or max_freq "
+                f"({max_freq} Hz) values introduced were not coherent with "
+                f"each other."))
         for i in range(len(self)):
             if not(self.value[i].shape == self.value[0].shape):
-                raise Exception((f"One of the FRFs in the provided list has a 
-                    different resolution, bandwidth, min_freq and/or max_freq. 
-                    The offending entry is: {i}"))
+                raise Exception((f"One of the FRFs in the provided list has a "
+                    f"different resolution, bandwidth, min_freq and/or "
+                    f"max_freq. The offending entry is: {i}"))
 
         self.part = part 
 
@@ -170,18 +167,34 @@ class FRF():
         points there are inside each line.
         """
         
-        frf_amount = len(self)
-        entry = "entries of"  if len(self) > 1 else "entry of"
-        lines_amount = self.value[0].shape[1]
-        lines = "lines" if self.value[0].shape[1] > 1 else "line"
-        each = "each" if len(self) > 1 else "."
-        data_points = self.value[0].shape[0]
+        dict_to_print = dict(self.__dict__)
+        
+        array_plural = "arrays"  if len(self) > 1 else "array"
+        shape = self.value[0].shape
+        dict_to_print['value'] = f"{len(self)} {array_plural} of shape {shape}"
+        return print(dict_to_print)
+        # frf_amount = len(self)
+        # entry = "entries of"  if len(self) > 1 else "entry of"
+        # lines_amount = self.value[0].shape[1]
+        # lines = "lines" if self.value[0].shape[1] > 1 else "line"
+        # each = " each" if len(self) > 1 else ""
+        # data_points = self.value[0].shape[0]
 
-        return f"""
-            FRF object with {frf_amount} {entry} {lines_amount} {lines} {each},
-            Resolution: {self.resolution} Hz ({data_points} data points),
-            Bandwidth: {self.bandwidth} ({self.min_freq} to {self.max_freq}) Hz
-            """
+        # return (f"FRF object with {frf_amount} {entry} {lines_amount} {lines}"
+        #         f"{each},\nResolution: {self.resolution} Hz ({data_points} "
+        #         f"data points),\nBandwidth: {self.bandwidth} ({self.min_freq} "
+        #         f"to {self.max_freq}) Hz)")
+
+    def __eq__(self, other):
+        if isinstance(other, pymodal.FRF):
+            own_dict = dict(self.__dict__)
+            other_dict = dict(other.__dict__)
+            own_dict['value'] = [item.tolist() for item in own_dict['value']]
+            other_dict['value'] = [item.tolist() 
+                                   for item in other_dict['value']]
+            return own_dict == other_dict
+        else:
+            return False
 
     def __getitem__(self, index:slice):
 
@@ -192,9 +205,13 @@ class FRF():
         slice.
         """
 
-        return FRF(self.value[index],
+        return FRF(frf=self.value[index],
                    resolution = self.resolution,
-                   name = self.name[index])
+                   bandwidth=self.bandwidth,
+                   max_freq=self.max_freq,
+                   min_freq=self.min_freq,
+                   name = self.name[index],
+                   part=self.part)
 
     def __len__(self):
 
@@ -213,9 +230,11 @@ class FRF():
         This takes FRFs in the same possible formats as the FRF class 
         and adds them to the current instance's value.
         """
+
         # New class instance with the FRFs that should be appended. This is 
         # necessary so that FRFs and names are propperly formatted lists, in 
         # this way, using the list.extend method becomes an option.
+        
         extension = FRF(frf=frf,
                         resolution=self.resolution,
                         bandwidth=self.bandwidth,
@@ -223,6 +242,13 @@ class FRF():
                         min_freq=self.min_freq,
                         name=name,
                         part=self.part)
+        
+        if name is None:
+            name = []
+            for i in range(len(extension)):
+                name.append(f'Unknown name {len(self) + i + 1}')
+            extension.name = name
+
         self.value.extend(extension.value)
         self.name.extend(extension.name)
     
@@ -239,9 +265,9 @@ class FRF():
 
         step = int(np.around(new_resolution / self.resolution))
         if new_resolution % self.resolution != 0:
-            warnings.warn(f"The specified new resolution is not divisible by 
-                the old resolution. The new reolution will be:
-                {step * self.resolution} Hz")
+            warnings.warn((f"The specified new resolution is not divisible by "
+                f"the old resolution. The new reolution will be "
+                f"{step * self.resolution} Hz instead."))
         new_resolution = step * self.resolution
         new_value = list(self.value)
         for index, item in enumerate(new_value):
@@ -270,7 +296,7 @@ class FRF():
         new_value = self.value
         for index, item in enumerate(new_value):
             new_value[index] = [item[:, i] for i in line_selection]
-        new_value = np.asarray(new_value).conj().T
+            new_value[index] = np.asarray(new_value[index]).conj().T
 
         return FRF(frf=new_value,
                    resolution=self.resolution,
@@ -293,16 +319,13 @@ class FRF():
 
         frequencies = list(frequencies) # Make sure frequencies is a list
         if not(len(frequencies) == 2): # frequencies should have 2 items
-            raise Exception(f"frequencies should be a list, tuple or array with
-                two items, the first referring to the minimum frequency, and 
-                the second referring to the maximum frequency.")
+            raise Exception((f"frequencies should be a list, tuple or array "
+                f"with two items, the first referring to the minimum "
+                f"frequency, and the second referring to the maximum "
+                f"frequency."))
         new_value = self.value
         frequency_start = int(np.around(frequencies[0] / self.resolution))
         frequency_end = int(np.around(frequencies[-1] / self.resolution) + 1)
-        print(frequency_start)
-        print(type(frequency_start))
-        print(frequency_end)
-        print(type(frequency_end))
         for index, item in enumerate(new_value):
             new_value[index] = item[frequency_start:frequency_end, :]
 
@@ -322,7 +345,7 @@ class FRF():
         the real part of the original instance's FRF.
         """
 
-        new_value = self.value
+        new_value = list(self.value)
         for index, item in enumerate(new_value):
             new_value[index] = np.absolute(item.real)
         
@@ -342,7 +365,7 @@ class FRF():
         the imaginary part of the original instance's FRF.
         """
 
-        new_value = self.value
+        new_value = list(self.value)
         for index, item in enumerate(new_value):
             new_value[index] = np.absolute(item.imag)
         
@@ -362,7 +385,7 @@ class FRF():
         the magnitude of the original instance's FRF.
         """
 
-        new_value = self.value
+        new_value = list(self.value)
         for index, item in enumerate(new_value):
             new_value[index] = np.absolute(item)
         
@@ -382,7 +405,7 @@ class FRF():
         the phase of the original instance's FRF.
         """
 
-        new_value = self.value
+        new_value = list(self.value)
         for index, item in enumerate(new_value):
             new_value[index] = np.angle(item)
         
@@ -499,7 +522,8 @@ class FRF():
             real_part = np.char.mod(f'%.{decimal_places}E', item.real)
             imag_part = np.char.mod(f'+%.{decimal_places}E', item.imag)
             frf[index] = defchararray.add(real_part, imag_part).tolist()
-        data = {'frf': frf
+        
+        data = {'frf': frf,
                 'resolution': self.resolution, 
                 'bandwidth': self.bandwidth, 
                 'max_freq': self.max_freq, 

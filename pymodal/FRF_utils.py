@@ -4,7 +4,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.core import defchararray
-import os
+from pathlib import Path
 import scipy.io as sio
 
 import papergraph
@@ -18,10 +18,10 @@ def unpack_FRF_mat(path:str):
     saved to a .mat file on path.
     """
 
-    frf = sio.loadmat(os.path.normpath(path)) # Load the .mat file
-    frf_info = sio.whosmat(os.path.normpath(path)) # Read .mat information
-    frf_info = frf_info[0] # Read .mat variable name
-    frf = frf[frf_info[0]] # Save refference FRF to file
+    frf = sio.loadmat(Path(path).as_posix())
+    frf_info = sio.whosmat(Path(path).as_posix())
+    frf_info = frf_info[0]
+    frf = frf[frf_info[0]]
     return frf
 
 def load(path:str):
@@ -92,8 +92,7 @@ def plot(*,
             ylabel = "Amplitude normalized to input/$\mathrm{m·s^{-2}·N^{-1}}$"
     xlabel = 'Frequency/Hz'
     freq = np.arange(min_freq, max_freq + resolution / 2, resolution)
-    ax = papergraph.lineplot(*,
-                             x=freq,
+    ax = papergraph.lineplot(x=freq,
                              y=frf,
                              ax=ax,
                              fontsize=fontsize,
