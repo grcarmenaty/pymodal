@@ -31,6 +31,7 @@ setuptools.setup(
             "pytest>=3.7",
             "docutils>=0.16",
             "doc8>=0.8.0",
+            "flake8>=3.7.9",
         ],
     },
     python_requires='>=3.6',
