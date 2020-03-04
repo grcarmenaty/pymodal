@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.0.1",
     author="Guillermo Reyes Carmenaty",
     author_email="grcarmenaty@gmail.com",
-    description="Modal analysis data management and storage tool",
+    description="Modal analysis data management and storage tool, under construction",
     long_description=long_description,
     url="https://github.com/grcarmenaty/pymodal",
     packages=setuptools.find_packages(),
