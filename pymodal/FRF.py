@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.core import defchararray
 import ntpath
+import random
 import warnings
 
 import pymodal
