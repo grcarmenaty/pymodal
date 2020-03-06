@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.0.1",
     author="Guillermo Reyes Carmenaty",
     author_email="grcarmenaty@gmail.com",
-    description="Modal analysis data management and storage tool, under construction",
+    description="Modal analysis data management and storage tool",
     long_description=long_description,
     url="https://github.com/grcarmenaty/pymodal",
     packages=setuptools.find_packages(),
@@ -24,7 +24,9 @@ setuptools.setup(
         "matplotlib>=3.1.3",
         "pandas>=1.0.1",
         "compress-json>=1.0.0",
-        "papergraph>=0.0.1"
+        "papergraph>=0.0.1",
+        "json-tricks>=3.14.0",
+        "imgarray>=1.0"
     ],
     # Should be as specific as possible
     extras_require={

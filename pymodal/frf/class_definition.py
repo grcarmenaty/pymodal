@@ -1,4 +1,4 @@
-import compress_json
+import json
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -6,6 +6,7 @@ from numpy.core import defchararray
 import ntpath
 import random
 import warnings
+from zipfile import ZipFile
 
 import pymodal
 
@@ -61,7 +62,7 @@ class FRF():
                 if name is None:
                     self.name = []
                 for item in frf:
-                    self.value.append(pymodal.unpack_FRF_mat(item))
+                    self.value.append(pymodal.load_array(item))
                     if name is None:
                         self.name.append(ntpath.split(item)[-1])
         elif isinstance(frf, np.ndarray):
@@ -77,13 +78,13 @@ class FRF():
                         self.name.append(f'Unknown name {i + 1}')
                     # Append every FRF along the third dimension
                     self.value.append(frf[:, :, i])
-            except Exception as _:  # Assuming frf is a 2D array
+            except Exception as __:  # Assuming frf is a 2D array
                 if name is None:
                     self.name = ['Unknown name 1']
                 self.value = [frf]
         # The last assumption the function makes is that frf is a file path
         else:
-            self.value = [pymodal.unpack_FRF_mat(frf)]
+            self.value = [pymodal.load_array(frf)]
             self.name = [ntpath.split(frf)[-1]]
 
         # The following structure makes sure name info is properly assigned if
@@ -156,8 +157,9 @@ class FRF():
             if not(self.value[i].shape == self.value[0].shape):
                 raise Exception((
                     f"One of the FRFs in the provided list has a different "
-                    f"resolution, bandwidth, min_freq and/or max_freq. The "
-                    f"offending entry is: {i}"))
+                    f"number of lines, resolution, bandwidth, min_freq and/or "
+                    f"max_freq. The offending entry is: {i} with shape "
+                    f"{self.value[i].shape}"))
 
         self.part = part
 
@@ -180,13 +182,17 @@ class FRF():
         return print(dict_to_print)
 
     def __eq__(self, other):
-        if isinstance(other, pymodal.FRF):
+        if isinstance(other, pymodal.frf.FRF):
             own_dict = dict(self.__dict__)
+            del own_dict['value']
             other_dict = dict(other.__dict__)
-            own_dict['value'] = [item.tolist() for item in own_dict['value']]
-            other_dict['value'] = [item.tolist()
-                                   for item in other_dict['value']]
-            return own_dict == other_dict
+            del other_dict['value']
+            try:
+                equal_value = all([np.array_equal(self.value[i], 
+                    other.value[i]) for i in range(len(self.value))])
+            except Exception as __:
+                equal_value = False
+            return own_dict == other_dict and equal_value
         else:
             return False
 
@@ -486,26 +492,27 @@ class FRF():
         for _ in range(len(ax), len(self)):
             ax.append(plt.gca())
 
-        img = self.real().value[i] if self.part == 'complex' else self.value[i]
+        img = self.real().value if self.part == 'complex' else self.value
         for index, item in enumerate(img):
-            img[index] = pymodal.plot_FRF(frf=item,
+            img[index] = pymodal.frf.plot(frf=item,
                                           max_freq=self.max_freq,
                                           min_freq=self.min_freq,
                                           resolution=self.resolution,
-                                          ax=ax[i],
+                                          ax=ax[index],
                                           fontsize=fontsize,
                                           title=title,
                                           title_size=title_size,
                                           major_locator=major_locator,
                                           minor_locator=minor_locator,
                                           fontname=fontname,
-                                          color=color[i],
+                                          color=color[index],
                                           ylabel=ylabel,
                                           bottom_ylim=bottom_ylim,
                                           part=self.part)
         return img
 
-    def save(self, path: str, decimal_places: int = None):
+    # def save(self, path: str, decimal_places: int = None):
+    def save(self, path: str, decimals: int = None):
 
         """
 
@@ -513,19 +520,32 @@ class FRF():
         of the class into a json file.
         """
 
-        decimal_places = 4 if decimal_places is None else decimal_places
-        frf = self.value
-        for index, item in enumerate(frf):
-            real_part = np.char.mod(f'%.{decimal_places}E', item.real)
-            imag_part = np.char.mod(f'+%.{decimal_places}E', item.imag)
-            frf[index] = defchararray.add(real_part, imag_part).tolist()
+        # decimal_places = 4 if decimal_places is None else decimal_places
+        # frf = list(self.value)
+        # for index, item in enumerate(frf):
+        #     real_part = np.char.mod(f'%.{decimal_places}E', item.real)
+        #     imag_part = np.char.mod(f'%+.{decimal_places}E', item.imag)
+        #     frf[index] = defchararray.add(real_part, imag_part).tolist()
 
-        data = {'frf': frf,
-                'resolution': self.resolution,
+        
+        frf_value = (list(self.value) if decimals is None 
+                     else [np.around(item, decimals) for item in self.value])
+        file_list = []
+        for index, item in enumerate(frf_value):
+            file_list.append(path.parents[0] / f'{self.name[index]}.npz')
+            pymodal.save_array(item, file_list[index])
+        
+        data = {'resolution': self.resolution,
                 'bandwidth': self.bandwidth,
                 'max_freq': self.max_freq,
                 'min_freq': self.min_freq,
                 'name': self.name,
                 'part': self.part}
+        file_list.append(path.parents[0] / 'data.json')
+        with open(path.parents[0] / 'data.json', 'w') as fh:
+            json.dump(data, fh)
 
-        compress_json.dump(data, path)
+        with ZipFile(path, 'w') as fh:
+            for item in file_list:
+                fh.write(item, item.name)
+                item.unlink()

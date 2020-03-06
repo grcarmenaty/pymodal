@@ -1,29 +1,14 @@
-import compress_json
+import json
 import math
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.core import defchararray
 from pathlib import Path
-import scipy.io as sio
+from zipfile import ZipFile
 
 import papergraph
 import pymodal
-
-
-def unpack_FRF_mat(path: str):
-
-    """
-
-    Unpack a Frequency Response Function (FRF) array of complexes
-    saved to a .mat file on path.
-    """
-
-    frf = sio.loadmat(Path(path).as_posix())
-    frf_info = sio.whosmat(Path(path).as_posix())
-    frf_info = frf_info[0]
-    frf = frf[frf_info[0]]
-    return frf
 
 
 def load(path: str):
@@ -34,22 +19,34 @@ def load(path: str):
     json file
     """
 
-    data = compress_json.load(path)
-    # data["frf"]
-    frf = data['frf']
-    # This loop takes the frf matrixes one by one, adds a j to the string
-    # complex numbers, and adds the array of complexes to a list, which is the
-    # input for the instance of the FRF class.
-    for i in range(len(frf)):
-        frf[i] = defchararray.add(np.asarray(frf[i]), 'j').astype(complex)
+    path = Path(path)
+    with ZipFile(path, 'r') as fh:
+        data_path = Path(fh.extract('data.json'))
+        with open('data.json', 'r') as z:
+            data = json.load(z)
+        data_path.unlink()
+        frf =[]
+        for item in data['name']:
+            value_path = Path(fh.extract(f'{item}.npz'))
+            with open(f'{item}.npz', 'r') as z:
+                frf.append(pymodal.load_array(z))
+            value_path.unlink()
 
-    return pymodal.FRF(frf=frf,
-                       resolution=data['resolution'],
-                       bandwidth=data['bandwidth'],
-                       max_freq=data['max_freq'],
-                       min_freq=data['min_freq'],
-                       name=data['name'],
-                       part=data['part'])
+    # data = compress_json.load(path)
+    # frf = data['frf']
+    # # This loop takes the frf matrixes one by one, adds a j to the string
+    # # complex numbers, and adds the array of complexes to a list, which is the
+    # # input for the instance of the FRF class.
+    # for i in range(len(frf)):
+    #     frf[i] = defchararray.add(np.asarray(frf[i]), 'j').astype(complex)
+
+    return pymodal.frf.FRF(frf=frf,
+                           resolution=data['resolution'],
+                           bandwidth=data['bandwidth'],
+                           max_freq=data['max_freq'],
+                           min_freq=data['min_freq'],
+                           name=data['name'],
+                           part=data['part'])
 
 
 def plot(frf: np.ndarray,
@@ -80,6 +77,9 @@ def plot(frf: np.ndarray,
     if part == 'phase':
         if ylabel is None:  # If no label for y axis was specified
             ylabel = 'Phase/rad'
+        top_ylim = np.amax(frf) + np.pi/4
+        if bottom_ylim is None:
+            bottom_ylim = -top_ylim
     else:
         if bottom_ylim is None:  # If no bottom limit is defined
             # Define the bottom limit as four powers of ten lower than average.
@@ -94,20 +94,21 @@ def plot(frf: np.ndarray,
                       r"$\mathrm{m·s^{-2}·N^{-1}}$")
     xlabel = 'Frequency/Hz'
     freq = np.arange(min_freq, max_freq + resolution / 2, resolution)
-    ax = papergraph.lineplot(x=freq,
-                             y=frf,
-                             ax=ax,
-                             fontsize=fontsize,
-                             title=title,
-                             title_size=title_size,
-                             major_x_locator=major_locator,
-                             minor_x_locator=minor_locator,
-                             fontname=fontname,
-                             color=color,
-                             ylabel=ylabel,
-                             xlabel=xlabel,
-                             bottom_ylim=bottom_ylim,
-                             top_ylim=top_ylim)
+    papergraph.lineplot(x=freq,
+                        y=frf,
+                        ax=ax,
+                        fontsize=fontsize,
+                        title=title,
+                        title_size=title_size,
+                        major_x_locator=major_locator,
+                        minor_x_locator=minor_locator,
+                        fontname=fontname,
+                        color=color,
+                        ylabel=ylabel,
+                        xlabel=xlabel,
+                        bottom_ylim=bottom_ylim,
+                        top_ylim=top_ylim)
+    ax.plot()
     if part == 'phase':
         # For y axis: set as many major and minor divisions as specified
         # (4 major and 4 minor inside each major by default) for each unit of
