@@ -3,7 +3,6 @@ import math
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-from numpy.core import defchararray
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -25,20 +24,12 @@ def load(path: str):
         with open('data.json', 'r') as z:
             data = json.load(z)
         data_path.unlink()
-        frf =[]
+        frf = []
         for item in data['name']:
             value_path = Path(fh.extract(f'{item}.npz'))
             with open(f'{item}.npz', 'r') as z:
                 frf.append(pymodal.load_array(z))
             value_path.unlink()
-
-    # data = compress_json.load(path)
-    # frf = data['frf']
-    # # This loop takes the frf matrixes one by one, adds a j to the string
-    # # complex numbers, and adds the array of complexes to a list, which is the
-    # # input for the instance of the FRF class.
-    # for i in range(len(frf)):
-    #     frf[i] = defchararray.add(np.asarray(frf[i]), 'j').astype(complex)
 
     return pymodal.frf.FRF(frf=frf,
                            resolution=data['resolution'],

@@ -2,7 +2,6 @@ import json
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-from numpy.core import defchararray
 import ntpath
 import random
 import warnings
@@ -188,8 +187,10 @@ class FRF():
             other_dict = dict(other.__dict__)
             del other_dict['value']
             try:
-                equal_value = all([np.array_equal(self.value[i], 
-                    other.value[i]) for i in range(len(self.value))])
+                equal_value = all([np.array_equal(
+                    self.value[i],
+                    other.value[i]
+                    ) for i in range(len(self.value))])
             except Exception as __:
                 equal_value = False
             return own_dict == other_dict and equal_value
@@ -520,21 +521,13 @@ class FRF():
         of the class into a json file.
         """
 
-        # decimal_places = 4 if decimal_places is None else decimal_places
-        # frf = list(self.value)
-        # for index, item in enumerate(frf):
-        #     real_part = np.char.mod(f'%.{decimal_places}E', item.real)
-        #     imag_part = np.char.mod(f'%+.{decimal_places}E', item.imag)
-        #     frf[index] = defchararray.add(real_part, imag_part).tolist()
-
-        
-        frf_value = (list(self.value) if decimals is None 
+        frf_value = (list(self.value) if decimals is None
                      else [np.around(item, decimals) for item in self.value])
         file_list = []
         for index, item in enumerate(frf_value):
             file_list.append(path.parents[0] / f'{self.name[index]}.npz')
             pymodal.save_array(item, file_list[index])
-        
+
         data = {'resolution': self.resolution,
                 'bandwidth': self.bandwidth,
                 'max_freq': self.max_freq,

@@ -1,21 +1,13 @@
-import gzip
+
 import numpy as np
 import pathlib
 from pathlib import Path
-from base64 import urlsafe_b64encode, urlsafe_b64decode
-from os import fsync
-from pickle import dump as pkl_dump, load as pkl_load
-from json_tricks import dump as jt_dump, load as jt_load
 from numpy import (
-    savetxt,
-    loadtxt,
-    frombuffer,
     save as np_save,
     load as np_load,
     savez_compressed,
 )
 from scipy.io import savemat, loadmat, whosmat
-from imgarray import save_array_img, load_array_img
 
 
 def save_array(array: np.ndarray, path: str):
@@ -59,7 +51,7 @@ def load_array(path: str):
     elif file_type in '.npz':
         return np_load(path)['data']
     elif file_type in '.mat':
-        with open(path, 'r') as fh:
+        with open(path, 'r') as __:
             array = loadmat(path)
             info = whosmat(path)
             info = info[0]

@@ -1,8 +1,6 @@
 import numpy as np
-from numpy.core import defchararray
 from pathlib import Path
 import pymodal
-import scipy.io as sio
 
 # Build a list of all FRF.mat files in the data folder. All of the used FRF
 # files have 81 lines of 0Hz to 3200Hz bands with a resolution of 0.5Hz, which
