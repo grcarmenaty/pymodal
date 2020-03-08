@@ -23,10 +23,7 @@ setuptools.setup(
         "scipy>=1.4.1",
         "matplotlib>=3.1.3",
         "pandas>=1.0.1",
-        "compress-json>=1.0.0",
         "papergraph>=0.0.1",
-        "json-tricks>=3.14.0",
-        "imgarray>=1.0"
     ],
     # Should be as specific as possible
     extras_require={
