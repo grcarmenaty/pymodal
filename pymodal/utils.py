@@ -15,7 +15,7 @@ def save_array(array: np.ndarray, path: str):
     try:
         if not isinstance(path, pathlib.PurePath):
             path = path.name
-    except Exception as __:
+    except Exception as __:  # noqa F841
         pass
     path = Path(path)
     file_type = path.suffix
@@ -40,7 +40,7 @@ def load_array(path: str):
     try:
         if not isinstance(path, pathlib.PurePath):
             path = path.name
-    except Exception as __:
+    except Exception as __:  # noqa F841
         pass
 
     path = Path(path)
@@ -51,7 +51,7 @@ def load_array(path: str):
     elif file_type in '.npz':
         return np_load(path)['data']
     elif file_type in '.mat':
-        with open(path, 'r') as __:
+        with open(path, 'r') as __:  # noqa F841
             array = loadmat(path)
             info = whosmat(path)
             info = info[0]

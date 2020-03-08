@@ -50,13 +50,13 @@ def test_init():
     try:
         frf = pymodal.frf.FRF(frf=array_list, resolution=0.5, max_freq=6400)
         assert False
-    except Exception as __:
+    except Exception as __:  # noqa F841
         assert True
     # Try to give more names than needed
     try:
         frf = pymodal.frf.FRF(frf=array_list[0:2], resolution=0.5, name=name)
         assert False
-    except Exception as __:
+    except Exception as __:  # noqa F841
         assert True
     # Give less names and make sure it still generates names
     frf = pymodal.frf.FRF(frf=array_list, resolution=0.5, name=name[0:2])
@@ -251,19 +251,19 @@ def test_change_frequencies():
     try:  # Length 3 entry should raise an error
         frf_changed = frf.change_frequencies([1000, 2000, 3000])
         assert False
-    except Exception as __:
+    except Exception as __:  # noqa F841
         assert True
 
     try:  # Length 1 entry should raise an error
         frf_changed = frf.change_frequencies([1000])
         assert False
-    except Exception as __:
+    except Exception as __:  # noqa F841
         assert True
 
     try:  # Non-iterable entry should raise an error
         frf_changed = frf.change_frequencies(1000)
         assert False
-    except Exception as __:
+    except Exception as __:  # noqa F841
         assert True
 
     frf_changed = frf.change_frequencies((1000, 2000))

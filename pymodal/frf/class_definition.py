@@ -13,26 +13,42 @@ import pymodal
 class FRF():
 
     """
+    Store and manipulate Frequency Response Functions (FRFs).
 
-    This class takes either a path to a Frequency Response Function
-    (FRF) file, a list of paths to FRF files (as ['path/to/file_1', ...,
-    'path/to/file_n']), a single 2D array or a 3D array where the third
-    dimension designates diferent FRFs, and turns it into a list of FRFs
-    where each item is one of the 2D arrays that consitute a FRF.
+    Parameters
+    ----------
+    frf : list of 2D arrays or 3D array or list of file paths or 
+            file path
+        Collection of FRF arrays.
+    resolution: float, optional
+        How many Hz there are between two adjacent points of the FRFs,
+        default is None.
+    bandwidth: float, optional
+        How many Hz there are between the minimum and maximum
+        frequencies of the FRFs, default is None.
+    max_freq: float, optional
+        What is the maximum frequency of the FRFs, in Hz, default is
+        None.
+    min_freq: float, optional
+        What is the minimum frequency of the FRFs, in Hz, default is
+        None.
+    name: list of strings, optional
+        A descriptive name for each FRF, default is None.
+    part: string, optional
+        Whether the values of the FRF is the real, imaginary, phase,
+        module or complex part of the values, default is complex.
 
-    Resolution, bandwidth, max_freq (maximum frequency) and min_freq
-    (minimum frequency) are assumed to be in Hertz (Hz) and HAVE TO be
-    coherent with each other and the amount of points the function has.
-    All inputted FRFs HAVE TO have the same resolution, bandwidth,
-    min_freq and max_freq, and the one against which both conditions are
-    checked is the first one.
+    Returns
+    -------
+    out: FRF class
+        FRF class object with all introduced FRFs and their information.
 
-    If no list of names is provided then an 'Unknown name' list of
-    length equal to the amount of FRFs will be created. If some names
-    are provided, but not as many as FRFs, those names will be assumed
-    to be for the first FRFs, and the name list will be extended with
-    'Unknown name' entries to have as many names as there are FRFs.
+    Notes
+    -----
+    At least one of resolution, bandwidth or max_freq must be specified,
+    and their values must be coherent.
     """
+
 
     def __init__(self,
                  frf: list,
@@ -42,6 +58,44 @@ class FRF():
                  min_freq: float = 0,
                  name: list = None,
                  part: str = 'complex'):
+
+        """
+        Constructor for FRF class.
+
+        Parameters
+        ----------
+        frf : list of 2D arrays or 3D array or list of file paths or 
+                file path
+            Collection of FRF arrays.
+        resolution: float, optional
+            How many Hz there are between two adjacent points of the
+            FRFs, default is None.
+        bandwidth: float, optional
+            How many Hz there are between the minimum and maximum
+            frequencies of the FRFs, default is None.
+        max_freq: float, optional
+            What is the maximum frequency of the FRFs, in Hz, default is
+            None.
+        min_freq: float, optional
+            What is the minimum frequency of the FRFs, in Hz, default is
+            None.
+        name: list of strings, optional
+            A descriptive name for each FRF, default is None.
+        part: string, optional
+            Whether the values of the FRF is the real, imaginary, phase,
+            module or complex part of the values, default is complex.
+
+        Returns
+        -------
+        out: FRF class
+            FRF class object with all introduced FRFs and their
+            information.
+
+        Notes
+        -----
+        At least one of resolution, bandwidth or max_freq must be 
+        specified, and their values must be coherent.
+        """
 
         # The following structure makes sure either of the possible inputs is
         # correctly processed so that a list of FRFs is composed, and name info
@@ -77,7 +131,7 @@ class FRF():
                         self.name.append(f'Unknown name {i + 1}')
                     # Append every FRF along the third dimension
                     self.value.append(frf[:, :, i])
-            except Exception as __:  # Assuming frf is a 2D array
+            except Exception as __:  # Assuming frf is a 2D array  # noqa F841
                 if name is None:
                     self.name = ['Unknown name 1']
                 self.value = [frf]
@@ -162,23 +216,10 @@ class FRF():
 
         self.part = part
 
+
     def __repr__(self):
+        return f"{self.__class__} ({self.__dict__})"
 
-        """
-
-        This is what the instance of the class FRF returns when printed.
-        It states how many FRFs are stored within this instance, how
-        many lines each FRF has, as well as resolution, bandwidth
-        (specifying minimum and maximum frequency) and how many data
-        points there are inside each line.
-        """
-
-        dict_to_print = dict(self.__dict__)
-
-        array_plural = "arrays" if len(self) > 1 else "array"
-        shape = self.value[0].shape
-        dict_to_print['value'] = f"{len(self)} {array_plural} of shape {shape}"
-        return print(dict_to_print)
 
     def __eq__(self, other):
         if isinstance(other, pymodal.frf.FRF):
@@ -191,21 +232,14 @@ class FRF():
                     self.value[i],
                     other.value[i]
                     ) for i in range(len(self.value))])
-            except Exception as __:
+            except Exception as __:  # noqa F841
                 equal_value = False
             return own_dict == other_dict and equal_value
         else:
             return False
 
+
     def __getitem__(self, index: slice):
-
-        """
-
-        This makes the FRF class sliceable. Each slice returns an
-        instance of the FRF class with only the FRFs specified by the
-        slice.
-        """
-
         return FRF(frf=self.value[index],
                    resolution=self.resolution,
                    bandwidth=self.bandwidth,
@@ -215,21 +249,29 @@ class FRF():
                    part=self.part)
 
     def __len__(self):
-
-        """
-
-        This function returns how many FRFs are stored inside the
-        instance of the class
-        """
-
         return len(self.value)
 
     def extend(self, frf: list, name: list = None):
 
         """
+        Adds an FRF to the current instance and returns None.
 
-        This takes FRFs in the same possible formats as the FRF class
-        and adds them to the current instance's value.
+        Parameters
+        ----------
+        frf : list of 2D arrays or 3D array or list of file paths or 
+                file path
+            Collection of FRF arrays.
+        name: list of strings, optional
+            A descriptive name for each FRF, default is None.
+
+        Returns
+        -------
+        out: None
+
+        Notes
+        -----
+        The rest of parameters for the new FRFs are assumed to be the
+        same as in the instance that is being extended.
         """
 
         # New class instance with the FRFs that should be appended. This is
@@ -256,21 +298,35 @@ class FRF():
     def change_resolution(self, new_resolution: float):
 
         """
+        Create a new instance with the same FRFs, but with a different
+        frequential resolution.
 
-        This function returns a new instance of the FRF class with all
-        of the FRFs from the instance from where the method was called
-        but with a new resolution. The new resolution will be rounded up
-        to the closest multiple of the original resolution, since
-        interpolation is undesirable.
+        Parameters
+        ----------
+        new_resolution : float
+            Desired new frequential resolution.
+
+        Returns
+        -------
+        out: FRF class
+            New instance with a different frequential resolution.
+
+        Notes
+        -----
+        In order to avoid interpolation, the new frequency can only be
+        a multiple of the original frequency.
         """
 
+        if new_resolution < self.resolution:
+            raise Exception("The new resolution must be greater than the old"
+                            "one.")
         step = int(np.around(new_resolution / self.resolution))
+        new_resolution = step * self.resolution
         if new_resolution % self.resolution != 0:
             warnings.warn((
                 f"The specified new resolution is not divisible by "
                 f"the old resolution. The new reolution will be "
-                f"{step * self.resolution} Hz instead."))
-        new_resolution = step * self.resolution
+                f"{new_resolution} Hz instead."))
         new_value = list(self.value)
         for index, item in enumerate(new_value):
             new_value[index] = item[0::step, :]
@@ -286,12 +342,18 @@ class FRF():
     def change_lines(self, line_selection: list):
 
         """
+        Create a new instance with the same FRFs, but with a different
+        set of lines.
 
-        This function takes a list of desired lines, where line refers
-        to each of the points of the experimental mesh of points where
-        the different spectra were measured, and returns a new instance
-        of the class with the previous instance's FRFs composed only by
-        the selected lines.
+        Parameters
+        ----------
+        line_selection : list of integers
+            A list of which lines are to be used for the new instance.
+
+        Returns
+        -------
+        out: FRF class
+            New instance with a different set of lines.
         """
 
         line_selection = list(line_selection)  # Line selection must be a list
@@ -311,12 +373,22 @@ class FRF():
     def change_frequencies(self, frequencies: list):
 
         """
+        Create a new instance with the same FRFs, but with a different
+        frequency band.
 
-        This function takes a list, tuple or array with two items,
-        the first referring to the new minimum frequency, and the second
-        referring to the new maximum frequency, and returns a new
-        instance of the class with the previous instance's FRFs between
-        the newly specified minimum and maximum frequency.
+        Parameters
+        ----------
+        frequencies : list of float
+            The new minimum and maximum frequencies.
+
+        Returns
+        -------
+        out: FRF class
+            New instance with a different frequency band.
+
+        Notes
+        -----
+        frequencies must be a two-element iterable object.
         """
 
         frequencies = list(frequencies)  # Make sure frequencies is a list
