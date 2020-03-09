@@ -17,7 +17,7 @@ class FRF():
 
     Parameters
     ----------
-    frf : list of 2D arrays or 3D array or list of file paths or 
+    frf: list of 2D arrays or 3D array or list of file paths or 
             file path
         Collection of FRF arrays.
     resolution: float, optional
@@ -64,7 +64,7 @@ class FRF():
 
         Parameters
         ----------
-        frf : list of 2D arrays or 3D array or list of file paths or 
+        frf: list of 2D arrays or 3D array or list of file paths or 
                 file path
             Collection of FRF arrays.
         resolution: float, optional
@@ -321,12 +321,12 @@ class FRF():
             raise Exception("The new resolution must be greater than the old"
                             "one.")
         step = int(np.around(new_resolution / self.resolution))
-        new_resolution = step * self.resolution
         if new_resolution % self.resolution != 0:
             warnings.warn((
                 f"The specified new resolution is not divisible by "
                 f"the old resolution. The new reolution will be "
-                f"{new_resolution} Hz instead."))
+                f"{step * self.resolution} Hz instead."))
+        new_resolution = step * self.resolution
         new_value = list(self.value)
         for index, item in enumerate(new_value):
             new_value[index] = item[0::step, :]
@@ -415,9 +415,12 @@ class FRF():
     def real(self):
 
         """
+        Create a new instance with the real part of the FRFs.
 
-        This function returns a new instance of the FRF class with only
-        the real part of the original instance's FRF.
+        Returns
+        -------
+        out: FRF class
+            New instance with only the real part of the FRFs.
         """
 
         new_value = list(self.value)
@@ -435,9 +438,12 @@ class FRF():
     def imag(self):
 
         """
+        Create a new instance with the imaginary part of the FRFs.
 
-        This function returns a new instance of the FRF class with only
-        the imaginary part of the original instance's FRF.
+        Returns
+        -------
+        out: FRF class
+            New instance with only the imaginary part of the FRFs.
         """
 
         new_value = list(self.value)
@@ -455,9 +461,12 @@ class FRF():
     def abs(self):
 
         """
+        Create a new instance with the absolute value of the FRFs.
 
-        This function returns a new instance of the FRF class with only
-        the magnitude of the original instance's FRF.
+        Returns
+        -------
+        out: FRF class
+            New instance with only the absolute value of the FRFs.
         """
 
         new_value = list(self.value)
@@ -475,9 +484,12 @@ class FRF():
     def phase(self):
 
         """
+        Create a new instance with the phase of the FRFs.
 
-        This function returns a new instance of the FRF class with only
-        the phase of the original instance's FRF.
+        Returns
+        -------
+        out: FRF class
+            New instance with only the phase of the FRFs.
         """
 
         new_value = list(self.value)
@@ -561,7 +573,10 @@ class FRF():
             ax = [plt.gca()]
         elif isinstance(ax, np.ndarray):
             ax = ax.flatten()
-        ax = list(ax)
+        try:
+            ax = list(ax)
+        except Exception as __:  # noqa F841
+            ax = [ax]
         for _ in range(len(ax), len(self)):
             ax.append(plt.gca())
 

@@ -20,13 +20,6 @@ array_3d = np.dstack(array_list)
 
 
 def test_init():
-
-    """
-
-    This tests initialization values using the preferred input method:
-    an array list.
-    """
-
     frf = pymodal.frf.FRF(frf=array_list, resolution=0.5, name=name)
     value_test = [(frf.value[i] == array_list[i]).all() for i in range(length)]
     assert np.asarray(value_test).all()
@@ -64,13 +57,6 @@ def test_init():
 
 
 def test_equality():
-
-    """
-
-    This tests that an object of the class is equal to exactly the same
-    object and not equal to any object with any different value.
-    """
-
     frf = pymodal.frf.FRF(frf=array_list[0:4], resolution=0.5)
     same_object = pymodal.frf.FRF(frf=array_list[0:4], resolution=0.5)
     other_frf = pymodal.frf.FRF(frf=array_list[0:2], resolution=0.5)
@@ -97,14 +83,6 @@ def test_equality():
 
 
 def test_input():
-
-    """
-
-    This tests that a function created using the four possible input
-    types in the FRF field (array list, list of .mat file objects, 3D
-    array, 2D array and single .mat file object) yields the same object.
-    """
-
     # All objects are created with the names defined so that they can be equal
     # to using file path list as input.
     frf_array_list = pymodal.frf.FRF(frf=array_list, resolution=0.5, name=name)
@@ -123,13 +101,6 @@ def test_input():
 
 
 def test_getitem():
-
-    """
-
-    This tests that slicing an object has the same values as the sliced
-    expected values.
-    """
-
     frf = pymodal.frf.FRF(frf=array_list, resolution=0.5, name=name)
     frf_selected = pymodal.frf.FRF(frf=array_list[5],
                                    resolution=0.5,
@@ -141,24 +112,11 @@ def test_getitem():
 
 
 def test_len():
-
-    """
-
-    This tests that the length of the object is the same as the length
-    of the value.
-    """
-
     frf = pymodal.frf.FRF(frf=array_list, resolution=0.5, name=name)
     assert len(frf) == len(array_list)
 
 
 def test_extend():
-
-    """
-
-    This tests that the extended object is the same as an object with
-    the values which were added.
-    """
     extended_array_list = list(array_list)
     extended_array_list.extend(array_list[0:2])
     extended_name = list(name)
@@ -195,13 +153,6 @@ def test_extend():
 
 
 def test_change_resolution():
-
-    """
-
-    This tests whether change resolution actually changes when the
-    method is applied.
-    """
-
     frf = pymodal.frf.FRF(frf=array_list, resolution=0.5)
     with pytest.warns(UserWarning):
         frf_changed = frf.change_resolution(1.2)
@@ -216,13 +167,6 @@ def test_change_resolution():
 
 
 def test_change_lines():
-
-    """
-
-    This tests whether change resolution actually changes when the
-    method is applied.
-    """
-
     frf = pymodal.frf.FRF(frf=array_list, resolution=0.5)
     new_lines = list(range(10, 40, 5))
     new_lines.append(62)
@@ -239,13 +183,6 @@ def test_change_lines():
 
 
 def test_change_frequencies():
-
-    """
-
-    This tests whether change frequency actually changes when the
-    method is applied.
-    """
-
     frf = pymodal.frf.FRF(frf=array_list, resolution=0.5)
 
     try:  # Length 3 entry should raise an error
@@ -280,13 +217,6 @@ def test_change_frequencies():
 
 
 def test_part():
-
-    """
-
-    This tests whether the correct part is selected when the part method
-    is applied.
-    """
-
     frf = pymodal.frf.FRF(frf=array_list, resolution=0.5)
     frf_real = pymodal.frf.FRF(frf=[np.absolute(element.real)
                                     for element in array_list],
@@ -311,14 +241,6 @@ def test_part():
 
 
 def test_save():
-
-    """
-
-    This tests whether the method to save actually saves with the
-    intended file formats. Loading of these files is tested in the utils
-    test.
-    """
-
     frf = pymodal.frf.FRF(frf=array_list, resolution=0.5)
     file_path = Path(__file__).parent / 'data' / 'save' / 'FRF' / 'test.zip'
     decimals_file_path = file_path.parent / 'test_decimals.zip'
