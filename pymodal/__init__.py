@@ -1,4 +1,5 @@
 import pymodal.frf  # noqa F401
+import pymodal.cfdac # noqa F401
 from .utils import (  # noqa F401
     save_array,
     load_array,
