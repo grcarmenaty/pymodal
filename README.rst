@@ -15,28 +15,24 @@ It also includes tools for building certain geometries in ANSYS and get their
 FRFs. This is still a very early alpha, but the main objective of this project
 is to comfortably have FRFs for training deep learning models with ease.
 
-Subheading
-----------
-
-The basic syntax is not that different from Markdown, but it also
-has many more powerful features that Markdown doesn't have. We aren't
-taking advantage of those yet though.
-
-- Bullet points
-- Are intuitive
-- And simple too
-
 Installation
 ============
 
-Installation info should go here.
+In order to install this module, just run
+
+.. code-block:: bash
+    
+    pip install pymodal
+
+in your terminal.
 
 Dev Installation
 ----------------
 
-Installation for developpement should go here.
+If you wish to try and add some features yourself or modify some of the existing
+ones, clone the repository and, in the same folder where the repo is cloned,
+run:
 
-Usage
-=====
-
-Use example should go here
+.. code-block:: bash
+    
+    pip install -e .[dev]
