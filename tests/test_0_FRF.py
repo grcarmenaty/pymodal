@@ -319,7 +319,8 @@ def test_plot():
     Check the plots that are created by the class object method. Should
     be checked manually.
     """
-    save_dir = pathlib.Path(__file__).parents[1] / 'result_images' / 'frf_plot'
+    save_dir = pathlib.Path(__file__).parent
+    save_dir = save_dir / 'data' / 'save' / 'result_images' / 'frf_plot'
     frf = pymodal.FRF(frf=array_3d, resolution=0.5)
 
     frf[0].plot()
@@ -327,18 +328,21 @@ def test_plot():
     
     frf[0].plot()
     file_path = save_dir / 'one_frf.png'
+    file_path.unlink()
     plt.savefig(file_path)
     plt.close()
     assert file_path.is_file()
 
     frf[0:2].real().plot()
     file_path = save_dir / 'two_frf.png'
+    file_path.unlink()
     plt.savefig(file_path)
     plt.close()
     assert file_path.is_file()
 
     frf[0:3].imag().plot()
     file_path = save_dir / 'three_frf.png'
+    file_path.unlink()
     plt.savefig(file_path)
     plt.close()
     assert file_path.is_file()
@@ -349,6 +353,7 @@ def test_plot():
     frf[0].phase().plot(ax=ax[1], title='Phase')
     plt.tight_layout()
     file_path = save_dir / 'frf_mag_phase.png'
+    file_path.unlink()
     plt.savefig(file_path)
     plt.close()
     assert file_path.is_file()

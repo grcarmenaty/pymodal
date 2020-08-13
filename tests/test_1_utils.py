@@ -89,7 +89,8 @@ def test_plot_cfdac():
                        [0, 3200],
                        0.5)
     plt.tight_layout()
-    save_dir = Path(__file__).parents[1] / 'result_images' / 'cfdac_plot'
+    save_dir = pathlib.Path(__file__).parent
+    save_dir = save_dir / 'data' / 'save' / 'result_images' / 'cfdac_plot'
     file_path = save_dir / 'cfdac.png'
     plt.savefig(file_path)
     plt.close()
