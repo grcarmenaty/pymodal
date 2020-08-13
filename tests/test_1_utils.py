@@ -1,16 +1,10 @@
 import numpy as np
 import pymodal
-from pathlib import Path
+import pathlib
 from scipy.io import loadmat, whosmat
 import matplotlib.pyplot as plt
-import admin
-import os
 
-if os.name == 'nt':
-    if not admin.isUserAdmin():
-            admin.runAsAdmin()
-
-path = Path(__file__).parent / 'data' / 'FRF' / 'Case0000.mat'
+path = pathlib.Path(__file__).parent / 'data' / 'FRF' / 'Case0000.mat'
 array = loadmat(path)
 info = whosmat(path)
 info = info[0]
@@ -37,7 +31,7 @@ def test_load():
 # Build a list of all FRF.mat files in the data folder. All of the used FRF
 # files have 81 lines of 0Hz to 3200Hz bands with a resolution of 0.5Hz, which
 # implies the shape of the arrays is (6401, 81)
-path = (Path(__file__).parent / 'data' / 'FRF').glob('**/*')
+path = (pathlib.Path(__file__).parent / 'data' / 'FRF').glob('**/*')
 files = [file for file in path if file.is_file()]
 length = len(files)
 array_3d = [pymodal.load_array(file) for file in files]
@@ -48,7 +42,7 @@ def test_load_frf():
     frf = pymodal.FRF(frf=array_3d, resolution=0.5)
     array_list_decimals = np.around(array_3d, 4)
     frf_decimals = pymodal.FRF(frf=array_list_decimals, resolution=0.5)
-    file_path = Path(__file__).parent / 'data' / 'save' / 'FRF' / 'test.zip'
+    file_path = pathlib.Path(__file__).parent / 'data' / 'save' / 'FRF' / 'test.zip'
     decimals_file_path = file_path.parent / 'test_decimals.zip'
     assert pymodal.load_FRF(file_path) == frf
     assert pymodal.load_FRF(decimals_file_path) == frf_decimals

@@ -4,15 +4,6 @@ import pathlib
 import pymodal
 import pytest
 import matplotlib.pyplot as plt
-import admin
-import os
-
-# I synch this folder with Google Drive, so I need to run it as admin because
-# of the way the save function is written, which needs to delete files that are
-# being synched.
-if os.name == 'nt':
-    if not admin.isUserAdmin():
-            admin.runAsAdmin()
 
 # Build a list of all FRF.mat files in the data folder. All of the used FRF
 # files have 81 lines of 0Hz to 3200Hz bands with a resolution of 0.5Hz, which
@@ -328,21 +319,18 @@ def test_plot():
     
     frf[0].plot()
     file_path = save_dir / 'one_frf.png'
-    file_path.unlink()
     plt.savefig(file_path)
     plt.close()
     assert file_path.is_file()
 
     frf[0:2].real().plot()
     file_path = save_dir / 'two_frf.png'
-    file_path.unlink()
     plt.savefig(file_path)
     plt.close()
     assert file_path.is_file()
 
     frf[0:3].imag().plot()
     file_path = save_dir / 'three_frf.png'
-    file_path.unlink()
     plt.savefig(file_path)
     plt.close()
     assert file_path.is_file()
@@ -353,7 +341,6 @@ def test_plot():
     frf[0].phase().plot(ax=ax[1], title='Phase')
     plt.tight_layout()
     file_path = save_dir / 'frf_mag_phase.png'
-    file_path.unlink()
     plt.savefig(file_path)
     plt.close()
     assert file_path.is_file()
