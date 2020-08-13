@@ -1,4 +1,5 @@
 pytest
+pytest-cov
 docutils
 doc8
 flake8
