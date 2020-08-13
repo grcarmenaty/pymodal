@@ -26,7 +26,15 @@ In order to install this module, just run
     
     pip install pymodal
 
-in your terminal.
+in your terminal. This will also potentially install all the requirements, which
+you can find in `requirements.txt <https://github.com/grcarmenaty/pymodal/blob/master/requirements.txt>`_, although they will be included here as
+well for clarity's sake:
+
+- numpy
+- scipy
+- matplotlib
+- pandas
+- pyansys
 
 Dev Installation
 ----------------
@@ -38,3 +46,12 @@ run the following command:
 .. code-block:: bash
     
     pip install -e .[dev]
+
+This will also potentially install all the development requirements, which
+you can find in `requirements-dev.txt <https://github.com/grcarmenaty/pymodal/blob/master/requirements-dev.txt>`_, although they will be included here as
+well for clarity's sake:
+
+- pytest
+- docutils
+- doc8
+- flake8

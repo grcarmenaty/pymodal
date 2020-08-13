@@ -1,0 +1,4 @@
+pytest
+docutils
+doc8
+flake8
