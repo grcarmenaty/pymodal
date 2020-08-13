@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.0.1",
     author="Guillermo Reyes Carmenaty",
     author_email="grcarmenaty@gmail.com",
-    description="Modal analysis data management and storage tool",
+    description="Modal analysis data management, simulation and storage tool",
     long_description=long_description,
     url="https://github.com/grcarmenaty/pymodal",
     packages=setuptools.find_packages(),
@@ -23,7 +23,7 @@ setuptools.setup(
         "scipy>=1.4.1",
         "matplotlib>=3.1.3",
         "pandas>=1.0.1",
-        "papergraph>=0.0.1",
+        "pyansys>=0.39",
     ],
     # Should be as specific as possible
     extras_require={

@@ -1,18 +1,19 @@
 =================
-My Project Readme
+PyModal Library
 =================
--------------------------
-Clever subtitle goes here
--------------------------
+------------------------------------------------------
+Simulate, load, store and represent your modal data
+------------------------------------------------------
 
 Introduction
 ============
 
-This is an example reStructuredText document that starts at the very top
-with a title and a sub-title. There is one primary header, Introduction.
-There is one example subheading below.
-The document is just plain text so it is easily readable even before
-being converted to HTML, man page, PDF or other formats.
+This library is a work in progress dedicated to storing FRFs with similar
+sampling frequency and time window. For now it's only built for storing
+processed FRFs into numpy arrays with a few extra information alongside them.
+It also includes tools for building certain geometries in ANSYS and get their
+FRFs. This is still a very early alpha, but the main objective of this project
+is to comfortably have FRFs for training deep learning models with ease.
 
 Subheading
 ----------
