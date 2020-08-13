@@ -4,13 +4,13 @@ channels:
   - conda-forge
 dependencies:
   - python
-  - pip
-  - numpy
-  - scipy
-  - matplotlib
-  - pandas
-  - pyansys
-  - pytest
-  - docutils
-  - doc8
-  - flake8
+  - pip:
+    - numpy
+    - scipy
+    - matplotlib
+    - pandas
+    - pyansys
+    - pytest
+    - docutils
+    - doc8
+    - flake8
