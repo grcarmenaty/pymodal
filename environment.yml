@@ -1,0 +1,16 @@
+name: pymodal-dev
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python
+  - pip
+  - numpy
+  - scipy
+  - matplotlib
+  - pandas
+  - pyansys
+  - pytest
+  - docutils
+  - doc8
+  - flake8
