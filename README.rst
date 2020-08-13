@@ -13,7 +13,9 @@ sampling frequency and time window. For now it's only built for storing
 processed FRFs into numpy arrays with a few extra information alongside them.
 It also includes tools for building certain geometries in ANSYS and get their
 FRFs. This is still a very early alpha, but the main objective of this project
-is to comfortably have FRFs for training deep learning models with ease.
+is to comfortably have FRFs for training deep learning models with ease. If
+you plan on using the ANSYS module, be sure to have a working ANSYS
+installation.
 
 Installation
 ============
@@ -31,7 +33,7 @@ Dev Installation
 
 If you wish to try and add some features yourself or modify some of the existing
 ones, clone the repository and, in the same folder where the repo is cloned,
-run:
+run the following command:
 
 .. code-block:: bash
     
