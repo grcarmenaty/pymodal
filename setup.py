@@ -5,13 +5,13 @@ with open("README.rst", "r") as fh:
 
 setuptools.setup(
     name="pymodal",
-    version="0.0.3",
+    version="0.0.4",
     author="Guillermo Reyes Carmenaty",
     author_email="grcarmenaty@gmail.com",
     description="Modal analysis data management, simulation and storage tool",
     long_description=long_description,
     url="https://github.com/grcarmenaty/pymodal",
-    download_url="https://github.com/grcarmenaty/pymodal/archive/0.0.3.tar.gz",
+    download_url="https://github.com/grcarmenaty/pymodal/archive/0.0.4.tar.gz",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
