@@ -11,6 +11,7 @@ setuptools.setup(
     description="Modal analysis data management, simulation and storage tool",
     long_description=long_description,
     url="https://github.com/grcarmenaty/pymodal",
+    download_url="https://github.com/grcarmenaty/pymodal/archive/0.0.1.tar.gz"
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
