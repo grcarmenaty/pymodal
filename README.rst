@@ -48,7 +48,7 @@ run the following command:
     pip install -e .[dev]
 
 This will also potentially install all the development requirements, which
-you can find in `requirements-dev.txt <https://github.com/grcarmenaty/pymodal/blob/master/requirements-dev.txt>`_, although they will be included here as
+you can find in `requirements-dev.txt <https://github.com/grcarmenaty/pymodal/blob/master/requirements-dev.txt>`_, although they are included here as
 well for clarity's sake:
 
 - pytest
