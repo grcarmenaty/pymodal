@@ -86,7 +86,7 @@ def create_area(ansys, coords):
     return return_data
 
 
-def create_cube(ansys, x_origin, y_origin, width, depth, height):
+def create_prism(ansys, x_origin, y_origin, width, depth, height):
 
     return_data = {}
     ansys.run('/PREP7')
