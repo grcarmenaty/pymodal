@@ -142,8 +142,8 @@ def crack_analogy_solid(ansys, elastic_modulus, poisson, density, thickness, a,
     ansys.finish()
 
 
-def stringer_support_solid(ansys, elastic_modulus, poisson, density, thickness, a,
-                     b, e_size, start, end, width, height):
+def stringer_support_solid(ansys, elastic_modulus, poisson, density, thickness,
+                           a, b, e_size, start, end, width, height):
     mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, poisson,
                                               density)
     element_id = pymodal.ansys.set_solid186(ansys)
@@ -161,7 +161,6 @@ def stringer_support_solid(ansys, elastic_modulus, poisson, density, thickness, 
     ]
     stringer_id = pymodal.ansys.create_extruded_volume(ansys, coords, height)
     ansys.run('/PREP7')
-    # ansys.vadd(prism_id['volume_id'], stringer_id['volume_id'])
     ansys.esize(e_size, 0)
     ansys.vmesh('ALL')
     ansys.asel('S', 'LOC', 'Z', thickness, thickness)
