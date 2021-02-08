@@ -205,6 +205,10 @@ def value_CFDAC(ref: np.ndarray, frf: np.ndarray):
     return CFDAC_value
 
 
+
+#FDAC
+
+
 # def compress(CFDAC: np.ndarray, diagonal_ratio: float = None,
 #     threshold: float = 0.15):
 
