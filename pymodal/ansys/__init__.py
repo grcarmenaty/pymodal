@@ -2,7 +2,7 @@ from .preprocessor import (  # noqa F401
     set_linear_elastic,
     create_line,
     create_area,
-    create_cube,
+    create_prism,
     create_cylinder,
     create_extruded_volume,
     set_beam3,

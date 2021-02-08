@@ -95,7 +95,7 @@ def free_plate_solid(ansys, elastic_modulus, poisson, density, thickness, a, b,
     mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, poisson,
                                               density)
     element_id = pymodal.ansys.set_solid186(ansys)
-    volume_id = pymodal.ansys.create_cube(ansys, 0, 0, a, b, thickness)
+    volume_id = pymodal.ansys.create_prism(ansys, 0, 0, a, b, thickness)
     ansys.run('/PREP7')
     ansys.esize(e_size, 0)
     ansys.vmesh(volume_id['volume_id'])
@@ -107,11 +107,11 @@ def circ_hole_solid(ansys, elastic_modulus, poisson, density, thickness, a, b,
     mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, poisson,
                                               density)
     element_id = pymodal.ansys.set_solid186(ansys)
-    cube_id = pymodal.ansys.create_cube(ansys, 0, 0, a, b, thickness)
+    prism_id = pymodal.ansys.create_prism(ansys, 0, 0, a, b, thickness)
     cyl_id = pymodal.ansys.create_cylinder(ansys, center[0], center[1], radius,
                                            thickness)
     ansys.run('/PREP7')
-    ansys.vsbv(cube_id['volume_id'], cyl_id['volume_id'])
+    ansys.vsbv(prism_id['volume_id'], cyl_id['volume_id'])
     ansys.esize(e_size, 0)
     ansys.vsweep(cyl_id['volume_id'] + 1)
     ansys.finish()
@@ -122,7 +122,7 @@ def crack_analogy_solid(ansys, elastic_modulus, poisson, density, thickness, a,
     mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, poisson,
                                               density)
     element_id = pymodal.ansys.set_solid186(ansys)
-    cube_id = pymodal.ansys.create_cube(ansys, 0, 0, a, b, thickness)
+    prism_id = pymodal.ansys.create_prism(ansys, 0, 0, a, b, thickness)
     start = np.array([start[0], start[1], 0])
     end = np.array([end[0], end[1], 0])
     direction = end - start
@@ -136,18 +136,18 @@ def crack_analogy_solid(ansys, elastic_modulus, poisson, density, thickness, a,
     ]
     crack_id = pymodal.ansys.create_extruded_volume(ansys, coords, 0.00498)
     ansys.run('/PREP7')
-    ansys.vsbv(cube_id['volume_id'], crack_id['volume_id'])
+    ansys.vsbv(prism_id['volume_id'], crack_id['volume_id'])
     ansys.esize(e_size, 0)
     ansys.vsweep(crack_id['volume_id'] + 1)
     ansys.finish()
 
 
-def stringer_support_solid(ansys, elastic_modulus, poisson, density, thickness, a,
-                     b, e_size, start, end, width, height):
+def stringer_support_solid(ansys, elastic_modulus, poisson, density, thickness,
+                           a, b, e_size, start, end, width, height):
     mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, poisson,
                                               density)
     element_id = pymodal.ansys.set_solid186(ansys)
-    cube_id = pymodal.ansys.create_cube(ansys, 0, 0, a, b, thickness)
+    prism_id = pymodal.ansys.create_prism(ansys, 0, 0, a, b, thickness)
     start = np.array([start[0], start[1]])
     end = np.array([end[0], end[1]])
     direction = end - start
@@ -161,7 +161,6 @@ def stringer_support_solid(ansys, elastic_modulus, poisson, density, thickness, 
     ]
     stringer_id = pymodal.ansys.create_extruded_volume(ansys, coords, height)
     ansys.run('/PREP7')
-    # ansys.vadd(cube_id['volume_id'], stringer_id['volume_id'])
     ansys.esize(e_size, 0)
     ansys.vmesh('ALL')
     ansys.asel('S', 'LOC', 'Z', thickness, thickness)
