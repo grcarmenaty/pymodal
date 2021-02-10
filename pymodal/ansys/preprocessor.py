@@ -417,3 +417,15 @@ def bonded_surface_contact(ansys, area_1_id, area_2_id):
     ansys.run("CMDEL,_TARGET")
     ansys.run("CMDEL,_CONTACT")
     ansys.finish()
+
+
+def mass_to_node(ansys, node_id, mass_value):
+
+    ansys.run('/PREP7')
+    mat_id = _get_max_param_id(ansys, 'ETYPE') + 1
+    ansys.et(80, 'MASS21')
+    ansys.r(80, mass_value, mass_value, mass_value)
+    ansys.type(80)
+    ansys.real(80)
+    ansys.e(node_id)
+    ansys.finish()
