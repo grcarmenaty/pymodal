@@ -22,7 +22,7 @@ from .solver import (
 
 from .mesher import (
     free_beam,
-    free_plate,
+    free_plate_shell,
     free_plate_solid,
     cantilever_beam,
     circ_hole_solid,
