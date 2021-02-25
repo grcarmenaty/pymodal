@@ -315,9 +315,52 @@ def elastic_support(ansys, x_lim, y_lim, z_lim, normal_stiffness,
     ansys.finish()
 
 
-def bonded_surface_contact(ansys, area_1_id, area_2_id):
+def linear_elastic_surface_contact(ansys, area_1_id, area_2_id,
+                                   elastic_modulus=1e12, Poisson=0.3,
+                                   density=0):
 
-    mat_id = set_linear_elastic(ansys, 1e12, 0.3, 0)
+    """
+    Create the mesh of SOLID186 elements of a rectangular plate with a
+    rectangular stringer support united to it with a bonded contact.
+
+    Parameters
+    ----------
+    ansys : pyansys.mapdl_console.MapdlConsole or 
+            pyansys.mapdl_corba.MapdlCorba class object
+        An ANSYS MAPDL instance as started by pyansys.launch_mapdl()
+    
+    area_1_id : int
+        The identifier of the first area, as master, that participates
+        in the contact.
+
+    area_1_id : int
+        The identifier of the second area, as slave, that participates
+        in the contact.
+
+    elastic_modulus : float
+        The isotropic linear elastic modulus for the material of the
+        contact.
+
+    Poisson : float
+        The Poisson coefficient for the material of the contact.
+    
+    density : float
+        The density value for the material of the contact.
+    
+    Returns
+    -------
+    out : dictionary
+        Dictionary containing IDs created in the contact (TO BE
+        IMPLEMENTED).
+
+    Notes
+    -----
+    Units are not specified, but should be coherent. Any result obtained
+    from a simulation using this function will also be coherent with the
+    units used for the rest of figures.
+    """
+
+    mat_id = set_linear_elastic(ansys, elastic_modulus, Poisson, density)
     rc_max = _get_max_param_id(ansys, 'RCON')
     et_max = _get_max_param_id(ansys, 'ETYPE')
     ansys.run('/PREP7')

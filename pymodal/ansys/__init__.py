@@ -11,7 +11,7 @@ from .preprocessor import (  # noqa F401
     get_node_list,
     displacement_bc,
     elastic_support,
-    bonded_surface_contact,
+    linear_elastic_surface_contact,
 )
 
 from .solver import (

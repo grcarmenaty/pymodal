@@ -2,13 +2,13 @@ import pymodal
 import numpy as np
 
 
-def cantilever_beam(ansys, elastic_modulus, poisson, density, damage_location,
+def cantilever_beam(ansys, elastic_modulus, Poisson, density, damage_location,
                     b, h, l, damage_level, ndiv):
     damage_element_start = np.arange(0, l, l / ndiv)[
         int(np.floor(damage_location / (l/ndiv)))
     ]
     damage_element_end = damage_element_start + l / ndiv
-    mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, poisson,
+    mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, Poisson,
                                               density)
     line_start = pymodal.ansys.create_line(ansys, [0, 0, 0],
                                            [damage_element_start, 0, 0])
@@ -40,13 +40,13 @@ def cantilever_beam(ansys, elastic_modulus, poisson, density, damage_location,
     return (damage_element_start, damage_element_end)
 
 
-def free_beam(ansys, elastic_modulus, poisson, density, damage_location, b, h,
+def free_beam(ansys, elastic_modulus, Poisson, density, damage_location, b, h,
               l, damage_level, ndiv):
     damage_element_start = np.arange(0, l, l / ndiv)[
         int(np.floor(damage_location / (l/ndiv)))
     ]
     damage_element_end = damage_element_start + l / ndiv
-    mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, poisson,
+    mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, Poisson,
                                               density)
     line_start = pymodal.ansys.create_line(ansys, [0, 0, 0],
                                            [damage_element_start, 0, 0])
@@ -77,9 +77,9 @@ def free_beam(ansys, elastic_modulus, poisson, density, damage_location, b, h,
     return (damage_element_start, damage_element_end)
 
 
-def free_plate_shell(ansys, elastic_modulus, poisson, density, thickness, a, b,
+def free_plate_shell(ansys, elastic_modulus, Poisson, density, thickness, a, b,
                e_size):
-    mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, poisson,
+    mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, Poisson,
                                               density)
     element_id = pymodal.ansys.set_shell181(ansys, thickness, mat_id)
     kp_list = [[0, 0, 0], [a, 0, 0], [a, b, 0], [0, b, 0]]
@@ -90,9 +90,9 @@ def free_plate_shell(ansys, elastic_modulus, poisson, density, thickness, a, b,
     ansys.finish()
 
 
-def free_plate_solid(ansys, elastic_modulus, poisson, density, thickness, a, b,
+def free_plate_solid(ansys, elastic_modulus, Poisson, density, thickness, a, b,
                      e_size):
-    mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, poisson,
+    mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, Poisson,
                                               density)
     element_id = pymodal.ansys.set_solid186(ansys)
     volume_id = pymodal.ansys.create_prism(ansys, 0, 0, a, b, thickness)
@@ -102,7 +102,7 @@ def free_plate_solid(ansys, elastic_modulus, poisson, density, thickness, a, b,
     ansys.finish()
 
 
-def circ_hole_solid(ansys, elastic_modulus, poisson, density, thickness, a, b,
+def circ_hole_solid(ansys, elastic_modulus, Poisson, density, thickness, a, b,
                     e_size, center, radius):
 
     """
@@ -123,8 +123,8 @@ def circ_hole_solid(ansys, elastic_modulus, poisson, density, thickness, a, b,
         The isotropic linear elastic modulus for the material of the
         plate and the stringer support.
 
-    poisson : float
-        The Poisoon coefficient for the material of the plate and the
+    Poisson : float
+        The Poisson coefficient for the material of the plate and the
         stringer support.
     
     density : float
@@ -166,7 +166,7 @@ def circ_hole_solid(ansys, elastic_modulus, poisson, density, thickness, a, b,
     """
 
     # Define a linear elastic material with the specified properties
-    mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, poisson,
+    mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, Poisson,
                                               density)
     # Define a SOLID186 element type for meshing
     element_id = pymodal.ansys.set_solid186(ansys)
@@ -187,7 +187,7 @@ def circ_hole_solid(ansys, elastic_modulus, poisson, density, thickness, a, b,
             'modified_plate_id': hole_id['volume_id'] + 1}
 
 
-def crack_analogy_solid(ansys, elastic_modulus, poisson, density, thickness, a,
+def crack_analogy_solid(ansys, elastic_modulus, Poisson, density, thickness, a,
                         b, e_size, start, end, width):
     
     """
@@ -208,8 +208,8 @@ def crack_analogy_solid(ansys, elastic_modulus, poisson, density, thickness, a,
         The isotropic linear elastic modulus for the material of the
         plate and the stringer support.
 
-    poisson : float
-        The Poisoon coefficient for the material of the plate and the
+    Poisson : float
+        The Poisson coefficient for the material of the plate and the
         stringer support.
     
     density : float
@@ -260,7 +260,7 @@ def crack_analogy_solid(ansys, elastic_modulus, poisson, density, thickness, a,
     """
 
     # Define a linear elastic material with the specified properties
-    mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, poisson,
+    mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, Poisson,
                                               density)
     # Define a SOLID186 element type for meshing
     element_id = pymodal.ansys.set_solid186(ansys)
@@ -299,7 +299,7 @@ def crack_analogy_solid(ansys, elastic_modulus, poisson, density, thickness, a,
             'modified_plate_id': crack_id['volume_id'] + 1}
 
 
-def stringer_support_solid(ansys, elastic_modulus, poisson, density, thickness,
+def stringer_support_solid(ansys, elastic_modulus, Poisson, density, thickness,
                            a, b, e_size, start, end, width, height):
     
     """
@@ -320,8 +320,8 @@ def stringer_support_solid(ansys, elastic_modulus, poisson, density, thickness,
         The isotropic linear elastic modulus for the material of the
         plate and the stringer support.
 
-    poisson : float
-        The Poisoon coefficient for the material of the plate and the
+    Poisson : float
+        The Poison coefficient for the material of the plate and the
         stringer support.
     
     density : float
@@ -374,7 +374,7 @@ def stringer_support_solid(ansys, elastic_modulus, poisson, density, thickness,
     """
 
     # Define a linear elastic material with the specified properties
-    mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, poisson,
+    mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, Poisson,
                                               density)
     # Define a SOLID186 element type for meshing
     element_id = pymodal.ansys.set_solid186(ansys)
@@ -417,7 +417,8 @@ def stringer_support_solid(ansys, elastic_modulus, poisson, density, thickness,
     area_1 = ansys.parameters['MAX_PARAM']
     area_2 = ansys.parameters['MIN_PARAM']
     # Deifne a bonded contact between both areas
-    pymodal.ansys.bonded_surface_contact(ansys, area_1, area_2)
+    pymodal.ansys.linear_elastic_surface_contact(ansys, area_1, area_2,
+                                                 elastic_modulus*10e7)
     ansys.finish()
     return {'mat_id': mat_id, 'element_id': element_id, 'plate_id': plate_id, 
             'stringer_id': stringer_id['volume_id']}
