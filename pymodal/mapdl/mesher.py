@@ -2,107 +2,107 @@ import pymodal
 import numpy as np
 
 
-def cantilever_beam(ansys, elastic_modulus, Poisson, density, damage_location,
+def cantilever_beam(mapdl, elastic_modulus, Poisson, density, damage_location,
                     b, h, l, damage_level, ndiv):
     damage_element_start = np.arange(0, l, l / ndiv)[
         int(np.floor(damage_location / (l/ndiv)))
     ]
     damage_element_end = damage_element_start + l / ndiv
-    mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, Poisson,
+    mat_id = pymodal.mapdl.set_linear_elastic(mapdl, elastic_modulus, Poisson,
                                               density)
-    line_start = pymodal.ansys.create_line(ansys, [0, 0, 0],
+    line_start = pymodal.mapdl.create_line(mapdl, [0, 0, 0],
                                            [damage_element_start, 0, 0])
-    line_damage = pymodal.ansys.create_line(
-        ansys,
+    line_damage = pymodal.mapdl.create_line(
+        mapdl,
         [damage_element_start, 0, 0],
         [damage_element_end, 0, 0]
     )
-    line_end = pymodal.ansys.create_line(ansys, [damage_element_end, 0, 0],
+    line_end = pymodal.mapdl.create_line(mapdl, [damage_element_end, 0, 0],
                                          [l, 0, 0])
-    element_id_pristine = pymodal.ansys.set_beam3(ansys, b * h,
+    element_id_pristine = pymodal.mapdl.set_beam3(mapdl, b * h,
                                                   (b * h**3) / 12, h)
-    ansys.run('/PREP7')
-    ansys.esize(l/ndiv, 0)
-    ansys.lmesh(line_start['line_id'])
-    ansys.lmesh(line_end['line_id'])
-    element_id_pristine = pymodal.ansys.set_beam3(
-        ansys, b * h, damage_level * ((b * h**3)/12), h
+    mapdl.run('/PREP7')
+    mapdl.esize(l/ndiv, 0)
+    mapdl.lmesh(line_start['line_id'])
+    mapdl.lmesh(line_end['line_id'])
+    element_id_pristine = pymodal.mapdl.set_beam3(
+        mapdl, b * h, damage_level * ((b * h**3)/12), h
     )
-    ansys.run('/PREP7')
-    ansys.esize(l/ndiv, 0)
-    ansys.type(2)
-    ansys.real(2)
-    ansys.lmesh(line_damage['line_id'])
-    ansys.nummrg('ALL')
-    ansys.numcmp('NODE')
-    ansys.dk(1, 'ALL')
-    ansys.finish()
+    mapdl.run('/PREP7')
+    mapdl.esize(l/ndiv, 0)
+    mapdl.type(2)
+    mapdl.real(2)
+    mapdl.lmesh(line_damage['line_id'])
+    mapdl.nummrg('ALL')
+    mapdl.numcmp('NODE')
+    mapdl.dk(1, 'ALL')
+    mapdl.finish()
     return (damage_element_start, damage_element_end)
 
 
-def free_beam(ansys, elastic_modulus, Poisson, density, damage_location, b, h,
+def free_beam(mapdl, elastic_modulus, Poisson, density, damage_location, b, h,
               l, damage_level, ndiv):
     damage_element_start = np.arange(0, l, l / ndiv)[
         int(np.floor(damage_location / (l/ndiv)))
     ]
     damage_element_end = damage_element_start + l / ndiv
-    mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, Poisson,
+    mat_id = pymodal.mapdl.set_linear_elastic(mapdl, elastic_modulus, Poisson,
                                               density)
-    line_start = pymodal.ansys.create_line(ansys, [0, 0, 0],
+    line_start = pymodal.mapdl.create_line(mapdl, [0, 0, 0],
                                            [damage_element_start, 0, 0])
-    line_damage = pymodal.ansys.create_line(
-        ansys,
+    line_damage = pymodal.mapdl.create_line(
+        mapdl,
         [damage_element_start, 0, 0],
         [damage_element_end, 0, 0]
     )
-    line_end = pymodal.ansys.create_line(ansys, [damage_element_end, 0, 0],
+    line_end = pymodal.mapdl.create_line(mapdl, [damage_element_end, 0, 0],
                                          [l, 0, 0])
-    element_id_pristine = pymodal.ansys.set_beam3(ansys, b * h,
+    element_id_pristine = pymodal.mapdl.set_beam3(mapdl, b * h,
                                                   (b * h**3) / 12, h)
-    ansys.run('/PREP7')
-    ansys.esize(l/ndiv, 0)
-    ansys.lmesh(line_start['line_id'])
-    ansys.lmesh(line_end['line_id'])
-    element_id_pristine = pymodal.ansys.set_beam3(
-        ansys, b * h, damage_level * ((b * h**3)/12), h
+    mapdl.run('/PREP7')
+    mapdl.esize(l/ndiv, 0)
+    mapdl.lmesh(line_start['line_id'])
+    mapdl.lmesh(line_end['line_id'])
+    element_id_pristine = pymodal.mapdl.set_beam3(
+        mapdl, b * h, damage_level * ((b * h**3)/12), h
     )
-    ansys.run('/PREP7')
-    ansys.esize(l/ndiv, 0)
-    ansys.type(2)
-    ansys.real(2)
-    ansys.lmesh(line_damage['line_id'])
-    ansys.nummrg('ALL')
-    ansys.numcmp('NODE')
-    ansys.finish()
+    mapdl.run('/PREP7')
+    mapdl.esize(l/ndiv, 0)
+    mapdl.type(2)
+    mapdl.real(2)
+    mapdl.lmesh(line_damage['line_id'])
+    mapdl.nummrg('ALL')
+    mapdl.numcmp('NODE')
+    mapdl.finish()
     return (damage_element_start, damage_element_end)
 
 
-def free_plate_shell(ansys, elastic_modulus, Poisson, density, thickness, a, b,
+def free_plate_shell(mapdl, elastic_modulus, Poisson, density, thickness, a, b,
                e_size):
-    mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, Poisson,
+    mat_id = pymodal.mapdl.set_linear_elastic(mapdl, elastic_modulus, Poisson,
                                               density)
-    element_id = pymodal.ansys.set_shell181(ansys, thickness, mat_id)
+    element_id = pymodal.mapdl.set_shell181(mapdl, thickness, mat_id)
     kp_list = [[0, 0, 0], [a, 0, 0], [a, b, 0], [0, b, 0]]
-    area_id = pymodal.ansys.create_area(ansys, kp_list)
-    ansys.run('/PREP7')
-    ansys.esize(e_size, 0)
-    ansys.amesh(area_id['area_id'])
-    ansys.finish()
+    area_id = pymodal.mapdl.create_area(mapdl, kp_list)
+    mapdl.run('/PREP7')
+    mapdl.esize(e_size, 0)
+    mapdl.amesh(area_id['area_id'])
+    mapdl.finish()
 
 
-def free_plate_solid(ansys, elastic_modulus, Poisson, density, thickness, a, b,
+def free_plate_solid(mapdl, elastic_modulus, Poisson, density, thickness, a, b,
                      e_size):
-    mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, Poisson,
+    mat_id = pymodal.mapdl.set_linear_elastic(mapdl, elastic_modulus, Poisson,
                                               density)
-    element_id = pymodal.ansys.set_solid186(ansys)
-    volume_id = pymodal.ansys.create_prism(ansys, 0, 0, a, b, thickness)
-    ansys.run('/PREP7')
-    ansys.esize(e_size, 0)
-    ansys.vmesh(volume_id['volume_id'])
-    ansys.finish()
+    element_id = pymodal.mapdl.set_solid186(mapdl)
+    volume_id = pymodal.mapdl.create_prism(mapdl, 0, 0, a, b, thickness)
+    mapdl.run('/PREP7')
+    mapdl.esize(e_size, 0)
+    mapdl.vmesh(volume_id['volume_id'])
+    mapdl.finish()
 
 
-def circ_hole_solid(ansys, elastic_modulus, Poisson, density, thickness, a, b,
+def circ_hole_solid(mapdl, elastic_modulus, Poisson, density, thickness, a, b,
                     e_size, center, radius):
 
     """
@@ -111,9 +111,9 @@ def circ_hole_solid(ansys, elastic_modulus, Poisson, density, thickness, a, b,
 
     Parameters
     ----------
-    ansys : pyansys.mapdl_console.MapdlConsole or 
-            pyansys.mapdl_corba.MapdlCorba class object
-        An ANSYS MAPDL instance as started by pyansys.launch_mapdl()
+    mapdl : pymapdl.mapdl_console.MapdlConsole or 
+            pymapdl.mapdl_corba.MapdlCorba class object
+        An ANSYS MAPDL instance as started by pymapdl.launch_mapdl()
     
     elastic_modulus : float
         The isotropic linear elastic modulus for the material of the
@@ -166,28 +166,28 @@ def circ_hole_solid(ansys, elastic_modulus, Poisson, density, thickness, a, b,
     """
 
     # Define a linear elastic material with the specified properties
-    mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, Poisson,
+    mat_id = pymodal.mapdl.set_linear_elastic(mapdl, elastic_modulus, Poisson,
                                               density)
     # Define a SOLID186 element type for meshing
-    element_id = pymodal.ansys.set_solid186(ansys)
+    element_id = pymodal.mapdl.set_solid186(mapdl)
     # Create a rectangular prism volume with the specified measurements
-    plate_id = pymodal.ansys.create_prism(ansys, 0, 0, a, b, thickness)
+    plate_id = pymodal.mapdl.create_prism(mapdl, 0, 0, a, b, thickness)
     # Create a cylinder as tall as the plate is thick, with it's center on the
     # specified coordinates.
-    hole_id = pymodal.ansys.create_cylinder(ansys, center[0], center[1],
+    hole_id = pymodal.mapdl.create_cylinder(mapdl, center[0], center[1],
                                             radius, thickness)
-    ansys.run('/PREP7')
+    mapdl.run('/PREP7')
     # Substract the cylinder from the plate
-    ansys.vsbv(plate_id['volume_id'], hole_id['volume_id'])
-    ansys.esize(e_size, 0) # Define element size
-    ansys.vsweep(hole_id['volume_id'] + 1) # Mesh the volume
-    ansys.finish()
+    mapdl.vsbv(plate_id['volume_id'], hole_id['volume_id'])
+    mapdl.esize(e_size, 0) # Define element size
+    mapdl.vsweep(hole_id['volume_id'] + 1) # Mesh the volume
+    mapdl.finish()
     return {'mat_id': mat_id, 'element_id': element_id,
             'plate_id': plate_id['volume_id'], 'hole_id': hole_id['volume_id'],
             'modified_plate_id': hole_id['volume_id'] + 1}
 
 
-def crack_analogy_solid(ansys, elastic_modulus, Poisson, density, thickness, a,
+def crack_analogy_solid(mapdl, elastic_modulus, Poisson, density, thickness, a,
                         b, e_size, start, end, width):
     
     """
@@ -196,9 +196,9 @@ def crack_analogy_solid(ansys, elastic_modulus, Poisson, density, thickness, a,
 
     Parameters
     ----------
-    ansys : pyansys.mapdl_console.MapdlConsole or 
-            pyansys.mapdl_corba.MapdlCorba class object
-        An ANSYS MAPDL instance as started by pyansys.launch_mapdl()
+    mapdl : pymapdl.mapdl_console.MapdlConsole or 
+            pymapdl.mapdl_corba.MapdlCorba class object
+        An ANSYS MAPDL instance as started by pymapdl.launch_mapdl()
     
     elastic_modulus : float
         The isotropic linear elastic modulus for the material of the
@@ -260,12 +260,12 @@ def crack_analogy_solid(ansys, elastic_modulus, Poisson, density, thickness, a,
     """
 
     # Define a linear elastic material with the specified properties
-    mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, Poisson,
+    mat_id = pymodal.mapdl.set_linear_elastic(mapdl, elastic_modulus, Poisson,
                                               density)
     # Define a SOLID186 element type for meshing
-    element_id = pymodal.ansys.set_solid186(ansys)
+    element_id = pymodal.mapdl.set_solid186(mapdl)
     # Create a rectangular prism volume with the specified measurements
-    plate_id = pymodal.ansys.create_prism(ansys, 0, 0, a, b, thickness)
+    plate_id = pymodal.mapdl.create_prism(mapdl, 0, 0, a, b, thickness)
     # Make sure start and end are arrays
     start = np.array([start[0], start[1]])
     end = np.array([end[0], end[1]])
@@ -286,20 +286,20 @@ def crack_analogy_solid(ansys, elastic_modulus, Poisson, density, thickness, a,
     # Create a volume that, when substracted from the volume defining the 
     # plate, produces the crack analogy, based on the previously defined
     # coordinates
-    crack_id = pymodal.ansys.create_extruded_volume(ansys, coords, 0.00498)
-    ansys.run('/PREP7')
+    crack_id = pymodal.mapdl.create_extruded_volume(mapdl, coords, 0.00498)
+    mapdl.run('/PREP7')
     # Substract the volume defining the crack from the volume defining the
     # plate.
-    ansys.vsbv(plate_id['volume_id'], crack_id['volume_id'])
-    ansys.esize(e_size, 0) # Define element size
-    ansys.vsweep(crack_id['volume_id'] + 1) # Mesh the volume
-    ansys.finish()
+    mapdl.vsbv(plate_id['volume_id'], crack_id['volume_id'])
+    mapdl.esize(e_size, 0) # Define element size
+    mapdl.vsweep(crack_id['volume_id'] + 1) # Mesh the volume
+    mapdl.finish()
     return {'mat_id': mat_id, 'element_id': element_id, 'plate_id': plate_id, 
             'crack': crack_id['volume_id'],
             'modified_plate_id': crack_id['volume_id'] + 1}
 
 
-def stringer_support_solid(ansys, elastic_modulus, Poisson, density, thickness,
+def stringer_support_solid(mapdl, elastic_modulus, Poisson, density, thickness,
                            a, b, e_size, start, end, width, height):
     
     """
@@ -308,9 +308,9 @@ def stringer_support_solid(ansys, elastic_modulus, Poisson, density, thickness,
 
     Parameters
     ----------
-    ansys : pyansys.mapdl_console.MapdlConsole or 
-            pyansys.mapdl_corba.MapdlCorba class object
-        An ANSYS MAPDL instance as started by pyansys.launch_mapdl()
+    mapdl : pymapdl.mapdl_console.MapdlConsole or 
+            pymapdl.mapdl_corba.MapdlCorba class object
+        An ANSYS MAPDL instance as started by pymapdl.launch_mapdl()
     
     elastic_modulus : float
         The isotropic linear elastic modulus for the material of the
@@ -374,12 +374,12 @@ def stringer_support_solid(ansys, elastic_modulus, Poisson, density, thickness,
     """
 
     # Define a linear elastic material with the specified properties
-    mat_id = pymodal.ansys.set_linear_elastic(ansys, elastic_modulus, Poisson,
+    mat_id = pymodal.mapdl.set_linear_elastic(mapdl, elastic_modulus, Poisson,
                                               density)
     # Define a SOLID186 element type for meshing
-    element_id = pymodal.ansys.set_solid186(ansys)
+    element_id = pymodal.mapdl.set_solid186(mapdl)
     # Create a rectangular prism volume with the specified measurements
-    plate_id = pymodal.ansys.create_prism(ansys, 0, 0, a, b, thickness)
+    plate_id = pymodal.mapdl.create_prism(mapdl, 0, 0, a, b, thickness)
     # Make sure start and end are arrays
     start = np.array([start[0], start[1]])
     end = np.array([end[0], end[1]])
@@ -398,27 +398,27 @@ def stringer_support_solid(ansys, elastic_modulus, Poisson, density, thickness,
         np.append(end + (width / 2)*perpendicular, thickness)
     ]
     # Create the stringer volume based upon the coordinates calculated above
-    stringer_id = pymodal.ansys.create_extruded_volume(ansys, coords, height)
-    ansys.run('/PREP7') # Enter preprocessor
-    ansys.esize(e_size, 0) # Set element size
-    ansys.vmesh('ALL') # Mesh the defined volumes
+    stringer_id = pymodal.mapdl.create_extruded_volume(mapdl, coords, height)
+    mapdl.run('/PREP7') # Enter preprocessor
+    mapdl.esize(e_size, 0) # Set element size
+    mapdl.vmesh('ALL') # Mesh the defined volumes
     # Select the areas based on their location coordinates in the Z axis, only
     # the ones contained in the plane parallel to the Z plane at the value of
     # z = thickness. This plane only contains the lower face of the stringer
     # support and the upper face of the plate.
-    ansys.asel('S', 'LOC', 'Z', thickness, thickness)
-    ansys.run('/PREP7')
+    mapdl.asel('S', 'LOC', 'Z', thickness, thickness)
+    mapdl.run('/PREP7')
     # Get the IDs for both areas
-    ansys.run('*DEL,MAX_PARAM')
-    ansys.run('*DEL,MIN_PARAM')
-    ansys.get('MAX_PARAM', 'AREA', 0, 'NUM', 'MAX')
-    ansys.get('MIN_PARAM', 'AREA', 0, 'NUM', 'MIN')
-    ansys.load_parameters()
-    area_1 = ansys.parameters['MAX_PARAM']
-    area_2 = ansys.parameters['MIN_PARAM']
+    mapdl.run('*DEL,MAX_PARAM')
+    mapdl.run('*DEL,MIN_PARAM')
+    mapdl.get('MAX_PARAM', 'AREA', 0, 'NUM', 'MAX')
+    mapdl.get('MIN_PARAM', 'AREA', 0, 'NUM', 'MIN')
+    mapdl.load_parameters()
+    area_1 = mapdl.parameters['MAX_PARAM']
+    area_2 = mapdl.parameters['MIN_PARAM']
     # Deifne a bonded contact between both areas
-    pymodal.ansys.linear_elastic_surface_contact(ansys, area_1, area_2,
+    pymodal.mapdl.linear_elastic_surface_contact(mapdl, area_1, area_2,
                                                  elastic_modulus*10e7)
-    ansys.finish()
+    mapdl.finish()
     return {'mat_id': mat_id, 'element_id': element_id, 'plate_id': plate_id, 
             'stringer_id': stringer_id['volume_id']}

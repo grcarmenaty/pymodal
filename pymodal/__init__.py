@@ -14,5 +14,5 @@ from .utils import (  # noqa F401
     synthetic_FRF,
     modal_superposition,
 )
-import pymodal.ansys
+import pymodal.mapdl
 from .FRF_class import FRF
