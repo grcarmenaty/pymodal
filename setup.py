@@ -24,7 +24,7 @@ setuptools.setup(
         "scipy>=1.4.1",
         "matplotlib>=3.1.3",
         "pandas>=1.0.1",
-        "pyansys>=0.39",
+        "ansys-mapdl-core>=0.39",
     ],
     # Should be as specific as possible
     extras_require={

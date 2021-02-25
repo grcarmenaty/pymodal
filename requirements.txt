@@ -2,4 +2,4 @@ numpy
 scipy
 matplotlib
 pandas
-pyansys
+ansys-mapdl-core
