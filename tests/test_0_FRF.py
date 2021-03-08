@@ -204,6 +204,7 @@ def test_change_lines():
     assert np.array_equal(frf_changed.value, changed_array_3d)
     assert frf_changed.value.shape == (6401, 7, len(frf_changed))
     assert frf_changed.lines == 7
+    assert all(value_test)
 
 
 def test_change_frequencies():
@@ -335,7 +336,7 @@ def test_plot():
     plt.close()
     assert file_path.is_file()
 
-    fig, ax = plt.subplots(2, 1, figsize=(10,10))
+    __, ax = plt.subplots(2, 1, figsize=(10,10))
     plt.title = 'Frequency Response Function'
     frf[0].abs().plot(ax=ax[0], title='Magnitude')
     frf[0].phase().plot(ax=ax[1], title='Phase')

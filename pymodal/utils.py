@@ -348,6 +348,7 @@ def modal_superposition(min_freq, max_freq, resolution, modal_frequencies,
     freq_vector = np.arange(min_freq, max_freq + resolution / 2, resolution)
     omega = freq_vector * 2 * np.pi
     omega_n = modal_frequencies * 2 * np.pi
+    damping = damping_coefficient(omega_n, damping[0], damping[1])
     sigma = omega_n * damping
     nf = omega.shape[0]
     modes = omega_n.shape[0]

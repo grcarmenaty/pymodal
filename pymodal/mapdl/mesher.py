@@ -4,20 +4,17 @@ import numpy as np
 
 def cantilever_beam(mapdl, elastic_modulus, Poisson, density, damage_location,
                     b, h, l, damage_level, ndiv):
-    damage_element_start = np.arange(0, l, l / ndiv)[
-        int(np.floor(damage_location / (l/ndiv)))
-    ]
-    damage_element_end = damage_element_start + l / ndiv
+    damage_level = 1 - damage_level
     mat_id = pymodal.mapdl.set_linear_elastic(mapdl, elastic_modulus, Poisson,
                                               density)
     line_start = pymodal.mapdl.create_line(mapdl, [0, 0, 0],
-                                           [damage_element_start, 0, 0])
+                                           [damage_location[0], 0, 0])
     line_damage = pymodal.mapdl.create_line(
         mapdl,
-        [damage_element_start, 0, 0],
-        [damage_element_end, 0, 0]
+        [damage_location[0], 0, 0],
+        [damage_location[1], 0, 0]
     )
-    line_end = pymodal.mapdl.create_line(mapdl, [damage_element_end, 0, 0],
+    line_end = pymodal.mapdl.create_line(mapdl, [damage_location[1], 0, 0],
                                          [l, 0, 0])
     element_id_pristine = pymodal.mapdl.set_beam3(mapdl, b * h,
                                                   (b * h**3) / 12, h)
@@ -25,7 +22,7 @@ def cantilever_beam(mapdl, elastic_modulus, Poisson, density, damage_location,
     mapdl.esize(l/ndiv, 0)
     mapdl.lmesh(line_start['line_id'])
     mapdl.lmesh(line_end['line_id'])
-    element_id_pristine = pymodal.mapdl.set_beam3(
+    element_id_damaged = pymodal.mapdl.set_beam3(
         mapdl, b * h, damage_level * ((b * h**3)/12), h
     )
     mapdl.run('/PREP7')
@@ -37,7 +34,9 @@ def cantilever_beam(mapdl, elastic_modulus, Poisson, density, damage_location,
     mapdl.numcmp('NODE')
     mapdl.dk(1, 'ALL')
     mapdl.finish()
-    return (damage_element_start, damage_element_end)
+    return {'mat_id': mat_id, 'element_id_pristine': element_id_pristine,
+            'element_id_damaged': element_id_damaged, 'line_start': line_start,
+            'line_damage': line_damage, 'line_end': line_end}
 
 
 def free_beam(mapdl, elastic_modulus, Poisson, density, damage_location, b, h,
@@ -100,6 +99,8 @@ def free_plate_solid(mapdl, elastic_modulus, Poisson, density, thickness, a, b,
     mapdl.esize(e_size, 0)
     mapdl.vmesh(volume_id['volume_id'])
     mapdl.finish()
+    return {'mat_id': mat_id, 'element_id': element_id,
+            'volume_id': volume_id}
 
 
 def circ_hole_solid(mapdl, elastic_modulus, Poisson, density, thickness, a, b,
@@ -413,7 +414,6 @@ def stringer_support_solid(mapdl, elastic_modulus, Poisson, density, thickness,
     mapdl.run('*DEL,MIN_PARAM')
     mapdl.get('MAX_PARAM', 'AREA', 0, 'NUM', 'MAX')
     mapdl.get('MIN_PARAM', 'AREA', 0, 'NUM', 'MIN')
-    mapdl.load_parameters()
     area_1 = mapdl.parameters['MAX_PARAM']
     area_2 = mapdl.parameters['MIN_PARAM']
     # Deifne a bonded contact between both areas

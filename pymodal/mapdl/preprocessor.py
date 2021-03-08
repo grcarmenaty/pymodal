@@ -1,5 +1,6 @@
 import ansys
 import numpy as np
+import pandas as pd
 import pathlib
 from scipy.spatial.distance import cdist
 import pymodal
@@ -12,7 +13,6 @@ def _get_max_param_id(mapdl, param):
     mapdl.run('*DEL,MAX_PARAM')
     mapdl.get('MAX_PARAM', param, 0, 'NUM', 'MAX')
     mapdl.finish()
-    mapdl.load_parameters()
     try:
         return mapdl.parameters['MAX_PARAM']
     except Exception as __:
@@ -50,7 +50,6 @@ def create_line(mapdl, start_coordinates, end_coordinates):
     )
     mapdl.l(return_data['start_kp'], return_data['end_kp'])
     mapdl.get('CURRENT_L', 'LINE', 0, 'NUM', 'MAX')
-    mapdl.load_parameters()
     return_data['line_id'] = mapdl.parameters['CURRENT_L']
     mapdl.run('CURRENT_L=')
     mapdl.finish()
@@ -79,7 +78,6 @@ def create_area(mapdl, coords):
             kp_list[10], kp_list[11], kp_list[12], kp_list[13], kp_list[14],
             kp_list[15], kp_list[16], kp_list[17])
     mapdl.get('CURRENT_A', 'AREA', 0, 'NUM', 'MAX')
-    mapdl.load_parameters()
     return_data['area_id'] = mapdl.parameters['CURRENT_A']
     mapdl.run('CURRENT_A=')
     mapdl.finish()
@@ -92,7 +90,6 @@ def create_prism(mapdl, x_origin, y_origin, width, depth, height):
     mapdl.run('/PREP7')
     mapdl.blc4(x_origin, y_origin, width, depth, height)
     mapdl.get('CURRENT_V', 'VOLU', 0, 'NUM', 'MAX')
-    mapdl.load_parameters()
     return_data['volume_id'] = mapdl.parameters['CURRENT_V']
     mapdl.run('CURRENT_V=')
     mapdl.finish()
@@ -105,7 +102,6 @@ def create_cylinder(mapdl, x_center, y_center, radius, height):
     mapdl.run('/PREP7')
     mapdl.cyl4(x_center, y_center, radius, '', '', '', height)
     mapdl.get('CURRENT_V', 'VOLU', 0, 'NUM', 'MAX')
-    mapdl.load_parameters()
     return_data['volume_id'] = mapdl.parameters['CURRENT_V']
     mapdl.run('CURRENT_V=')
     mapdl.finish()
@@ -119,7 +115,6 @@ def create_extruded_volume(mapdl, coords, thickness):
     mapdl.run('/PREP7')
     mapdl.voffst(area_id['area_id'], thickness)
     mapdl.get('CURRENT_V', 'VOLU', 0, 'NUM', 'MAX')
-    mapdl.load_parameters()
     return_data['volume_id'] = mapdl.parameters['CURRENT_V']
     mapdl.run('CURRENT_V=')
     mapdl.finish()
@@ -171,24 +166,16 @@ def _get_closest_node(mapdl, coordinates):
     return node_list[int(np.argmin(node_distance)), 0]
 
 
-def get_node_list(mapdl, stage='/SOL'):
+def get_node_list(mapdl, tol=6):
 
-    mapdl.finish()
-    mapdl.run('/SOL')
-    mapdl.antype(2)
-    mapdl.modopt('LANB', 1)
-    mapdl.solve()
-    mapdl.finish()
-    result = mapdl.result
-    node_coordinates = result.geometry['nodes'][:, 0:3]
-    node_coordinates = np.core.records.fromarrays(node_coordinates.transpose(), 
-                                                  names='x, y, z')
-    node_order = np.argsort(node_coordinates, order=['x', 'y', 'z'])
-    node_list = np.hstack(
-        (result.geometry['nnum'][node_order].reshape(-1, 1),
-         result.geometry['nodes'][node_order, 0:3])
-    )
-    mapdl.run(stage)
+    node_coordinates = mapdl.mesh.nodes
+    node_coordinates = np.hstack((mapdl.mesh.nnum.reshape(-1, 1),
+                                  node_coordinates)).round(tol)
+    node_coordinates = pd.DataFrame(node_coordinates,
+                                    columns=['num', 'x', 'y', 'z'])
+    node_coordinates.sort_values(['x', 'y', 'z', 'num'], inplace=True)
+    node_coordinates.to_csv('nodes.csv')
+    node_list = node_coordinates.to_numpy()
     return node_list
 
 
@@ -207,7 +194,6 @@ def select_nodes(mapdl, x_lim, y_lim, z_lim):
     mapdl.get('MIN_Y', 'NODE', 0, 'MNLOC', 'Y')
     mapdl.run('*DEL,MIN_Z')
     mapdl.get('MIN_Z', 'NODE', 0, 'MNLOC', 'Z')
-    mapdl.load_parameters()
     # max_x = mapdl.parameters['MAX_X']
     max_y = mapdl.parameters['MAX_Y']
     max_z = mapdl.parameters['MAX_Z']
