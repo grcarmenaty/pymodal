@@ -181,23 +181,17 @@ def get_node_list(mapdl, tol=6):
 
 def select_nodes(mapdl, x_lim, y_lim, z_lim):
 
-    mapdl.run('/SOL')
-    # mapdl.run('*DEL,MAX_X')
-    # mapdl.get('MAX_X', 'NODE', 0, 'MXLOC', 'X')
+    mapdl.prep7()
     mapdl.run('*DEL,MAX_Y')
     mapdl.get('MAX_Y', 'NODE', 0, 'MXLOC', 'Y')
     mapdl.run('*DEL,MAX_Z')
     mapdl.get('MAX_Z', 'NODE', 0, 'MXLOC', 'Z')
-    # mapdl.run('*DEL,MIN_X')
-    # mapdl.get('MIN_X', 'NODE', 0, 'MNLOC', 'X')
     mapdl.run('*DEL,MIN_Y')
     mapdl.get('MIN_Y', 'NODE', 0, 'MNLOC', 'Y')
     mapdl.run('*DEL,MIN_Z')
     mapdl.get('MIN_Z', 'NODE', 0, 'MNLOC', 'Z')
-    # max_x = mapdl.parameters['MAX_X']
     max_y = mapdl.parameters['MAX_Y']
     max_z = mapdl.parameters['MAX_Z']
-    # min_x = mapdl.parameters['MIN_X']
     min_y = mapdl.parameters['MIN_Y']
     min_z = mapdl.parameters['MIN_Z']
     mapdl.nsel('S', 'LOC', 'X', x_lim[0], x_lim[1])
@@ -205,6 +199,29 @@ def select_nodes(mapdl, x_lim, y_lim, z_lim):
     mapdl.nsel('U', 'LOC', 'Y', y_lim[1], max_y + 1)
     mapdl.nsel('U', 'LOC', 'Z', min_z - 1, z_lim[0])
     mapdl.nsel('U', 'LOC', 'Z', z_lim[1], max_z + 1)
+    mapdl.finish()
+
+
+def select_areas(mapdl, x_lim, y_lim, z_lim):
+
+    mapdl.prep7()
+    mapdl.run('*DEL,MAX_Y')
+    mapdl.get('MAX_Y', 'KP', 0, 'MXLOC', 'Y')
+    mapdl.run('*DEL,MAX_Z')
+    mapdl.get('MAX_Z', 'KP', 0, 'MXLOC', 'Z')
+    mapdl.run('*DEL,MIN_Y')
+    mapdl.get('MIN_Y', 'KP', 0, 'MNLOC', 'Y')
+    mapdl.run('*DEL,MIN_Z')
+    mapdl.get('MIN_Z', 'KP', 0, 'MNLOC', 'Z')
+    max_y = mapdl.parameters['MAX_Y']
+    max_z = mapdl.parameters['MAX_Z']
+    min_y = mapdl.parameters['MIN_Y']
+    min_z = mapdl.parameters['MIN_Z']
+    mapdl.asel('S', 'LOC', 'X', x_lim[0], x_lim[1], '', 0)
+    mapdl.asel('U', 'LOC', 'Y', min_y - 1, y_lim[0])
+    mapdl.asel('U', 'LOC', 'Y', y_lim[1], max_y + 1)
+    mapdl.asel('U', 'LOC', 'Z', min_z - 1, z_lim[0])
+    mapdl.asel('U', 'LOC', 'Z', z_lim[1], max_z + 1)
     mapdl.finish()
 
 
@@ -444,4 +461,10 @@ def linear_elastic_surface_contact(mapdl, area_1_id, area_2_id,
     mapdl.run("CMDEL,_VOLUCM")
     mapdl.run("CMDEL,_TARGET")
     mapdl.run("CMDEL,_CONTACT")
+    mapdl.finish()
+
+
+def move_volume(mapdl, volume_id, dx, dy, dz):
+    mapdl.prep7()
+    mapdl.vgen('', volume_id, '', '', dx, dy, dz, '', '', 1)
     mapdl.finish()

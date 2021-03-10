@@ -9,9 +9,12 @@ from .preprocessor import (  # noqa F401
     set_shell181,
     set_solid186,
     get_node_list,
+    select_nodes,
+    select_areas,
     displacement_bc,
     elastic_support,
     linear_elastic_surface_contact,
+    move_volume,
 )
 
 from .solver import (
@@ -28,4 +31,5 @@ from .mesher import (
     circ_hole_solid,
     crack_analogy_solid,
     stringer_support_solid,
+    los_alamos_building,
 )

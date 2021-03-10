@@ -77,5 +77,183 @@ def unfinished_test_modal_analysis():
     mapdl.exit()
     plt.show()
 
+
+def unfinished_test_los_alamos_building():
+    working_dir = path / "mapdl-ansys"
+    working_dir.mkdir(exist_ok=True)
+    mapdl = launch_mapdl(run_location=working_dir, override=True, nproc=8)
+    pymodal.mapdl.los_alamos_building(
+        mapdl=mapdl,
+        floor_elastic_moduli=[
+            72000000000.0,
+            72000000000.0,
+            72000000000.0,
+            72000000000.0,
+        ],
+        column_elastic_moduli=[
+            72000000000.0,
+            72000000000.0,
+            72000000000.0,
+            72000000000.0,
+            72000000000.0,
+            72000000000.0,
+            72000000000.0,
+            72000000000.0,
+            72000000000.0,
+            72000000000.0,
+            72000000000.0,
+            72000000000.0,
+            72000000000.0,
+            72000000000.0,
+            72000000000.0,
+            72000000000.0,
+        ],
+        Poisson=0,
+        floor_densities=[
+            2810,
+            2810,
+            2810,
+            2810,
+        ],
+        column_densities=[
+            2810,
+            2810,
+            2810,
+            2810,
+            2810,
+            2810,
+            2810,
+            2810,
+            2810,
+            2810,
+            2810,
+            2810,
+            2810,
+            2810,
+            2810,
+            2810,
+        ],
+        e_size=0.01,
+        column_thicknesses=[
+            0.006,
+            0.006,
+            0.006,
+            0.006,
+            0.006,
+            0.006,
+            0.006,
+            0.006,
+            0.006,
+            0.006,
+            0.006,
+            0.006,
+            0.006,
+            0.006,
+            0.006,
+            0.006,
+        ],
+        column_widths=[
+            0.025,
+            0.025,
+            0.025,
+            0.025,
+            0.025,
+            0.025,
+            0.025,
+            0.025,
+            0.025,
+            0.025,
+            0.025,
+            0.025,
+            0.025,
+            0.025,
+            0.025,
+            0.025,
+        ],
+        floor_width=0.305,
+        floor_heights=[
+            0.152,
+            0.152,
+            0.152,
+        ],
+        floor_depth=0.305,
+        floor_thicknesses=[
+            0.025,
+            0.025,
+            0.025,
+            0.025,
+        ],
+        contact_strengths=[
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+            1e12,
+        ]
+    )
+    pymodal.mapdl.displacement_bc(mapdl, (0, 0.305), (0.305/3-0.05, 0.305/3+0.05), (0, 0.01),
+                                  x=True)
+    pymodal.mapdl.displacement_bc(mapdl, (0, 0.305), (2*0.305/3-0.05, 2*0.305/3+0.05),
+                                  (0, 0.1), x=True)
+    modal_analysis = pymodal.mapdl.modal_analysis(
+        mapdl, frequency_range=[0, 100], dof="uxuyuz"
+    )
+    print(modal_analysis)
+    # harmonic_analysis = pymodal.mapdl.harmonic_analysis(
+    #     mapdl,
+    #     excitation_coordinates=[0.305, 0.305/2, 0.025/2],
+    #     response_coordinates=[
+    #         [0.305, 0.305/2, 0.025/2],
+    #         [0, 0.025/2, 0.025/2],
+    #         [0, 0.305-0.025/2, 0.025/2],
+    #         [0, 0.025/2, 0.152+0.025/2],
+    #         [0, 0.305-0.025/2, 0.152+0.025/2],
+    #         [0, 0.025/2, 2*0.152+0.025/2],
+    #         [0, 0.305-0.025/2, 2*0.152+0.025/2],
+    #         [0, 0.025/2, 3*0.152+0.025/2],
+    #         [0, 0.305-0.025/2, 3*0.152+0.025/2],
+    #     ],
+    #     response_directions="X",
+    #     excitation_vector=[100, 0, 0],
+    #     frequency_range=[0, 100],
+    #     damping=[12, 5e-6],
+    #     N=200,
+    #     magnitude='acc',
+    #     mode_superposition=True
+    # )
+    # print(harmonic_analysis)
+    # harmonic_analysis.plot()
+    # plt.show()
+    mapdl.exit()
+
+
 if __name__ == "__main__":
-    unfinished_test_modal_analysis()
+    # unfinished_test_modal_analysis()
+    unfinished_test_los_alamos_building()
