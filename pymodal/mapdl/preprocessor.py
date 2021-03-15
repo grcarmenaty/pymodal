@@ -121,6 +121,18 @@ def create_extruded_volume(mapdl, coords, thickness):
     return return_data
 
 
+def set_mass21(mapdl, mass_value):
+
+    return_data = {}
+    return_data['etype_id'] = _get_max_param_id(mapdl, 'ETYPE') + 1
+    return_data['sectype_id'] = _get_max_param_id(mapdl, 'RCON') + 1
+    mapdl.run('/PREP7')
+    mapdl.et(return_data['etype_id'], 'MASS21')
+    mapdl.r(return_data['sectype_id'], mass_value, mass_value, mass_value)
+    mapdl.finish()
+    return return_data
+
+
 def set_beam3(mapdl, area, inertia, height):
 
     return_data = {}
@@ -174,7 +186,6 @@ def get_node_list(mapdl, tol=6):
     node_coordinates = pd.DataFrame(node_coordinates,
                                     columns=['num', 'x', 'y', 'z'])
     node_coordinates.sort_values(['x', 'y', 'z', 'num'], inplace=True)
-    node_coordinates.to_csv('nodes.csv')
     node_list = node_coordinates.to_numpy()
     return node_list
 

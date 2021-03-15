@@ -428,7 +428,7 @@ def los_alamos_building(mapdl, floor_elastic_moduli, column_elastic_moduli,
                          Poisson, floor_densities, column_densities, e_size,
                          column_thicknesses, column_widths, floor_width,
                          floor_heights, floor_depth, floor_thicknesses,
-                         contact_strengths):
+                         contact_strengths, mass_coordinates, mass_values):
 
     # Define a SOLID186 element type for meshing
     element_id = pymodal.mapdl.set_solid186(mapdl)

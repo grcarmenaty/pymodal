@@ -216,42 +216,79 @@ def unfinished_test_los_alamos_building():
             1e12,
             1e12,
             1e12,
-        ]
+        ],
+        mass_coordinates=[
+            [0, 0.025/2, 0.025/2],
+            [0, 0.305-0.025/2, 0.025/2],
+            [0, 0.025/2, 0.152+0.025/2],
+            [0, 0.305-0.025/2, 0.152+0.025/2],
+            [0, 0.025/2, 2*0.152+0.025/2],
+            [0, 0.305-0.025/2, 2*0.152+0.025/2],
+            [0, 0.025/2, 3*0.152+0.025/2],
+            [0, 0.305-0.025/2, 3*0.152+0.025/2],
+            [0.305, 0.025/2, 0.025/2],
+            [0.305, 0.305-0.025/2, 0.025/2],
+            [0.305, 0.025/2, 0.152+0.025/2],
+            [0.305, 0.305-0.025/2, 0.152+0.025/2],
+            [0.305, 0.025/2, 2*0.152+0.025/2],
+            [0.305, 0.305-0.025/2, 2*0.152+0.025/2],
+            [0.305, 0.025/2, 3*0.152+0.025/2],
+            [0.305, 0.305-0.025/2, 3*0.152+0.025/2],
+        ],
+        mass_values=[
+            0.4,
+            0.4,
+            0.4,
+            0.4,
+            0.4,
+            0.4,
+            0.4,
+            0.4,
+            0.4,
+            0.4,
+            0.4,
+            0.4,
+            0.4,
+            0.4,
+            0.4,
+            0.4,
+        ],
     )
+    mapdl.eplot()
     pymodal.mapdl.displacement_bc(mapdl, (0, 0.305), (0.305/3-0.05, 0.305/3+0.05), (0, 0.01),
-                                  x=True)
+                                  x=False)
     pymodal.mapdl.displacement_bc(mapdl, (0, 0.305), (2*0.305/3-0.05, 2*0.305/3+0.05),
-                                  (0, 0.1), x=True)
+                                  (0, 0.1), x=False)
     modal_analysis = pymodal.mapdl.modal_analysis(
         mapdl, frequency_range=[0, 100], dof="uxuyuz"
     )
     print(modal_analysis)
-    # harmonic_analysis = pymodal.mapdl.harmonic_analysis(
-    #     mapdl,
-    #     excitation_coordinates=[0.305, 0.305/2, 0.025/2],
-    #     response_coordinates=[
-    #         [0.305, 0.305/2, 0.025/2],
-    #         [0, 0.025/2, 0.025/2],
-    #         [0, 0.305-0.025/2, 0.025/2],
-    #         [0, 0.025/2, 0.152+0.025/2],
-    #         [0, 0.305-0.025/2, 0.152+0.025/2],
-    #         [0, 0.025/2, 2*0.152+0.025/2],
-    #         [0, 0.305-0.025/2, 2*0.152+0.025/2],
-    #         [0, 0.025/2, 3*0.152+0.025/2],
-    #         [0, 0.305-0.025/2, 3*0.152+0.025/2],
-    #     ],
-    #     response_directions="X",
-    #     excitation_vector=[100, 0, 0],
-    #     frequency_range=[0, 100],
-    #     damping=[12, 5e-6],
-    #     N=200,
-    #     magnitude='acc',
-    #     mode_superposition=True
-    # )
-    # print(harmonic_analysis)
-    # harmonic_analysis.plot()
-    # plt.show()
+    harmonic_analysis = pymodal.mapdl.harmonic_analysis(
+        mapdl,
+        excitation_coordinates=[0.305, 0.305/2, 0.025/2],
+        response_coordinates=[
+            [0.305, 0.305/2, 0.025/2],
+            [0, 0.025/2, 0.025/2],
+            [0, 0.305-0.025/2, 0.025/2],
+            [0, 0.025/2, 0.152+0.025/2],
+            [0, 0.305-0.025/2, 0.152+0.025/2],
+            [0, 0.025/2, 2*0.152+0.025/2],
+            [0, 0.305-0.025/2, 2*0.152+0.025/2],
+            [0, 0.025/2, 3*0.152+0.025/2],
+            [0, 0.305-0.025/2, 3*0.152+0.025/2],
+        ],
+        response_directions="X",
+        excitation_vector=[100, 0, 0],
+        frequency_range=[0, 100],
+        damping=[12, 5e-6],
+        N=400,
+        magnitude='acc',
+        mode_superposition=True
+    )
+    print(harmonic_analysis)
     mapdl.exit()
+    harmonic_analysis.plot()
+    plt.show()
 
 
 if __name__ == "__main__":
