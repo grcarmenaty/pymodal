@@ -5,6 +5,7 @@ from .preprocessor import (  # noqa F401
     create_prism,
     create_cylinder,
     create_extruded_volume,
+    set_mass21,
     set_beam3,
     set_shell181,
     set_solid186,

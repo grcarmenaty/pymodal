@@ -1,5 +1,6 @@
 import pymodal
 import numpy as np
+from scipy.spatial.distance import cdist
 
 
 def cantilever_beam(mapdl, elastic_modulus, Poisson, density, damage_location,
@@ -569,3 +570,15 @@ def los_alamos_building(mapdl, floor_elastic_moduli, column_elastic_moduli,
                 current_col_id,
                 contact_strengths[8*i+j]
             )
+    node_list = pymodal.mapdl.get_node_list(mapdl)
+    node_id_list = []
+    for row in mass_coordinates:
+        closest_node = cdist(np.asarray([row]), node_list[:, 1:4])
+        node_id_list.append(int(node_list[int(np.argmin(closest_node)), 0]))
+    for i, node in enumerate(node_id_list):
+        current_etype = pymodal.mapdl.set_mass21(mapdl, mass_values[i])
+        mapdl.prep7()
+        mapdl.type(current_etype['etype_id'])
+        mapdl.real(current_etype['real_constant_id'])
+        mapdl.e(node)
+

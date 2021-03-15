@@ -110,3 +110,6 @@ dmypy.json
 
 # Ignore vscode configuration files
 .vscode/
+
+# Ignore pymapdl working directory created in tests
+tests/mapdl-ansys

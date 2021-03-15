@@ -125,10 +125,10 @@ def set_mass21(mapdl, mass_value):
 
     return_data = {}
     return_data['etype_id'] = _get_max_param_id(mapdl, 'ETYPE') + 1
-    return_data['sectype_id'] = _get_max_param_id(mapdl, 'RCON') + 1
+    return_data['real_constant_id'] = _get_max_param_id(mapdl, 'RCON') + 1
     mapdl.run('/PREP7')
     mapdl.et(return_data['etype_id'], 'MASS21')
-    mapdl.r(return_data['sectype_id'], mass_value, mass_value, mass_value)
+    mapdl.r(return_data['real_constant_id'], mass_value, mass_value, mass_value)
     mapdl.finish()
     return return_data
 
