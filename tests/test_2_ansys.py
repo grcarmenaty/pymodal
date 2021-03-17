@@ -78,6 +78,92 @@ def unfinished_test_modal_analysis():
     plt.show()
 
 
+def unfinished_test_plate():
+    working_dir = path / "mapdl-ansys"
+    working_dir.mkdir(exist_ok=True)
+    mapdl = launch_mapdl(run_location=working_dir, override=True, nproc=8)
+    elastic_modulus = 72586933547.72092
+    density = 2715.9797479
+    alpha = 2.37252317
+    beta = 1.687709903e-7
+    normal_stiffness = 4138667648558.9054
+    tangential_stiffness = 584391971941.3767
+    pymodal.mapdl.free_plate_solid(
+        mapdl=mapdl,
+        elastic_modulus=elastic_modulus,
+        Poisson=0.3,
+        density=density,
+        thickness=0.00498,
+        a=0.3,
+        b=0.3,
+        e_size=0.005
+    )
+    # This kind of works with displacement bc, but elastic support is not
+    # working.
+    # pymodal.mapdl.elastic_support(
+    #     mapdl,
+    #     x_lim=[-1, 0.4],
+    #     y_lim=[-1, 0.026],
+    #     z_lim=[-1, 0.001],
+    #     normal_stiffness=normal_stiffness,
+    #     tangential_stiffness=tangential_stiffness
+    # )
+    # pymodal.mapdl.elastic_support(
+    #     mapdl,
+    #     x_lim=[-1, 0.4],
+    #     y_lim=[-1, 0.026],
+    #     z_lim=[0.004, 0.006],
+    #     normal_stiffness=normal_stiffness,
+    #     tangential_stiffness=tangential_stiffness
+    # )
+    pymodal.mapdl.displacement_bc(
+        mapdl,
+        x_lim=[-1, 0.4],
+        y_lim=[-1, 0.026],
+        z_lim=[-1, 0.001],
+    )
+    pymodal.mapdl.displacement_bc(
+        mapdl,
+        x_lim=[-1, 0.4],
+        y_lim=[-1, 0.026],
+        z_lim=[0.004, 0.006],
+    )
+    exp_mesh_81 = []
+    mesh_spacing_x = np.arange(0.27, 0, -0.03)
+    mesh_spacing_y = np.arange(0.27, 0, -0.03)
+    for i in range(9):
+        for j in range(9):
+            exp_mesh_81.append(
+                [mesh_spacing_x[j], mesh_spacing_y[i], 0.00498]
+            )
+    exp_mesh_81 = np.asarray(exp_mesh_81)
+    pymodal.mapdl.modal_analysis(
+        mapdl, frequency_range=[0, 3200], dof="uxuyuz"
+    )
+    mapdl.result.plot_nodal_displacement(
+        9, show_displacement=True, displacement_factor=0.005
+    )
+    num_ref = pymodal.mapdl.harmonic_analysis(
+        mapdl=mapdl,
+        excitation_coordinates=exp_mesh_81[29],
+        response_coordinates=exp_mesh_81,
+        response_directions='Z',
+        excitation_vector=[0, 0, 1],
+        frequency_range=(0, 3200),
+        damping=(alpha, beta),
+        N=6400,
+        magnitude='acc',
+        mode_superposition=True
+    )
+    mapdl.finish()
+    mapdl.exit()
+    experimental_dir = working_dir.parent / 'data' / 'FRF'
+    exp_ref = pymodal.load_FRF(experimental_dir / 'experimental_frf.zip')
+    exp_ref[4].normalize().plot(color="b")
+    num_ref.normalize().plot(color="r")
+    plt.savefig("plot.png")
+
+
 def unfinished_test_los_alamos_building():
     working_dir = path / "mapdl-ansys"
     working_dir.mkdir(exist_ok=True)
@@ -293,4 +379,5 @@ def unfinished_test_los_alamos_building():
 
 if __name__ == "__main__":
     # unfinished_test_modal_analysis()
-    unfinished_test_los_alamos_building()
+    # unfinished_test_los_alamos_building()
+    unfinished_test_plate()
