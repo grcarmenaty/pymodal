@@ -86,8 +86,8 @@ def unfinished_test_plate():
     density = 2715.9797479
     alpha = 2.37252317
     beta = 1.687709903e-7
-    normal_stiffness = 4138667648558.9054
-    tangential_stiffness = 584391971941.3767
+    # normal_stiffness = 4138667648558.9054
+    # tangential_stiffness = 584391971941.3767
     pymodal.mapdl.free_plate_solid(
         mapdl=mapdl,
         elastic_modulus=elastic_modulus,
