@@ -194,7 +194,30 @@ def unfinished_test_los_alamos_building():
             72000000000.0,
             72000000000.0,
         ],
-        Poisson=0,
+        floor_Poisson=[
+            0.3,
+            0.3,
+            0.3,
+            0.3,
+        ],
+        column_Poisson=[
+            0.3,
+            0.3,
+            0.3,
+            0.3,
+            0.3,
+            0.3,
+            0.3,
+            0.3,
+            0.3,
+            0.3,
+            0.3,
+            0.3,
+            0.3,
+            0.3,
+            0.3,
+            0.3,
+        ],
         floor_densities=[
             2810,
             2810,
@@ -379,5 +402,5 @@ def unfinished_test_los_alamos_building():
 
 if __name__ == "__main__":
     # unfinished_test_modal_analysis()
-    # unfinished_test_los_alamos_building()
-    unfinished_test_plate()
+    unfinished_test_los_alamos_building()
+    # unfinished_test_plate()

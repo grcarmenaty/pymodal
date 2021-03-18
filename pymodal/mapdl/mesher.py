@@ -426,10 +426,11 @@ def stringer_support_solid(mapdl, elastic_modulus, Poisson, density, thickness,
 
 
 def los_alamos_building(mapdl, floor_elastic_moduli, column_elastic_moduli,
-                         Poisson, floor_densities, column_densities, e_size,
-                         column_thicknesses, column_widths, floor_width,
-                         floor_heights, floor_depth, floor_thicknesses,
-                         contact_strengths, mass_coordinates, mass_values):
+                         floor_Poisson, column_Poisson, floor_densities,
+                         column_densities, e_size, column_thicknesses,
+                         column_widths, floor_width, floor_heights,
+                         floor_depth, floor_thicknesses, contact_strengths,
+                         mass_coordinates, mass_values):
 
     # Define a SOLID186 element type for meshing
     element_id = pymodal.mapdl.set_solid186(mapdl)
@@ -440,7 +441,8 @@ def los_alamos_building(mapdl, floor_elastic_moduli, column_elastic_moduli,
     for i in range(len(list(floor_heights))+1):
         # Define material for current floor
         floor_mat_id[f'floor_{i}'] = pymodal.mapdl.set_linear_elastic(
-            mapdl, floor_elastic_moduli[i], Poisson, floor_densities[i]
+            mapdl, floor_elastic_moduli[i], floor_Poisson[i],
+            floor_densities[i]
         )
         # Create a rectangular prism volume with the specified measurements
         floor_id[f'floor_{i}'] = pymodal.mapdl.create_prism(
@@ -466,7 +468,7 @@ def los_alamos_building(mapdl, floor_elastic_moduli, column_elastic_moduli,
             # Define material for current column
             col_mat_id[f'floor_{i}_col_{j}'] = (
                 pymodal.mapdl.set_linear_elastic(
-                    mapdl, column_elastic_moduli[col], Poisson,
+                    mapdl, column_elastic_moduli[col], column_Poisson[i],
                     column_densities[col]
                 )
             )
