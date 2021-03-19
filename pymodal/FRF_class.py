@@ -579,29 +579,50 @@ class FRF():
 
 
 
-    def get_CFDAC(self, ref: int):
-        ref_FRF = self[ref].value[:, :, 0]
-        CFDAC = pymodal.value_CFDAC(self[ref].value[:, :, 0],
-                                    self[0].value[:, :, 0])
-        CFDAC.reshape((CFDAC.shape[0], CFDAC.shape[1], -1))
-        for i in range(1, len(self)):
-            CFDAC = np.dstack(
-                (CFDAC, pymodal.value_CFDAC(ref_FRF, self[i].value[:, :, 0]))
-            )
+    def get_CFDAC(self, ref: int, frf: list = None):
+        ref_FRF = self.value[:, :, ref]
+        if frf is None:
+            CFDAC = pymodal.value_CFDAC(ref_FRF,
+                                        self.value[:, :, 0])
+            CFDAC.reshape((CFDAC.shape[0], CFDAC.shape[1], -1))
+            for i in range(1, len(self)):
+                CFDAC = np.dstack(
+                    (CFDAC, pymodal.value_CFDAC(ref_FRF, self.value[:, :, i]))
+                )
+        else:
+            if isinstance(frf, slice):
+                frf = list(range(frf.start, frf.stop, frf.step))
+            else:
+                try:
+                    frf = list(frf)
+                except Exception as __:
+                    frf = [frf]
+            CFDAC = pymodal.value_CFDAC(ref_FRF,
+                                        self.value[:, :, frf[0]])
+            CFDAC.reshape((CFDAC.shape[0], CFDAC.shape[1], -1))
+            for i in frf[1:]:
+                CFDAC = np.dstack(
+                    (CFDAC, pymodal.value_CFDAC(ref_FRF, self.value[:, :, i]))
+                )
         return CFDAC
 
 
     def get_SCI(self, ref: int, part: str = 'abs'):
         if part == 'abs':
-            CFDAC = np.abs(self.get_CFDAC(ref))
+            ref_CFDAC = np.abs(self[ref].get_CFDAC(0))
         elif part == 'real':
-            CFDAC = np.real(self.get_CFDAC(ref))
+            ref_CFDAC = np.real(self[ref].get_CFDAC(0))
         elif part == 'imag':
-            CFDAC = np.imag(self.get_CFDAC(ref))
-        ref_CFDAC = CFDAC[:, :, ref]
-        SCI = np.array([pymodal.SCI(ref_CFDAC, CFDAC[:, :, 0])])
-        for i in range(1, len(self)):
-            SCI = np.append(SCI, pymodal.SCI(ref_CFDAC, CFDAC[:, :, i]))
+            ref_CFDAC = np.imag(self[ref].get_CFDAC(0))
+        SCI = np.array([])
+        for i in range(len(self)):
+            if part == 'abs':
+                CFDAC = np.abs(self.get_CFDAC(ref, i))
+            elif part == 'real':
+                CFDAC = np.real(self.get_CFDAC(ref, i))
+            elif part == 'imag':
+                CFDAC = np.imag(self.get_CFDAC(ref, i))
+            SCI = np.append(SCI, pymodal.SCI(ref_CFDAC, CFDAC[:, :]))
         return SCI
     
 
