@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal
 from scipy import optimize
+from scipy import interpolate
 import random
 import warnings
 import pathlib
@@ -288,19 +289,33 @@ class FRF():
         In order to avoid interpolation, the new frequency can only be
         a multiple of the original frequency.
         """
-
-        if new_resolution < self.resolution:
-            raise Exception("The new resolution must be greater than the old"
-                            "one.")
-        step = int(np.around(new_resolution / self.resolution))
+        
         if new_resolution % self.resolution != 0:
-            warnings.warn((
-                f"The specified new resolution is not divisible by "
-                f"the old resolution. The new reolution will be "
-                f"{step * self.resolution} Hz instead."
-            ))
-        new_resolution = step * self.resolution
-        new_value = self.value[0::step, :, :]
+            warnings.warn("The resulting FRF will be interpolated according to"
+                          " the desired new resolution.")
+            print(self.freq_vector.shape)
+            new_freq_vector = np.arange(
+                self.min_freq, self.max_freq+new_resolution, new_resolution
+            )
+            new_value = []
+            for i in range(self.value.shape[-1]):
+                frf = self.value[..., i]
+                new_frf = []
+                for j in range(frf.shape[-1]):
+                    line_real = frf[..., i].real
+                    line_imag = frf[..., i].imag
+                    new_line_real = interpolate.interp1d(new_freq_vector,
+                                                         line_real)
+                    new_line_imag = interpolate.interp1d(new_freq_vector,
+                                                         line_imag)
+                    new_line = (new_line_real(new_freq_vector) +
+                                new_line_imag(new_freq_vector)*1j)
+                    new_frf.append(new_line)
+                new_value.append(new_frf)
+            new_value = np.array(new_value)
+        else:
+            step = int(new_resolution / self.resolution)
+            new_value = self.value[0::step, :, :]
 
         return FRF(frf=new_value,
                    resolution=new_resolution,
