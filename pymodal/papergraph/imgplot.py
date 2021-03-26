@@ -125,7 +125,8 @@ def imgplot(data: np.ndarray,
                    labelbottom=True, labeltop=False, labelleft=True,
                    labelright=False)
     x, y = np.meshgrid(x, y)
-    img = ax.pcolormesh(x, y, data, cmap=color_map)  # Plot the CFDAC
+    # Plot the CFDAC
+    img = ax.pcolormesh(x, y, data, cmap=color_map, shading='auto')
     if grid:
         ax.grid(color='grey', linestyle=':', linewidth=1)
     plt.tight_layout()

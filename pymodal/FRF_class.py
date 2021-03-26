@@ -302,8 +302,8 @@ class FRF():
                 frf = self.value[..., i]
                 new_frf = []
                 for j in range(frf.shape[-1]):
-                    line_real = frf[..., i].real
-                    line_imag = frf[..., i].imag
+                    line_real = frf[..., j].real
+                    line_imag = frf[..., j].imag
                     new_line_real = interpolate.interp1d(new_freq_vector,
                                                          line_real)
                     new_line_imag = interpolate.interp1d(new_freq_vector,
