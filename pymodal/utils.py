@@ -239,6 +239,13 @@ def SCI(CFDAC_pristine: np.ndarray, CFDAC_altered: np.ndarray):
     return SCI_calculation
 
 
+def unsigned_SCI(CFDAC_pristine: np.ndarray, CFDAC_altered: np.ndarray):
+
+    PCC = np.corrcoef(CFDAC_pristine.flatten(), CFDAC_altered.flatten())[0,1]
+    SCI_calculation = 1 - np.absolute(PCC)
+    return SCI_calculation
+
+
 # Code developped by Joan Fernández Esmerats
 def M2L_func(x, i):
 

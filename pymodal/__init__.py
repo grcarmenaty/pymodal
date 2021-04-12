@@ -7,6 +7,7 @@ from .utils import (  # noqa F401
     value_CFDAC,
     # compress,
     SCI,
+    unsigned_SCI,
     M2L_func,
     M2L,
     plot_CFDAC,
