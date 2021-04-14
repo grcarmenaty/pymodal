@@ -819,7 +819,8 @@ class FRF():
                 'max_freq': self.max_freq,
                 'min_freq': self.min_freq,
                 'name': self.name,
-                'part': self.part}
+                'part': self.part,
+                'modal_frequencies': self.modal_frequencies}
         file_list.append(path.parent / 'data.json')
         with open(path.parent / 'data.json', 'w') as fh:
             json.dump(data, fh)
