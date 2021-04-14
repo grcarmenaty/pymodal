@@ -26,7 +26,8 @@ class FRF():
                  max_freq: float = None,
                  min_freq: float = 0,
                  name: list = None,
-                 part: str = 'complex'):
+                 part: str = 'complex',
+                 modal_frequencies: list = None):
         """
         Constructor for FRF class.
 
@@ -147,6 +148,10 @@ class FRF():
             self.min_freq, self.max_freq + self.resolution / 2, self.resolution
         )
         self.part = part
+        if modal_frequencies is None:
+            self.modal_frequencies = self._modal_frequencies()
+        else:
+            self.modal_frequencies = modal_frequencies
 
 
     def __repr__(self):
@@ -473,7 +478,7 @@ class FRF():
         return silhouette
     
 
-    def modal_frequencies(self, prominence=0.02, distance=50):
+    def _modal_frequencies(self, prominence=0.02, distance=50):
         modal_frequencies = []
         distance = distance / self.resolution
         for i in range(len(self)):
