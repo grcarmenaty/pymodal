@@ -189,10 +189,6 @@ def unfinished_test_los_alamos_building():
             72000000000.0,
             72000000000.0,
             72000000000.0,
-            72000000000.0,
-            72000000000.0,
-            72000000000.0,
-            72000000000.0,
         ],
         floor_Poisson=[
             0.3,
@@ -213,10 +209,6 @@ def unfinished_test_los_alamos_building():
             0.3,
             0.3,
             0.3,
-            0.3,
-            0.3,
-            0.3,
-            0.3,
         ],
         floor_densities=[
             2810,
@@ -225,10 +217,6 @@ def unfinished_test_los_alamos_building():
             2810,
         ],
         column_densities=[
-            2810,
-            2810,
-            2810,
-            2810,
             2810,
             2810,
             2810,
@@ -262,45 +250,33 @@ def unfinished_test_los_alamos_building():
             0.006,
         ],
         column_widths=[
-            0.025,
-            0.025,
-            0.025,
-            0.025,
-            0.025,
-            0.025,
-            0.025,
-            0.025,
-            0.025,
-            0.025,
-            0.025,
-            0.025,
-            0.025,
-            0.025,
-            0.025,
-            0.025,
+            0.025051,
+            0.025010,
+            0.024987,
+            0.025033,
+            0.025040,
+            0.025045,
+            0.025034,
+            0.025013,
+            0.025043,
+            0.025043,
+            0.024979,
+            0.024972,
         ],
         floor_width=0.305,
         floor_heights=[
-            0.152,
-            0.152,
-            0.152,
+            0.15185,
+            0.15124,
+            0.15190,
         ],
         floor_depth=0.305,
         floor_thicknesses=[
-            0.025,
-            0.025,
-            0.025,
-            0.025,
+            0.025419,
+            0.025447,
+            0.025457,
+            0.025453,
         ],
         contact_strengths=[
-            1e12,
-            1e12,
-            1e12,
-            1e12,
-            1e12,
-            1e12,
-            1e12,
-            1e12,
             1e12,
             1e12,
             1e12,
@@ -371,33 +347,36 @@ def unfinished_test_los_alamos_building():
     modal_analysis = pymodal.mapdl.modal_analysis(
         mapdl, frequency_range=[0, 100], dof="uxuyuz"
     )
-    result = mapdl.result
-    result.plot_nodal_displacement(5, show_displacement=True, displacement_factor=0.4)
+    # result = mapdl.result
+    # result.plot_nodal_displacement(5, show_displacement=True, displacement_factor=0.4)
     print(modal_analysis)
-    # harmonic_analysis = pymodal.mapdl.harmonic_analysis(
-    #     mapdl,
-    #     excitation_coordinates=[0.305, 0.305/2, 0.025/2],
-    #     response_coordinates=[
-    #         [0.305, 0.305/2, 0.025/2],
-    #         [0, 0.025/2, 0.025/2],
-    #         [0, 0.305-0.025/2, 0.025/2],
-    #         [0, 0.025/2, 0.152+0.025+0.025/2],
-    #         [0, 0.305-0.025/2, 0.152+0.025+0.025/2],
-    #         [0, 0.025/2, 2*0.152+2*0.025+0.025/2],
-    #         [0, 0.305-0.025/2, 2*0.152+2*0.025+0.025/2],
-    #         [0, 0.025/2, 3*0.152+3*0.025+0.025/2],
-    #         [0, 0.305-0.025/2, 3*0.152+3*0.025+0.025/2],
-    #     ],
-    #     response_directions="X",
-    #     excitation_vector=[100, 0, 0],
-    #     frequency_range=[0, 100],
-    #     damping=[12, 5e-6],
-    #     N=400,
-    #     magnitude='acc',
-    #     mode_superposition=True
-    # )
-    # print(harmonic_analysis)
+    harmonic_analysis = pymodal.mapdl.harmonic_analysis(
+        mapdl,
+        excitation_coordinates=[0.305, 0.305/2, 0.025/2],
+        response_coordinates=[
+            [0.305, 0.305/2, 0.025/2],
+            [0, 0.025/2, 0.025/2],
+            [0, 0.305-0.025/2, 0.025/2],
+            [0, 0.025/2, 0.152+0.025+0.025/2],
+            [0, 0.305-0.025/2, 0.152+0.025+0.025/2],
+            [0, 0.025/2, 2*0.152+2*0.025+0.025/2],
+            [0, 0.305-0.025/2, 2*0.152+2*0.025+0.025/2],
+            [0, 0.025/2, 3*0.152+3*0.025+0.025/2],
+            [0, 0.305-0.025/2, 3*0.152+3*0.025+0.025/2],
+        ],
+        response_directions="X",
+        excitation_vector=[100, 0, 0],
+        frequency_range=[0, 100],
+        damping=[4, 8e-6],
+        N=400,
+        magnitude='acc',
+        mode_superposition=True
+    )
+    print(harmonic_analysis)
     mapdl.exit()
+    harmonic_analysis.plot()
+    plt.show()
+    plt.close()
 
 
 if __name__ == "__main__":
