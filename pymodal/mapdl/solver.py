@@ -141,7 +141,8 @@ def harmonic_analysis(
     damping,
     N,
     magnitude,
-    mode_superposition
+    mode_superposition,
+    model_dof="uxuyuzrotxrotyrotz"
 ):
 
     mapdl.prep7()
@@ -160,7 +161,8 @@ def harmonic_analysis(
     mapdl.f(excitation_node, "FZ",
           excitation_vector[2])
     if mode_superposition:
-        modal_analysis = pymodal.mapdl.modal_analysis(mapdl, frequency_range)
+        modal_analysis = pymodal.mapdl.modal_analysis(mapdl, frequency_range,
+                                                      dof=model_dof)
     mapdl.run("/SOL")
     mapdl.antype(3)
     if mode_superposition:

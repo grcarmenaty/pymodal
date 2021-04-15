@@ -28,16 +28,16 @@ def save_array(array: np.ndarray, path: str):
     file_type = path.suffix
     file_type = file_type.lower()
 
-    if file_type in '.npy':
-        with open(path, 'wb+') as fh:
+    if file_type in ".npy":
+        with open(path, "wb+") as fh:
             np_save(fh, array, allow_pickle=False)
-    elif file_type in '.npz':
-        with open(path, 'wb+') as fh:
+    elif file_type in ".npz":
+        with open(path, "wb+") as fh:
             savez_compressed(fh, data=array)
-    elif file_type in '.mat':
-        with open(path, 'wb+') as fh:
+    elif file_type in ".mat":
+        with open(path, "wb+") as fh:
             print(type(fh))
-            savemat(fh, {'data': array})
+            savemat(fh, {"data": array})
     else:
         raise Exception(f"Extension {file_type} not recognized. This function"
                         f" only recognizes .npy, .npz and .mat")
@@ -54,12 +54,12 @@ def load_array(path: str):
     path = Path(path)
     file_type = path.suffix
 
-    if file_type in '.npy':
+    if file_type in ".npy":
         return np_load(path)
-    elif file_type in '.npz':
-        return np_load(path)['data']
-    elif file_type in '.mat':
-        with open(path, 'r') as __:  # noqa F841
+    elif file_type in ".npz":
+        return np_load(path)["data"]
+    elif file_type in ".mat":
+        with open(path, "r") as __:  # noqa F841
             array = loadmat(path)
             info = whosmat(path)
             info = info[0]
@@ -85,42 +85,53 @@ def load_FRF(path: str):
     """
 
     path = Path(path)
-    with ZipFile(path, 'r') as fh:
-        data_path = Path(fh.extract('data.json'))
-        with open('data.json', 'r') as z:
+    with ZipFile(path, "r") as fh:
+        data_path = Path(fh.extract("data.json"))
+        with open("data.json", "r") as z:
             data = json.load(z)
         data_path.unlink()
         frf = []
-        for item in data['name']:
-            value_path = Path(fh.extract(f'{item}.npz'))
-            with open(f'{item}.npz', 'r') as z:
+        for item in data["name"]:
+            value_path = Path(fh.extract(f"{item}.npz"))
+            with open(f"{item}.npz", "r") as z:
                 frf.append(pymodal.load_array(z))
             value_path.unlink()
         frf = np.dstack(frf)
-
-    return pymodal.FRF(frf=frf,
-                           resolution=data['resolution'],
-                           bandwidth=data['bandwidth'],
-                           max_freq=data['max_freq'],
-                           min_freq=data['min_freq'],
-                           name=data['name'],
-                           part=data['part'])
+    try:
+        return pymodal.FRF(frf=frf,
+                        resolution=data["resolution"],
+                        bandwidth=data["bandwidth"],
+                        max_freq=data["max_freq"],
+                        min_freq=data["min_freq"],
+                        name=data["name"],
+                        part=data["part"],
+                        modal_frequencies=data["modal_frequencies"])
+    except Exception as __:
+        Warning("This is an old file, it will now be imported as the new"
+                " format.")
+        return pymodal.FRF(frf=frf,
+                        resolution=data["resolution"],
+                        bandwidth=data["bandwidth"],
+                        max_freq=data["max_freq"],
+                        min_freq=data["min_freq"],
+                        name=data["name"],
+                        part=data["part"])
 
 def plot_FRF(frf: np.ndarray,
              freq: np.ndarray,
              ax=None,
              fontsize: float = 12,
-             title: str = 'Frequency Response',
+             title: str = "Frequency Response",
              title_size: float = 12,
              major_locator: int = 4,
              minor_locator: int = 4,
-             fontname: str = 'Times New Roman',
-             color: str = 'blue',
+             fontname: str = "Times New Roman",
+             color: str = "blue",
              ylabel: str = "Normalized amplitude ($m·s^{-2}·N^{-1}$)",
              bottom_ylim: float = None,
              decimals_y: int = 1,
              decimals_x: int = 1,
-             part: str = 'complex'):
+             part: str = "complex"):
 
     """
 
@@ -129,15 +140,15 @@ def plot_FRF(frf: np.ndarray,
     """
 
     if ax is None:  # If this is not a subplot of a greater figure:
-        fig, ax = plt.subplots()
+        __, ax = plt.subplots()
 
-    if part == 'phase':
+    if part == "phase":
         if ylabel is None:  # If no label for y axis was specified
-            ylabel = 'Phase/rad'
+            ylabel = "Phase/rad"
         top_ylim = np.amax(frf) + np.pi/4
         if bottom_ylim is None:
             bottom_ylim = -top_ylim
-    elif part == 'abs' or part == 'complex':
+    elif part == "abs" or part == "complex":
         if bottom_ylim is None:  # If no bottom limit is defined
             # Define the bottom limit as four powers of ten lower than average.
             bottom_ylim = 10 ** int(
@@ -151,7 +162,7 @@ def plot_FRF(frf: np.ndarray,
                       r"$\mathrm{m·s^{-2}·N^{-1}}$")
     else:
         top_ylim = None
-    xlabel = 'Frequency/Hz'
+    xlabel = "Frequency/Hz"
     papergraph.lineplot(x=freq,
                         y=frf,
                         ax=ax,
@@ -169,7 +180,7 @@ def plot_FRF(frf: np.ndarray,
                         bottom_ylim=bottom_ylim,
                         top_ylim=top_ylim)
     ax.plot()
-    if part == 'phase':
+    if part == "phase":
         # For y axis: set as many major and minor divisions as specified
         # (4 major and 4 minor inside each major by default) for each unit of
         # pi the data reaches (so going from pi to -pi means 8 divisions).
@@ -181,8 +192,8 @@ def plot_FRF(frf: np.ndarray,
         ax.yaxis.set_major_formatter(
             plt.FuncFormatter(papergraph.multiple_formatter(
                 denominator=major_locator)))
-    elif part == 'abs' or part == 'complex':
-        ax.set_yscale('log')
+    elif part == "abs" or part == "complex":
+        ax.set_yscale("log")
         # Put ticks every log decade
         locmaj = mpl.ticker.LogLocator(base=10.0, subs=(1.0, ))
         ax.yaxis.set_major_locator(locmaj)
@@ -287,17 +298,17 @@ def plot_CFDAC(cfdac: np.ndarray,
          yfreq: float,
          resolution: float,
          ax=None,
-         fontname: str = 'serif',
+         fontname: str = "serif",
          fontsize: float = 12,
-         title: str = 'CFDAC Matrix',
+         title: str = "CFDAC Matrix",
          title_size: float = 12,
          major_x_locator: int = 4,
          minor_x_locator: int = 4,
          major_y_locator: int = 4,
          minor_y_locator: int = 4,
-         color_map: str = 'cubehelix',
-         xlabel: str = 'Frequency/Hz',
-         ylabel: str = 'Frequency/Hz',
+         color_map: str = "cubehelix",
+         xlabel: str = "Frequency/Hz",
+         ylabel: str = "Frequency/Hz",
          decimals: int = 0,
          cbar: bool = True,
          pad=0.05):

@@ -149,9 +149,12 @@ class FRF():
         )
         self.part = part
         if modal_frequencies is None:
-            self.modal_frequencies = self._modal_frequencies()
+            Warning("The modal frequencies will now be approximated from the"
+                    " observed peaks in the signal. Take this with a grain of"
+                    " salt.")
+            self.modal_frequencies = list(self._modal_frequencies())
         else:
-            self.modal_frequencies = modal_frequencies
+            self.modal_frequencies = list(modal_frequencies)
 
 
     def __repr__(self):
@@ -195,7 +198,8 @@ class FRF():
                    max_freq=self.max_freq,
                    min_freq=self.min_freq,
                    name=self.name[index.start:index.stop:index.step],
-                   part=self.part)
+                   part=self.part,
+                   modal_frequencies=self.modal_frequencies)
 
 
     def __len__(self):
@@ -243,7 +247,8 @@ class FRF():
                    max_freq=self.max_freq,
                    min_freq=self.min_freq,
                    name=new_name,
-                   part=self.part)
+                   part=self.part,
+                   modal_frequencies=self.modal_frequencies)
 
 
     def normalize(self):  #untested
@@ -271,7 +276,8 @@ class FRF():
                    max_freq=self.max_freq,
                    min_freq=self.min_freq,
                    name=self.name,
-                   part=self.part)
+                   part=self.part,
+                   modal_frequencies=self.modal_frequencies)
 
 
     def change_resolution(self, new_resolution: float):
@@ -328,7 +334,8 @@ class FRF():
                    max_freq=self.max_freq,
                    min_freq=self.min_freq,
                    name=self.name,
-                   part=self.part)
+                   part=self.part,
+                   modal_frequencies=self.modal_frequencies)
 
 
     def change_lines(self, line_selection: np.ndarray):
@@ -353,7 +360,8 @@ class FRF():
                    max_freq=self.max_freq,
                    min_freq=self.min_freq,
                    name=self.name,
-                   part=self.part)
+                   part=self.part,
+                   modal_frequencies=self.modal_frequencies)
 
 
     def change_frequencies(self, frequencies: list):
@@ -391,7 +399,8 @@ class FRF():
                    max_freq=frequencies[-1],
                    min_freq=frequencies[0],
                    name=self.name,
-                   part=self.part)
+                   part=self.part,
+                   modal_frequencies=self.modal_frequencies)
 
 
     def real(self):
@@ -410,7 +419,8 @@ class FRF():
                    max_freq=self.max_freq,
                    min_freq=self.min_freq,
                    name=self.name,
-                   part='real')
+                   part='real',
+                   modal_frequencies=self.modal_frequencies)
 
 
     def imag(self):
@@ -429,7 +439,8 @@ class FRF():
                    max_freq=self.max_freq,
                    min_freq=self.min_freq,
                    name=self.name,
-                   part='imag')
+                   part='imag',
+                   modal_frequencies=self.modal_frequencies)
 
 
     def abs(self):
@@ -448,7 +459,8 @@ class FRF():
                    max_freq=self.max_freq,
                    min_freq=self.min_freq,
                    name=self.name,
-                   part='abs')
+                   part='abs',
+                   modal_frequencies=self.modal_frequencies)
 
 
     def phase(self):
@@ -467,14 +479,15 @@ class FRF():
                    max_freq=self.max_freq,
                    min_freq=self.min_freq,
                    name=self.name,
-                   part='phase')
+                   part='phase',
+                   modal_frequencies=self.modal_frequencies)
 
 
     def silhouette(self):
         silhouette = []
         for i in range(len(self)):
-            silhouette.append(self[i].value[:, :, 0].max(axis=1))
-        silhouette = np.stack(silhouette, axis=1)
+            silhouette.append(self.value[:, :, i].max(axis=1))
+        silhouette = np.dstack(silhouette)
         return silhouette
     
 
@@ -483,7 +496,7 @@ class FRF():
         distance = distance / self.resolution
         for i in range(len(self)):
             peaks = signal.find_peaks(
-                np.abs(self[i].normalize().imag().silhouette()[:, 0]),
+                np.abs(self.silhouette()[:, 0, i].imag),
                 prominence=prominence,
                 distance=distance
             )
