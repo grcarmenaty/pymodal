@@ -216,7 +216,7 @@ def value_CFDAC(ref: np.ndarray, frf: np.ndarray):
     return CFDAC_value
 
 
-def FDAC(ref: np.ndarray, frf: np.ndarray):
+def value_FDAC(ref: np.ndarray, frf: np.ndarray):
 
     #The following line is the formula of the FDAC matrix.
     FDAC_value = np.nan_to_num(np.abs(
