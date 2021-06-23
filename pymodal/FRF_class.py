@@ -639,6 +639,33 @@ class FRF():
                 )
         return CFDAC
 
+    def get_FDAC(self, ref: int, frf: list = None):
+        ref_FRF = self.value[:, :, ref]
+        if frf is None:
+            FDAC = pymodal.value_FDAC(ref_FRF,
+                                        self.value[:, :, 0])
+            FDAC.reshape((FDAC.shape[0], FDAC.shape[1], -1))
+            for i in range(1, len(self)):
+                FDAC = np.dstack(
+                    (FDAC, pymodal.value_FDAC(ref_FRF, self.value[:, :, i]))
+                )
+        else:
+            if isinstance(frf, slice):
+                frf = list(range(frf.start, frf.stop, frf.step))
+            else:
+                try:
+                    frf = list(frf)
+                except Exception as __:
+                    frf = [frf]
+            FDAC = pymodal.value_FDAC(ref_FRF,
+                                        self.value[:, :, frf[0]])
+            FDAC.reshape((FDAC.shape[0], FDAC.shape[1], -1))
+            for i in frf[1:]:
+                FDAC = np.dstack(
+                    (FDAC, pymodal.value_FDAC(ref_FRF, self.value[:, :, i]))
+                )
+        return FDAC
+
 
     def get_SCI(self, ref: int, part: str = 'abs'):
         if part == 'abs':
