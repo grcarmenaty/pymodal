@@ -216,13 +216,20 @@ def value_CFDAC(ref: np.ndarray, frf: np.ndarray):
     return CFDAC_value
 
 
+def value_FDAC(ref: np.ndarray, frf: np.ndarray):
 
-#FDAC
+    #The following line is the formula of the FDAC matrix.
+    FDAC_value = np.nan_to_num(np.abs(
+        ((frf @ ref.conj().transpose()) ** 2)) * (1/(np.diag(frf @
+        frf.conj().transpose()).reshape(-1,1) @ (np.diag(ref @
+        ref.conj().transpose()).reshape(-1,1)).transpose()))
+    )
+    return FDAC_value
 
-#RVAC Response Vector Assurance Criterion Ouput: Vector
+
 def value_RVAC(ref: np.ndarray, frf: np.ndarray):
 
-    # The following line is the formula of the CFDAC matrix.
+    # The following line is the formula of the RVAC vector.
     RVAC_value = np.nan_to_num((np.abs(np.sum(frf * ref.conj(), axis=1)) ** 2) * 
         (1/(np.sum(frf * frf.conj(), axis=1) * (np.sum(ref * ref.conj(), axis=1)))))
     return RVAC_value
