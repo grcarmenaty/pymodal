@@ -102,7 +102,7 @@ def get_stiffness(mapdl, coords, force_vector):
     excitation_node = cdist(np.asarray([coords]),
                             node_list[:, 1:4])
     excitation_node = node_list[int(np.argmin(excitation_node)), 0]
-    node_id_list = []
+    mapdl.run("/SOL")
     mapdl.f(excitation_node, "FX",
           force_vector[0])
     mapdl.f(excitation_node, "FY",
@@ -113,19 +113,22 @@ def get_stiffness(mapdl, coords, force_vector):
     mapdl.antype(0)
     mapdl.solve()
     mapdl.finish()
-    path = pathlib.Path(mapdl.inquire("DIRECTORY"))
-    jobname = mapdl.inquire("JOBNAME")
-    result = mapdl.result
-    node_coordinates = result.geometry["nodes"][:, 0:3]
-    node_coordinates = np.core.records.fromarrays(node_coordinates.transpose(),
-                                                  names="x, y, z")
-    node_result = np.hstack((
-        result.nodal_solution(0)[0].reshape(-1, 1),
-        result.nodal_solution(0)[1][:, 0:3]
-    ))
-    displacement = np.linalg.norm(
-        node_result[node_result[:, 0] == excitation_node, 1:4]
-    )
+    # result = mapdl.result
+    # node_coordinates = result.geometry["nodes"][:, 0:3]
+    # node_coordinates = np.core.records.fromarrays(node_coordinates.transpose(),
+    #                                               names="x, y, z")
+    # node_result = np.hstack((
+    #     result.nodal_solution(0)[0].reshape(-1, 1),
+    #     result.nodal_solution(0)[1][:, 0:3]
+    # ))
+    # displacement = np.linalg.norm(
+    #     node_result[node_result[:, 0] == excitation_node, 1:4]
+    # )
+    displacement = np.linalg.norm(np.vstack(
+        (mapdl.post_processing.nodal_displacement("X"),
+         mapdl.post_processing.nodal_displacement("Y"),
+         mapdl.post_processing.nodal_displacement("Z"))
+    ).T[excitation_node.astype(int) - 1, :])
     force_magnitude = np.linalg.norm(np.asarray(force_vector))
     k = force_magnitude / displacement
     return k

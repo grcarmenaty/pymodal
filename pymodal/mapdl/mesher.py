@@ -78,7 +78,7 @@ def free_beam(mapdl, elastic_modulus, Poisson, density, damage_location, b, h,
 
 
 def free_plate_shell(mapdl, elastic_modulus, Poisson, density, thickness, a, b,
-               e_size):
+                     e_size):
     mat_id = pymodal.mapdl.set_linear_elastic(mapdl, elastic_modulus, Poisson,
                                               density)
     element_id = pymodal.mapdl.set_shell181(mapdl, thickness, mat_id)
@@ -86,8 +86,14 @@ def free_plate_shell(mapdl, elastic_modulus, Poisson, density, thickness, a, b,
     area_id = pymodal.mapdl.create_area(mapdl, kp_list)
     mapdl.prep7()
     mapdl.esize(e_size, 0)
-    mapdl.amesh(area_id['area_id'])
+    mapdl.aatt(mat_id, "", element_id["etype_id"], "", "")
+    mapdl.amesh(int(area_id['area_id']))
     mapdl.finish()
+    return {
+        "mat_id": mat_id,
+        "element_id": element_id,
+        "area_id": area_id
+    }
 
 
 def free_plate_solid(mapdl, elastic_modulus, Poisson, density, thickness, a, b,
@@ -280,15 +286,16 @@ def crack_analogy_solid(mapdl, elastic_modulus, Poisson, density, thickness, a,
     # Calculate the coordinates for the four corners of the rectangle defining
     # the crack analogy
     coords = [
-        np.append(start + (width / 2)*perpendicular, thickness),
-        np.append(start - (width / 2)*perpendicular, thickness),
-        np.append(end - (width / 2)*perpendicular, thickness),
-        np.append(end + (width / 2)*perpendicular, thickness)
+        np.append(start + (width / 2)*perpendicular, -thickness*0.1),
+        np.append(start - (width / 2)*perpendicular, -thickness*0.1),
+        np.append(end - (width / 2)*perpendicular, -thickness*0.1),
+        np.append(end + (width / 2)*perpendicular, -thickness*0.1)
     ]
-    # Create a volume that, when substracted from the volume defining the 
+    # Create a volume that, when substracted from the volume defining the
     # plate, produces the crack analogy, based on the previously defined
     # coordinates
-    crack_id = pymodal.mapdl.create_extruded_volume(mapdl, coords, 0.00498)
+    crack_id = pymodal.mapdl.create_extruded_volume(mapdl, coords,
+                                                    thickness*1.2)
     mapdl.prep7()
     # Substract the volume defining the crack from the volume defining the
     # plate.
@@ -430,7 +437,11 @@ def los_alamos_building(mapdl, floor_elastic_moduli, column_elastic_moduli,
                          column_densities, e_size, column_thicknesses,
                          column_widths, floor_width, floor_heights,
                          floor_depth, floor_thicknesses, contact_strengths,
-                         mass_coordinates, mass_values):
+                         mass_coordinates, mass_values, foundation,
+                         foundation_points, foundation_moduli,
+                         foundation_Poisson, foundation_densities,
+                         foundation_width, foundation_height,
+                         foundation_depth, foundation_contact_strength):
 
     # Define a SOLID186 element type for meshing
     element_id = pymodal.mapdl.set_solid186(mapdl)
@@ -456,6 +467,8 @@ def los_alamos_building(mapdl, floor_elastic_moduli, column_elastic_moduli,
         )
         mapdl.prep7()
         mapdl.esize(e_size, 0) # Set element size
+        mapdl.aatt(floor_mat_id[f'floor_{i}'], "", element_id["etype_id"], "",
+                   "")
         # Mesh current floor
         mapdl.vmesh(floor_id[f'floor_{i}']['volume_id'])
 
@@ -498,6 +511,8 @@ def los_alamos_building(mapdl, floor_elastic_moduli, column_elastic_moduli,
             )
             mapdl.prep7()
             mapdl.esize(e_size, 0) # Set element size
+            mapdl.aatt(col_mat_id[f'floor_{i}_col_{j}'], "",
+                       element_id["etype_id"], "", "")
             # Mesh current column
             mapdl.vmesh(col_id[f'floor_{i}_col_{j}']['volume_id'])
     col_area_id = []
@@ -572,6 +587,62 @@ def los_alamos_building(mapdl, floor_elastic_moduli, column_elastic_moduli,
                 current_col_id,
                 contact_strengths[8*i+j]
             )
+            mapdl.allsel()
+    if foundation:
+        pymodal.mapdl.select_areas(mapdl, (-1, 1), (-1, 1), (-1, e_size/2))
+        mapdl.prep7()
+        mapdl.run('*DEL,A_ID')
+        mapdl.get('A_ID', 'AREA', 0, 'NUM', 'MAX')
+        base_area_id = mapdl.parameters['A_ID']
+        mapdl.allsel()
+        foundation_id = {}
+        foundation_mat_id = {}
+        foundation_base_area_id = {}
+        for i, foundation_point in enumerate(foundation_points):
+            foundation_mat_id[f'foundation_{i}'] = (
+                pymodal.mapdl.set_linear_elastic(
+                    mapdl, foundation_moduli[i], foundation_Poisson[i],
+                    foundation_densities[i]
+                )
+            )
+            current_x_origin = foundation_point[0] - foundation_width/2
+            current_y_origin = foundation_point[1] - foundation_depth/2
+            foundation_id[f'foundation_{i}'] = pymodal.mapdl.create_prism(
+                mapdl, current_x_origin, current_y_origin,
+                foundation_width, foundation_depth, foundation_height
+            )
+            pymodal.mapdl.move_volume(
+                mapdl, foundation_id[f'foundation_{i}']['volume_id'], 0, 0,
+                -foundation_height
+            )
+            mapdl.prep7()
+            mapdl.aatt(foundation_mat_id[f'foundation_{i}'], "",
+                       element_id["etype_id"], "", "")
+            # Mesh current column
+            mapdl.vmesh(foundation_id[f'foundation_{i}']['volume_id'])
+            pymodal.mapdl.select_areas(mapdl, (-2*floor_width, 2*floor_width), 
+                                       (-2*floor_depth, 2*floor_depth),
+                                       (-e_size/2, e_size/2))
+            mapdl.run('*DEL,A_ID')
+            mapdl.get('A_ID', 'AREA', 0, 'NUM', 'MAX')
+            current_foundation_top_area_id = mapdl.parameters['A_ID']
+            pymodal.mapdl.linear_elastic_surface_contact(
+                mapdl,
+                current_foundation_top_area_id,
+                base_area_id,
+                foundation_contact_strength
+            )
+            pymodal.mapdl.select_areas(mapdl, (-2*floor_width, 2*floor_width), 
+                                       (-2*floor_depth, 2*floor_depth),
+                                       (-2*foundation_height,
+                                        -foundation_height+e_size/2))
+            mapdl.prep7()
+            mapdl.run('*DEL,A_ID')
+            mapdl.get('A_ID', 'AREA', 0, 'NUM', 'MAX')
+            foundation_base_area_id[f'foundation_{i}'] = mapdl.parameters[
+                'A_ID'
+            ]
+            mapdl.allsel()
     node_list = pymodal.mapdl.get_node_list(mapdl)
     node_id_list = []
     for row in mass_coordinates:
@@ -583,4 +654,53 @@ def los_alamos_building(mapdl, floor_elastic_moduli, column_elastic_moduli,
         mapdl.type(current_etype['etype_id'])
         mapdl.real(current_etype['real_constant_id'])
         mapdl.e(node)
+    mapdl.finish()
 
+
+def add_spring(mapdl, anchor_node, k, destination=None, destination_node=None):
+    if destination_node is None:
+        if destination is None:
+            raise Exception("At least one of destination or destnation node"
+                            " must be specifiedd.")
+        anchor_node_id = pymodal.mapdl._get_closest_node(mapdl, anchor_node)
+        destination_node_id = (
+            pymodal.mapdl._get_max_param_id(mapdl, 'NODE') + 1
+        )
+        mapdl.prep7()
+        mapdl.n(destination_node_id, destination[0], destination[1],
+                destination[2])
+        length = cdist(np.array([anchor_node]), np.array([destination]))[0][0]
+    else:
+        if destination is not None:
+            raise Exception("Destination and destination node cannot be both"
+                            " defined at the same time")
+        anchor_node_id = pymodal.mapdl._get_closest_node(mapdl, anchor_node)
+        destination_node_id = pymodal.mapdl._get_closest_node(mapdl,
+                                                              destination_node)
+        length = cdist(
+            np.array([anchor_node]), np.array([destination_node])
+        )[0][0]
+    element_type = pymodal.mapdl.set_link180(mapdl, length, 0, 0)
+    material = pymodal.mapdl.set_linear_elastic(mapdl, k, 0)
+    element_id = (pymodal.mapdl._get_max_param_id(mapdl, 'ELEM') + 1)
+    # mat_id = pymodal.mapdl._get_max_param_id(mapdl, 'MAT') + 1
+    # etype_id = pymodal.mapdl._get_max_param_id(mapdl, 'ETYPE') + 1
+    # sec_id = pymodal.mapdl._get_max_param_id(mapdl, 'LINK') + 1
+    mapdl.prep7()
+    # mapdl.mp('EX', mat_id, k)
+    # mapdl.mp('PRXY', mat_id, 0)
+    # mapdl.et(etype_id, 'LINK180')
+    # mapdl.sectype(sec_id, "LINK")
+    # mapdl.secdata(length)
+    # mapdl.seccontrol(0, 0)
+    mapdl.type(element_type['etype_id'])
+    mapdl.mat(material)
+    # print(anchor_node_id)
+    # print(destination_node_id)
+    # mapdl.open_gui()
+    mapdl.en(element_id, anchor_node_id, destination_node_id)
+    mapdl.finish()
+    return {
+        "anchor_node_id": anchor_node_id,
+        "destination_node_id": destination_node_id
+    }

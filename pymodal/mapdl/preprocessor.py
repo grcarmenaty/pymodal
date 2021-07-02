@@ -9,7 +9,7 @@ import pymodal
 def _get_max_param_id(mapdl, param):
 
     mapdl.finish()
-    mapdl.run('/PREP7')
+    mapdl.prep7()
     mapdl.run('*DEL,MAX_PARAM')
     mapdl.get('MAX_PARAM', param, 0, 'NUM', 'MAX')
     mapdl.finish()
@@ -19,13 +19,14 @@ def _get_max_param_id(mapdl, param):
         return 0
 
 
-def set_linear_elastic(mapdl, elastic_modulus, Poisson_ratio, density):
+def set_linear_elastic(mapdl, elastic_modulus, Poisson_ratio, density=None):
 
     mat_id = _get_max_param_id(mapdl, 'MAT') + 1
-    mapdl.run('/PREP7')
+    mapdl.prep7()
     mapdl.mp('EX', mat_id, elastic_modulus)
     mapdl.mp('PRXY', mat_id, Poisson_ratio)
-    mapdl.mp('DENS', mat_id, density)
+    if density is not None:
+        mapdl.mp('DENS', mat_id, density)
     mapdl.finish()
     return mat_id
 
@@ -35,7 +36,7 @@ def create_line(mapdl, start_coordinates, end_coordinates):
     return_data = {}
     return_data['start_kp'] = _get_max_param_id(mapdl, 'KP') + 1
     return_data['end_kp'] = return_data['start_kp'] + 1
-    mapdl.run('/PREP7')
+    mapdl.prep7()
     mapdl.k(
         return_data['start_kp'],
         start_coordinates[0],
@@ -63,7 +64,7 @@ def create_area(mapdl, coords):
         raise Exception("Areas can only have up to 18 KP.")
     return_data = {}
     return_data['start_kp'] = _get_max_param_id(mapdl, 'KP') + 1
-    mapdl.run('/PREP7')
+    mapdl.prep7()
     kp_id = return_data['start_kp']
     kp_list = []
     for coord in coords:
@@ -87,7 +88,7 @@ def create_area(mapdl, coords):
 def create_prism(mapdl, x_origin, y_origin, width, depth, height):
 
     return_data = {}
-    mapdl.run('/PREP7')
+    mapdl.prep7()
     mapdl.blc4(x_origin, y_origin, width, depth, height)
     mapdl.get('CURRENT_V', 'VOLU', 0, 'NUM', 'MAX')
     return_data['volume_id'] = mapdl.parameters['CURRENT_V']
@@ -99,7 +100,7 @@ def create_prism(mapdl, x_origin, y_origin, width, depth, height):
 def create_cylinder(mapdl, x_center, y_center, radius, height):
 
     return_data = {}
-    mapdl.run('/PREP7')
+    mapdl.prep7()
     mapdl.cyl4(x_center, y_center, radius, '', '', '', height)
     mapdl.get('CURRENT_V', 'VOLU', 0, 'NUM', 'MAX')
     return_data['volume_id'] = mapdl.parameters['CURRENT_V']
@@ -112,7 +113,7 @@ def create_extruded_volume(mapdl, coords, thickness):
 
     return_data = {}
     area_id = create_area(mapdl, coords)
-    mapdl.run('/PREP7')
+    mapdl.prep7()
     mapdl.voffst(area_id['area_id'], thickness)
     mapdl.get('CURRENT_V', 'VOLU', 0, 'NUM', 'MAX')
     return_data['volume_id'] = mapdl.parameters['CURRENT_V']
@@ -126,9 +127,23 @@ def set_mass21(mapdl, mass_value):
     return_data = {}
     return_data['etype_id'] = _get_max_param_id(mapdl, 'ETYPE') + 1
     return_data['real_constant_id'] = _get_max_param_id(mapdl, 'RCON') + 1
-    mapdl.run('/PREP7')
+    mapdl.prep7()
     mapdl.et(return_data['etype_id'], 'MASS21')
     mapdl.r(return_data['real_constant_id'], mass_value, mass_value, mass_value)
+    mapdl.finish()
+    return return_data
+
+
+def set_link180(mapdl, area, linear_density, tension_compression = 0):
+
+    return_data = {}
+    return_data['etype_id'] = _get_max_param_id(mapdl, 'ETYPE') + 1
+    return_data['sec_id'] = _get_max_param_id(mapdl, 'LINK') + 1
+    mapdl.prep7()
+    mapdl.et(return_data['etype_id'], 'LINK180')
+    mapdl.sectype(return_data['sec_id'], "LINK")
+    mapdl.secdata(area)
+    mapdl.seccontrol(linear_density, tension_compression)
     mapdl.finish()
     return return_data
 
@@ -137,10 +152,10 @@ def set_beam3(mapdl, area, inertia, height):
 
     return_data = {}
     return_data['etype_id'] = _get_max_param_id(mapdl, 'ETYPE') + 1
-    return_data['sectype_id'] = _get_max_param_id(mapdl, 'RCON') + 1
-    mapdl.run('/PREP7')
+    return_data['real_constant_id'] = _get_max_param_id(mapdl, 'RCON') + 1
+    mapdl.prep7()
     mapdl.et(return_data['etype_id'], 'BEAM3')
-    mapdl.r(return_data['sectype_id'], area, inertia, height)
+    mapdl.r(return_data['real_constant_id'], area, inertia, height)
     mapdl.finish()
     return return_data
 
@@ -149,7 +164,7 @@ def set_solid186(mapdl):
 
     return_data = {}
     return_data['etype_id'] = _get_max_param_id(mapdl, 'ETYPE') + 1
-    mapdl.run('/PREP7')
+    mapdl.prep7()
     mapdl.et(return_data['etype_id'], 'SOLID186')
     mapdl.finish()
     return return_data
@@ -161,7 +176,7 @@ def set_shell181(mapdl, thickness, material, angle=0, int_points=3,
     return_data = {}
     return_data['etype_id'] = _get_max_param_id(mapdl, 'ETYPE') + 1
     return_data['sec_id'] = _get_max_param_id(mapdl, 'GENS') + 1
-    mapdl.run('/PREP7')
+    mapdl.prep7()
     mapdl.et(return_data['etype_id'], 'SHELL181')
     mapdl.sectype(return_data['sec_id'], 'SHELL')
     mapdl.secdata(thickness, material, angle, int_points)
@@ -269,7 +284,7 @@ def elastic_support(mapdl, x_lim, y_lim, z_lim, normal_stiffness,
     mapdl.cm('Elastic_Here', 'NODE')
     mapdl.allsel()
     # Source for the following code snippet: https://www.simutechgroup.com/tips-and-tricks/fea-articles/143-a-normal-and-tangential-elastic-foundation-in-workbench-mechanical
-    mapdl.run('/PREP7')
+    mapdl.prep7()
     with mapdl.non_interactive:
         mapdl.run('*if,ARG1,LE,0,then')
         mapdl.run('*MSG,ERROR')
@@ -283,7 +298,7 @@ def elastic_support(mapdl, x_lim, y_lim, z_lim, normal_stiffness,
         mapdl.run('/COM,######## ARG2 was made equal to ARG1 ########')
         mapdl.run('*endif')
         mapdl.run('fini')
-        mapdl.run('/prep7')
+        mapdl.prep7()
         mapdl.run('*get,nodemax,NODE,,NUM,MAX        ')
         mapdl.cmsel('s', 'Elastic_Here')
         mapdl.esln()
@@ -376,7 +391,7 @@ def linear_elastic_surface_contact(mapdl, area_1_id, area_2_id,
     mat_id = set_linear_elastic(mapdl, elastic_modulus, Poisson, density)
     rc_max = _get_max_param_id(mapdl, 'RCON')
     et_max = _get_max_param_id(mapdl, 'ETYPE')
-    mapdl.run('/PREP7')
+    mapdl.prep7()
     mapdl.mp("MU", mat_id, "")
     mapdl.mp("EMIS", mat_id, 7.88860905221e-031)
     mapdl.cm("_NODECM", "NODE")

@@ -149,10 +149,10 @@ class FRF():
         )
         self.part = part
         if modal_frequencies is None:
-            Warning("The modal frequencies will now be approximated from the"
-                    " observed peaks in the signal. Take this with a grain of"
-                    " salt.")
-            self.modal_frequencies = list(self._modal_frequencies())
+            warnings.warn("The modal frequencies will now be approximated from"
+                    " the observed peaks in the signal. Take this with a grain"
+                    " of salt.")
+            self.modal_frequencies = list(self._modal_frequencies(distance=5))
         else:
             self.modal_frequencies = list(modal_frequencies)
 
@@ -500,7 +500,7 @@ class FRF():
                 prominence=prominence,
                 distance=distance
             )
-            modal_frequencies.append(self.freq_vector[peaks[0]])
+            modal_frequencies.append(self.freq_vector[peaks[0]].tolist())
         return modal_frequencies
 
 
@@ -799,6 +799,16 @@ class FRF():
         return img
 
 
+    def time_domain(self):
+        value_time_domain = []
+        for i in range(len(self)):
+            frf_time_domain = []
+            for j in range(self.lines):
+                frf_time_domain.append(np.fft.irfft(self.value[:, j, i]))
+            value_time_domain.append(np.array(frf_time_domain))
+        return np.array(value_time_domain).T
+
+
     # def save(self, path: str, decimal_places: int = None):
     def save(self, path: pathlib.PurePath, decimals: int = None):
         """
@@ -826,7 +836,6 @@ class FRF():
         for i in range(len(self)):
             file_list.append(path.parent / f'{self.name[i]}.npz')
             pymodal.save_array(frf_value[:, :, i], file_list[i])
-
         data = {'resolution': self.resolution,
                 'bandwidth': self.bandwidth,
                 'max_freq': self.max_freq,

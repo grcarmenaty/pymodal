@@ -1,4 +1,6 @@
 from .preprocessor import (  # noqa F401
+    _get_closest_node,
+    _get_max_param_id,
     set_linear_elastic,
     create_line,
     create_area,
@@ -6,6 +8,7 @@ from .preprocessor import (  # noqa F401
     create_cylinder,
     create_extruded_volume,
     set_mass21,
+    set_link180,
     set_beam3,
     set_shell181,
     set_solid186,
@@ -33,4 +36,5 @@ from .mesher import (
     crack_analogy_solid,
     stringer_support_solid,
     los_alamos_building,
+    add_spring,
 )
