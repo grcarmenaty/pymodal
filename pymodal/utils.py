@@ -226,7 +226,6 @@ def value_FDAC(ref: np.ndarray, frf: np.ndarray):
     )
     return FDAC_value
 
-
 def value_RVAC(ref: np.ndarray, frf: np.ndarray):
 
     # The following line is the formula of the RVAC vector.

@@ -149,10 +149,10 @@ class FRF():
         )
         self.part = part
         if modal_frequencies is None:
-            warnings.warn("The modal frequencies will now be approximated from"
-                    " the observed peaks in the signal. Take this with a grain"
-                    " of salt.")
-            self.modal_frequencies = list(self._modal_frequencies(distance=5))
+            Warning("The modal frequencies will now be approximated from the"
+                    " observed peaks in the signal. Take this with a grain of"
+                    " salt.")
+            self.modal_frequencies = list(self._modal_frequencies())
         else:
             self.modal_frequencies = list(modal_frequencies)
 
@@ -500,7 +500,7 @@ class FRF():
                 prominence=prominence,
                 distance=distance
             )
-            modal_frequencies.append(self.freq_vector[peaks[0]].tolist())
+            modal_frequencies.append(self.freq_vector[peaks[0]])
         return modal_frequencies
 
 
@@ -672,12 +672,10 @@ class FRF():
     def get_RVAC(self, ref: int, frf: list = None):
         ref_FRF = self.value[:, :, ref]
         if frf is None:
-            RVAC = pymodal.value_RVAC(ref_FRF,self.value[:, 0])
-            RVAC.reshape((-1, RVAC.shape[1]))
+            RVAC = pymodal.value_RVAC(ref_FRF,self.value[:, :, 0])
+            RVAC.reshape((RVAC.shape[0], RVAC.shape[1], -1))
             for i in range(1, len(self)):
-                RVAC = np.hstack(
-                    (RVAC, pymodal.value_RVAC(ref_FRF, self.value[:, i]))
-                )
+                RVAC = np.dstack((RVAC, pymodal.value_RVAC(ref_FRF, self.value[:, :, i])))
         else:
             if isinstance(frf, slice):
                 frf = list(range(frf.start, frf.stop, frf.step))
@@ -686,12 +684,10 @@ class FRF():
                     frf = list(frf)
                 except Exception as __:
                     frf = [frf]
-            RVAC = pymodal.value_FDAC(ref_FRF,self.value[:, frf[0]])
-            RVAC.reshape((-1, RVAC.shape[1]))
+            RVAC = pymodal.value_RVAC(ref_FRF,self.value[:, :, frf[0]])
+            RVAC.reshape((RVAC.shape[0], RVAC.shape[1], -1))
             for i in frf[1:]:
-                RVAC = np.hstack(
-                    (RVAC, pymodal.value_FDAC(ref_FRF, self.value[:, i]))
-                )
+                RVAC = np.dstack((RVAC, pymodal.value_CFDAC(ref_FRF, self.value[:, :, i])))
         return RVAC
 
 
@@ -854,16 +850,6 @@ class FRF():
         return img
 
 
-    def time_domain(self):
-        value_time_domain = []
-        for i in range(len(self)):
-            frf_time_domain = []
-            for j in range(self.lines):
-                frf_time_domain.append(np.fft.irfft(self.value[:, j, i]))
-            value_time_domain.append(np.array(frf_time_domain))
-        return np.array(value_time_domain).T
-
-
     # def save(self, path: str, decimal_places: int = None):
     def save(self, path: pathlib.PurePath, decimals: int = None):
         """
@@ -891,6 +877,7 @@ class FRF():
         for i in range(len(self)):
             file_list.append(path.parent / f'{self.name[i]}.npz')
             pymodal.save_array(frf_value[:, :, i], file_list[i])
+
         data = {'resolution': self.resolution,
                 'bandwidth': self.bandwidth,
                 'max_freq': self.max_freq,
