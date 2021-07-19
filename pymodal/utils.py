@@ -233,6 +233,42 @@ def value_RVAC(ref: np.ndarray, frf: np.ndarray):
         (1/(np.sum(frf * frf.conj(), axis=1) * (np.sum(ref * ref.conj(), axis=1)))))
     return RVAC_value
 
+def value_RVAC_2d(ref: np.ndarray, frf: np.ndarray):
+    ref = np.diff(ref, n=2)
+    frf = np.diff(frf, n=2)
+    #The following line is the formula of the RVAC''
+    #Implementation of the RVAC to make use of FRF curvature
+    RVAC_value_2d = np.nan_to_num((np.abs(np.sum(frf * ref.conj(), axis=1)) ** 2) * 
+        (1/(np.sum(frf * frf.conj(), axis=1) * (np.sum(ref * ref.conj(), axis=1)))))
+    return RVAC_value_2d
+
+def value_GAC(ref: np.ndarray, frf: np.ndarray):
+
+    #The following line is the formula of the GAC vector
+    GAC_value = 2(np.abs(np.sum(frf*ref.conj(),axis=1))*
+        (1/(np.sum(frf*frf.conj(),axis=1)+np.sum(ref*ref.conj(),axis=1))))
+    return GAC_value
+
+def value_FRFRMS(ref: np.ndarray, frf: np.ndarray):
+    #The following line is the formula of the FRFRMS
+    num = (np.log10(np.abs(np.sum(frf, axis=1)))-np.log10(np.abs(np.sum(ref,axis=1))))**2
+    den = (np.log10(np.abs(np.sum(ref,axis=1))))**2
+    FRFRMS_value = np.sqrt(np.sum(num/den))
+    return FRFRMS_value
+
+def value_FRFSF(ref: np.ndarray, frf: np.ndarray):
+    FRFSF_value = np.sum(np.sum(np.abs(ref),axis=1))/(np.sum(np.sum(np.abs(frf),axis=1)))
+    return FRFSF_value
+
+def value_FRFSM(ref: np.ndarray, frf: np.ndarray):
+    ref = np.sum(ref, axis=1)
+    frf = np.sum(frf, axis=1)
+    ej = np.abs(10*np.log10(np.abs(ref**2))-10*np.log10(np.abs(frf**2)))
+    f = 1/(np.std(ej)*np.sqrt(2*np.pi))*np.exp(-(1/2)*((ej-0)/np.std(ej))**2)
+    f0 = 1/(np.std(ej)*np.sqrt(2*np.pi))
+    s = 1/len(ref)*np.sum(f)/f0
+    return s
+
 # def compress(CFDAC: np.ndarray, diagonal_ratio: float = None,
 #     threshold: float = 0.15):
 
@@ -246,7 +282,6 @@ def value_RVAC(ref: np.ndarray, frf: np.ndarray):
 #     CFDAC = sparse.csr_matrix(CFDAC)
 #     return CFDAC
 
-
 def SCI(CFDAC_pristine: np.ndarray, CFDAC_altered: np.ndarray):
 
     PCC = np.corrcoef(CFDAC_pristine.flatten(), CFDAC_altered.flatten())[0,1]
@@ -255,6 +290,13 @@ def SCI(CFDAC_pristine: np.ndarray, CFDAC_altered: np.ndarray):
     SCI_calculation = k * (1-np.absolute(PCC))
     return SCI_calculation
 
+def DRQ(RVAC: np.ndarray):
+    DRQ = np.mean(RVAC)
+    return DRQ
+
+def AIGAC(GAC:np.ndarray):
+    AIGAC = np.mean(GAC)
+    return AIGAC
 
 def unsigned_SCI(CFDAC_pristine: np.ndarray, CFDAC_altered: np.ndarray):
 

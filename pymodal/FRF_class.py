@@ -610,8 +610,6 @@ class FRF():
     #         H_N = self[i].get_normal_FRF()[:, :, 0]
     #         G = self[i].get_transformation_matrix()[:, :, 0]
 
-
-
     def get_CFDAC(self, ref: int, frf: list = None):
         ref_FRF = self.value[:, :, ref]
         if frf is None:
@@ -667,8 +665,7 @@ class FRF():
                 )
         return FDAC
 
-
-    #RVAC function
+    #RVAC function equivalent to the Global Shape Criterion (GSC) and the Cross Signature Assurance Criterion (CSAC)
     def get_RVAC(self, ref: int, frf: list = None):
         ref_FRF = self.value[:, :, ref]
         if frf is None:
@@ -687,9 +684,53 @@ class FRF():
             RVAC = pymodal.value_RVAC(ref_FRF,self.value[:, :, frf[0]])
             RVAC.reshape((RVAC.shape[0], RVAC.shape[1], -1))
             for i in frf[1:]:
-                RVAC = np.dstack((RVAC, pymodal.value_CFDAC(ref_FRF, self.value[:, :, i])))
+                RVAC = np.dstack((RVAC, pymodal.value_RVAC(ref_FRF, self.value[:, :, i])))
         return RVAC
 
+    #RVAC applied to FRF curvatures
+    def get_RVAC_2d(self, ref: int, frf: list = None):
+        ref_FRF = self.value[:, :, ref]
+        if frf is None:
+            RVAC_2d = pymodal.value_RVAC_2d(ref_FRF,self.value[:, :, 0])
+            RVAC_2d.reshape((RVAC_2d.shape[0], RVAC_2d.shape[1], -1))
+            for i in range(1, len(self)):
+                RVAC_2d = np.dstack((RVAC_2d, pymodal.value_RVAC_2d(ref_FRF, self.value[:, :, i])))
+        else:
+            if isinstance(frf, slice):
+                frf = list(range(frf.start, frf.stop, frf.step))
+            else:
+                try:
+                    frf = list(frf)
+                except Exception as __:
+                    frf = [frf]
+            RVAC_2d = pymodal.value_RVAC_2d(ref_FRF,self.value[:, :, frf[0]])
+            RVAC_2d.reshape((RVAC_2d.shape[0], RVAC_2d.shape[1], -1))
+            for i in frf[1:]:
+                RVAC_2d = np.dstack((RVAC_2d, pymodal.value_RVAC_2d(ref_FRF, self.value[:, :, i])))
+        return RVAC_2d
+    
+    
+    #GAC function equivalent to the Cross Signature Scale Factor (CSF)
+    def get_GAC(self, ref:int, frf: list = None):
+        ref_FRF = self.value[:,:,ref]
+        if frf is None:
+            GAC = pymodal.value_GAC(ref_FRF, self.value[:,:,0])
+            GAC.reshape((GAC.shape[0], GAC.shape[1], -1))
+            for  in range(1, len(self)):
+                GAC = np.ndstack((GAC, pymodal.value_GAC(ref_FRF, self.value[:,:,i])))
+        else:
+            if isinstance(frf, slice):
+                frf = list(range(frf.start, frf.stop, frf.step))
+            else:
+                try:
+                    frf = list(frf)
+                except Exception as __:
+                    frf = [frf]
+            GAC = pymodal.value_GAC(ref_FRF, self.value[:,:,frf[0]])
+            GAC.reshape((GAC.shape[0], GAC.shape[1], -1))
+            for i in frf[1:]:
+                GAC = np.dstack((GAC, pymodal.value_GAC(ref_FRF, self.value[:,:,i])))
+        return GAC
 
     def get_SCI(self, ref: int, part: str = 'abs'):
         if part == 'abs':
@@ -708,7 +749,46 @@ class FRF():
                 CFDAC = np.imag(self.get_CFDAC(ref, i))
             SCI = np.append(SCI, pymodal.SCI(ref_CFDAC, CFDAC[:, :]))
         return SCI
+
+    #The DRQ damage indicator is equivalent to the AIGSC based on the Global Shape Criterion (GSC) 
+    def get_DRQ(self, ref:int):
+        DRQ = np.array([])
+        for i in range(len(self)):
+            RVAC = self.get_RVAC(ref,i)
+            DRQ = np.append(DRQ, pymodal.DRQ(RVAC))
+        return DRQ
+
+    def get_AIGAC(self, ref:int):
+        AIGAC = np.array([])
+        for i in range(len(self)):
+            GAC = self.get_GAC(ref,i)
+            AIGAC = np.append(AIGAC, pymodal.AIGAC(GAC))
+        return AIGAC
     
+    def get_DRQ_2d(self, ref:int):
+        DRQ_2d = np.array([])
+        for i in range(len(self)):
+            RVAC_2d = self.get_RVAC_2d(ref,i)
+            DRQ_2d = np.append(DRQ_2d, pymodal.DRQ(RVAC_2d))
+        return DRQ_2d
+
+    def get_FRFSF(self, ref:int):
+        FRFSF = np.array([])
+        for i in range(len(self)):
+            FRFSF = np.append(FRFSF, pymodal.FRFSF(ref,i))
+        return FRFSF
+
+    def get_FRFRMS(self, ref:int):
+        FRFRMS = np.array([])
+        for i in range(len(self)):
+            FRFRMS = np.append(FRFRMS, pymodal.FRFRMS(ref,i))
+        return FRFRMS
+
+    def get_FRFSM(self, ref:int):
+        FRFSM = np.array([])
+        for i in range(len(self)):
+            FRFSM = np.append(FRFSM, pymodal.FRFSM(ref,i))
+        return FRFSM
 
     def get_M2L(self, ref: int, part: str = 'abs'):
         if part == 'abs':
@@ -723,7 +803,6 @@ class FRF():
                             np.reshape(pymodal.M2L(CFDAC[:, :, i]), (1, -1)),
                             axis=0)
         return M2L
-
 
     def plot(self,
              ax: list = None,
