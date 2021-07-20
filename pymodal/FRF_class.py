@@ -716,7 +716,7 @@ class FRF():
         if frf is None:
             GAC = pymodal.value_GAC(ref_FRF, self.value[:,:,0])
             GAC.reshape((GAC.shape[0], GAC.shape[1], -1))
-            for  in range(1, len(self)):
+            for i in range(1, len(self)):
                 GAC = np.ndstack((GAC, pymodal.value_GAC(ref_FRF, self.value[:,:,i])))
         else:
             if isinstance(frf, slice):
@@ -789,6 +789,19 @@ class FRF():
         for i in range(len(self)):
             FRFSM = np.append(FRFSM, pymodal.FRFSM(ref,i))
         return FRFSM
+
+    def get_ODS_diff(self, ref:int):
+        sm = np.array([])
+        for i in range(len(self)):
+            sm = np.append(sm, pymodal.ODS_diff(ref,i))
+        
+        ODS_diff = 1 - sm/np.max(sm)
+        return ODS_diff
+
+    def get_r2_imag(self, ref:int):
+        r2_imag = np.array([])
+        for i in range(len(self)):
+            r2_imag = np.append(r2_imag, pymodal.r2_imag(ref,i))
 
     def get_M2L(self, ref: int, part: str = 'abs'):
         if part == 'abs':

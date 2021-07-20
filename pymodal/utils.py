@@ -249,18 +249,18 @@ def value_GAC(ref: np.ndarray, frf: np.ndarray):
         (1/(np.sum(frf*frf.conj(),axis=1)+np.sum(ref*ref.conj(),axis=1))))
     return GAC_value
 
-def value_FRFRMS(ref: np.ndarray, frf: np.ndarray):
+def FRFRMS(ref: np.ndarray, frf: np.ndarray):
     #The following line is the formula of the FRFRMS
     num = (np.log10(np.abs(np.sum(frf, axis=1)))-np.log10(np.abs(np.sum(ref,axis=1))))**2
     den = (np.log10(np.abs(np.sum(ref,axis=1))))**2
     FRFRMS_value = np.sqrt(np.sum(num/den))
     return FRFRMS_value
 
-def value_FRFSF(ref: np.ndarray, frf: np.ndarray):
+def FRFSF(ref: np.ndarray, frf: np.ndarray):
     FRFSF_value = np.sum(np.sum(np.abs(ref),axis=1))/(np.sum(np.sum(np.abs(frf),axis=1)))
     return FRFSF_value
 
-def value_FRFSM(ref: np.ndarray, frf: np.ndarray):
+def FRFSM(ref: np.ndarray, frf: np.ndarray):
     ref = np.sum(ref, axis=1)
     frf = np.sum(frf, axis=1)
     ej = np.abs(10*np.log10(np.abs(ref**2))-10*np.log10(np.abs(frf**2)))
@@ -268,6 +268,19 @@ def value_FRFSM(ref: np.ndarray, frf: np.ndarray):
     f0 = 1/(np.std(ej)*np.sqrt(2*np.pi))
     s = 1/len(ref)*np.sum(f)/f0
     return s
+
+def ODS_diff (ref:np.ndarray, frf:np.ndarray):
+    sm_value = np.abs(frf-ref)
+    sm_value = np.sum(np.sum(sm_value,axis=1))
+    return sm_value
+
+def r2_imag (ref:np.ndarray, frf:np.ndarray):
+    ref = np.imag(ref).reshape(1,-1)
+    frf = np.imag(frf).reshape(1,-1)
+    sstot = np.sum((ref - np.mean(ref))**2)
+    ssres = np.sum((ref - frf)**2)
+    r2_value = 1-ssres/sstot
+    return r2_value
 
 # def compress(CFDAC: np.ndarray, diagonal_ratio: float = None,
 #     threshold: float = 0.15):
