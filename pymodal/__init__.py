@@ -5,6 +5,7 @@ from .utils import (  # noqa F401
     load_FRF,
     plot_FRF,
     value_CFDAC,
+    value_CFDAC_A,
     value_FDAC,
     value_RVAC,
     value_RVAC_2d,
