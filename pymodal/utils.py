@@ -215,6 +215,16 @@ def value_CFDAC(ref: np.ndarray, frf: np.ndarray):
     )
     return CFDAC_value
 
+def value_CFDAC_A(ref: np.ndarray, frf: np.ndarray):
+
+    # The following line is the formula of the CFDAC matrix.
+    CFDAC_A_value = np.nan_to_num(
+        (2*(frf @ ref.conj().transpose())) * (1/(np.diag(frf @
+        frf.conj().transpose()).reshape(-1,1) + (np.diag(ref @
+        ref.conj().transpose()).reshape(-1,1)).conj().transpose()))
+    )
+    return CFDAC_A_value
+
 
 def value_FDAC(ref: np.ndarray, frf: np.ndarray):
 

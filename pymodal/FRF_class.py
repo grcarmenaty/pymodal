@@ -637,6 +637,33 @@ class FRF():
                 )
         return CFDAC
 
+    def get_CFDAC_A(self, ref: int, frf: list = None):
+        ref_FRF = self.value[:, :, ref]
+        if frf is None:
+            CFDAC_A = pymodal.value_CFDAC_A(ref_FRF,
+                                        self.value[:, :, 0])
+            CFDAC_A.reshape((CFDAC_A.shape[0], CFDAC_A.shape[1], -1))
+            for i in range(1, len(self)):
+                CFDAC_A = np.dstack(
+                    (CFDAC_A, pymodal.value_CFDAC_A(ref_FRF, self.value[:, :, i]))
+                )
+        else:
+            if isinstance(frf, slice):
+                frf = list(range(frf.start, frf.stop, frf.step))
+            else:
+                try:
+                    frf = list(frf)
+                except Exception as __:
+                    frf = [frf]
+            CFDAC_A = pymodal.value_CFDAC_A(ref_FRF,
+                                        self.value[:, :, frf[0]])
+            CFDAC_A.reshape((CFDAC_A.shape[0], CFDAC_A.shape[1], -1))
+            for i in frf[1:]:
+                CFDAC_A = np.dstack(
+                    (CFDAC_A, pymodal.value_CFDAC_A(ref_FRF, self.value[:, :, i]))
+                )
+        return CFDAC_A
+
     #FDAC function
     def get_FDAC(self, ref: int, frf: list = None):
         ref_FRF = self.value[:, :, ref]
