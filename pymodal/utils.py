@@ -270,12 +270,13 @@ def FRFSF(ref: np.ndarray, frf: np.ndarray):
     FRFSF_value = np.sum(np.sum(np.abs(ref),axis=1))/(np.sum(np.sum(np.abs(frf),axis=1)))
     return FRFSF_value
 
-def FRFSM(ref: np.ndarray, frf: np.ndarray):
-    ref = np.sum(ref, axis=1)
-    frf = np.sum(frf, axis=1)
-    ej = np.abs(10*np.log10(np.abs(ref**2))-10*np.log10(np.abs(frf**2)))
-    f = 1/(np.std(ej)*np.sqrt(2*np.pi))*np.exp(-(1/2)*((ej-0)/np.std(ej))**2)
-    f0 = 1/(np.std(ej)*np.sqrt(2*np.pi))
+def FRFSM(ref: np.ndarray, frf: np.ndarray,std):
+    #std is a parameter which is usually set at 6dB
+    ref = np.abs(np.sum(ref, axis=1))**2
+    frf = np.abs(np.sum(frf, axis=1))**2
+    ej = np.abs(10*np.log10(ref)-10*np.log10(frf))
+    f = 1/(std*np.sqrt(2*np.pi))*np.exp(-(1/2)*((ej-0)/std)**2)
+    f0 = 1/(std*np.sqrt(2*np.pi))
     s = 1/len(ref)*np.sum(f)/f0
     return s
 
