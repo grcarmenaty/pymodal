@@ -40,6 +40,97 @@ def cantilever_beam(mapdl, elastic_modulus, Poisson, density, damage_location,
             'line_damage': line_damage, 'line_end': line_end}
 
 
+def free_beam_solid(mapdl, elastic_modulus, Poisson, density, b, h, l,
+                    e_size):
+    mat_id = pymodal.mapdl.set_linear_elastic(mapdl, elastic_modulus, Poisson,
+                                              density)
+    element_id = pymodal.mapdl.set_solid186(mapdl)
+    volume_id = pymodal.mapdl.create_prism(mapdl, 0, 0, b, l, h)
+    mapdl.prep7()
+    mapdl.esize(e_size, 0)
+    mapdl.vmesh(volume_id['volume_id'])
+    mapdl.finish()
+    return {'mat_id': mat_id, 'element_id': element_id,
+            'volume_id': volume_id}
+
+
+def damaged_beam_solid(mapdl, elastic_modulus, Poisson, density, b, h, l,
+                       e_size, damage_location, damage_width, damage_depth):
+    mat_id = pymodal.mapdl.set_linear_elastic(mapdl, elastic_modulus, Poisson,
+                                              density)
+    element_id = pymodal.mapdl.set_solid186(mapdl)
+    beam_id = pymodal.mapdl.create_prism(mapdl, 0, 0, b, l, h)
+    indentation_id = pymodal.mapdl.create_prism(
+        mapdl, 0, damage_location-damage_width/2, b, damage_width, damage_depth
+    )
+    pymodal.mapdl.move_volume(mapdl, indentation_id['volume_id'], 0, 0,
+                              h-damage_depth)
+    mapdl.prep7()
+    mapdl.vsbv(beam_id['volume_id'], indentation_id['volume_id'])
+    mapdl.esize(e_size, 0)
+    mapdl.vsweep(indentation_id['volume_id']+1)
+    mapdl.finish()
+    return {'mat_id': mat_id, 'element_id': element_id,
+            'volume_id': indentation_id['volume_id']+1}
+
+
+def mass_beam_solid(mapdl, elastic_modulus, Poisson, density, b, h, l,
+                    e_size, mass_location, mass_value):
+    mat_id = pymodal.mapdl.set_linear_elastic(mapdl, elastic_modulus, Poisson,
+                                              density)
+    element_id = pymodal.mapdl.set_solid186(mapdl)
+    volume_id = pymodal.mapdl.create_prism(mapdl, 0, 0, b, l, h)
+    mapdl.prep7()
+    mapdl.esize(e_size, 0)
+    mapdl.vmesh(volume_id['volume_id'])
+    node_list = pymodal.mapdl.get_node_list(mapdl)
+    closest_node = cdist(np.array([[b/2, mass_location, h]]), node_list[:, 1:4])
+    node_id = int(node_list[int(np.argmin(closest_node)), 0])
+    current_etype = pymodal.mapdl.set_mass21(mapdl, mass_value)
+    mapdl.prep7()
+    mapdl.type(current_etype['etype_id'])
+    mapdl.real(current_etype['real_constant_id'])
+    mapdl.e(node_id)
+    mapdl.finish()
+    return {'mat_id': mat_id, 'element_id': element_id,
+            'volume_id': volume_id}
+
+
+def stringer_beam_solid(mapdl, elastic_modulus, Poisson, density, b, h, l,
+                    e_size, stringer_start, stringer_length, stringer_height):
+    mat_id = pymodal.mapdl.set_linear_elastic(mapdl, elastic_modulus, Poisson,
+                                              density)
+    element_id = pymodal.mapdl.set_solid186(mapdl)
+    volume_id = pymodal.mapdl.create_prism(mapdl, 0, 0, b, l, h)
+    stringer_id = pymodal.mapdl.create_prism(mapdl, b/2-h/2, stringer_start, h,
+                                             stringer_length, stringer_height)
+    pymodal.mapdl.move_volume(mapdl, stringer_id['volume_id'], 0, 0, h)
+    mapdl.prep7()
+    mapdl.esize(e_size, 0) # Set element size
+    mapdl.vmesh('ALL') # Mesh the defined volumes
+    # Select the areas based on their location coordinates in the Z axis, only
+    # the ones contained in the plane parallel to the Z plane at the value of
+    # z = thickness. This plane only contains the lower face of the stringer
+    # support and the upper face of the plate.
+    mapdl.asel('S', 'LOC', 'Z', h, h)
+    mapdl.prep7()
+    # Get the IDs for both areas
+    mapdl.run('*DEL,MAX_PARAM')
+    mapdl.run('*DEL,MIN_PARAM')
+    mapdl.get('MAX_PARAM', 'AREA', 0, 'NUM', 'MAX')
+    mapdl.get('MIN_PARAM', 'AREA', 0, 'NUM', 'MIN')
+    area_1 = mapdl.parameters['MAX_PARAM']
+    area_2 = mapdl.parameters['MIN_PARAM']
+    # Deifne a bonded contact between both areas
+    pymodal.mapdl.linear_elastic_surface_contact(mapdl, area_1, area_2,
+                                                 elastic_modulus*10e7)
+    mapdl.prep7()
+    mapdl.vmesh("ALL")
+    mapdl.finish()
+    return {'mat_id': mat_id, 'element_id': element_id,
+            'volume_id': stringer_id['volume_id']}
+
+
 def free_beam(mapdl, elastic_modulus, Poisson, density, damage_location, b, h,
               l, damage_level, ndiv):
     damage_element_start = np.arange(0, l, l / ndiv)[

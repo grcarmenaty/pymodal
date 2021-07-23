@@ -193,13 +193,13 @@ def unfinished_test_los_alamos_building():
             0.3,
             0.3,
         ],
-        floor_densities=list([3200 for i in range(4)]),
-        # floor_densities=[
-        #     2757.334507,
-        #     2771.198089,
-        #     2778.554965,
-        #     2778.991622,
-        # ],
+        # floor_densities=list([3200 for i in range(4)]),
+        floor_densities=[
+            2757.334507,
+            2771.198089,
+            2778.554965,
+            2778.991622,
+        ],
         column_densities=[
             3190.944102,
             3213.290471,
@@ -361,6 +361,7 @@ def unfinished_test_los_alamos_building():
         (0.052, 0.305-0.052, -0.05),
         (0.305-0.052, 0.305-0.052, -0.05),
     ]
+    # This is for adding a sprind to the base, adds a mode, bad idea
     # for point in foundation_points:
     #     node_list = pymodal.mapdl.add_spring(
     #         mapdl, point, 2e4,

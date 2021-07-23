@@ -37,4 +37,8 @@ from .mesher import (
     stringer_support_solid,
     los_alamos_building,
     add_spring,
+    free_beam_solid,
+    damaged_beam_solid,
+    mass_beam_solid,
+    stringer_beam_solid,
 )

@@ -496,7 +496,7 @@ class FRF():
         distance = distance / self.resolution
         for i in range(len(self)):
             peaks = signal.find_peaks(
-                np.abs(self.silhouette()[:, 0, i].imag),
+                np.abs(self.silhouette().imag)[0, :, 0],
                 prominence=prominence,
                 distance=distance
             )

@@ -34,7 +34,7 @@ def modal_analysis(mapdl, frequency_range, master_coords=None,
         master_nodes = []
         for i in range(master_coords.shape[0]):
             closest_node = cdist(np.asarray([master_coords[i]]),
-                                node_list[:, 1:4])
+                                 node_list[:, 1:4])
             master_nodes.append(int(node_list[
                 int(np.argmin(closest_node)), 0
             ]))

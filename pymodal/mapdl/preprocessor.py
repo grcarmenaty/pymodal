@@ -89,7 +89,7 @@ def create_prism(mapdl, x_origin, y_origin, width, depth, height):
 
     return_data = {}
     mapdl.prep7()
-    mapdl.blc4(x_origin, y_origin, width, depth, height)
+    mapdl.blc4(x_origin, y_origin, width, depth, height) # x, y, z
     mapdl.get('CURRENT_V', 'VOLU', 0, 'NUM', 'MAX')
     return_data['volume_id'] = mapdl.parameters['CURRENT_V']
     mapdl.run('CURRENT_V=')
