@@ -216,7 +216,7 @@ def unfinished_test_los_alamos_building():
         ],
         e_size=0.01,
         column_thicknesses=[
-            0.006,
+            0.00001,
             0.006,
             0.006,
             0.006,
@@ -348,6 +348,7 @@ def unfinished_test_los_alamos_building():
         foundation_depth=0.05,
         foundation_contact_strength=1e12
     )
+    mapdl.eplot()
     pymodal.mapdl.displacement_bc(
         mapdl,
         (-1, 1),

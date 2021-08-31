@@ -844,6 +844,15 @@ class FRF():
                             axis=0)
         return M2L
 
+    def time_domain(self):
+        value_time_domain = []
+        for i in range(len(self)):
+            frf_time_domain = []
+            for j in range(self.lines):
+                frf_time_domain.append(np.fft.irfft(self.value[:, j, i]))
+            value_time_domain.append(np.array(frf_time_domain))
+        return np.array(value_time_domain).T
+
     def plot(self,
              ax: list = None,
              fontsize: float = 12,
