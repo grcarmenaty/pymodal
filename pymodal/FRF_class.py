@@ -494,7 +494,7 @@ class FRF():
     def _modal_frequencies(self, prominence=0.02, distance=50):
         modal_frequencies = []
         distance = distance / self.resolution
-        for i in range(len(self)):
+        for __ in range(len(self)):
             peaks = signal.find_peaks(
                 np.abs(self.silhouette().imag)[0, :, 0],
                 prominence=prominence,
