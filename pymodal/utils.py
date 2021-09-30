@@ -255,7 +255,7 @@ def value_RVAC_2d(ref: np.ndarray, frf: np.ndarray):
 def value_GAC(ref: np.ndarray, frf: np.ndarray):
 
     #The following line is the formula of the GAC vector
-    GAC_value = 2(np.abs(np.sum(frf*ref.conj(),axis=1))*
+    GAC_value = 2*(np.abs(np.sum(frf*ref.conj(),axis=1))*
         (1/(np.sum(frf*frf.conj(),axis=1)+np.sum(ref*ref.conj(),axis=1))))
     return GAC_value
 
@@ -270,7 +270,7 @@ def FRFSF(ref: np.ndarray, frf: np.ndarray):
     FRFSF_value = np.sum(np.sum(np.abs(ref),axis=1))/(np.sum(np.sum(np.abs(frf),axis=1)))
     return FRFSF_value
 
-def FRFSM(ref: np.ndarray, frf: np.ndarray,std):
+def FRFSM(ref: np.ndarray, frf: np.ndarray, std):
     #std is a parameter which is usually set at 6dB
     ref = np.abs(np.sum(ref, axis=1))**2
     frf = np.abs(np.sum(frf, axis=1))**2

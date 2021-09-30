@@ -781,46 +781,46 @@ class FRF():
     def get_DRQ(self, ref:int):
         DRQ = np.array([])
         for i in range(len(self)):
-            RVAC = self.get_RVAC(ref,i)
+            RVAC = self.get_RVAC(ref, i)
             DRQ = np.append(DRQ, pymodal.DRQ(RVAC))
         return DRQ
 
     def get_AIGAC(self, ref:int):
         AIGAC = np.array([])
         for i in range(len(self)):
-            GAC = self.get_GAC(ref,i)
+            GAC = self.get_GAC(ref, i)
             AIGAC = np.append(AIGAC, pymodal.AIGAC(GAC))
         return AIGAC
     
     def get_DRQ_2d(self, ref:int):
         DRQ_2d = np.array([])
         for i in range(len(self)):
-            RVAC_2d = self.get_RVAC_2d(ref,i)
+            RVAC_2d = self.get_RVAC_2d(ref, i)
             DRQ_2d = np.append(DRQ_2d, pymodal.DRQ(RVAC_2d))
         return DRQ_2d
 
     def get_FRFSF(self, ref:int):
         FRFSF = np.array([])
         for i in range(len(self)):
-            FRFSF = np.append(FRFSF, pymodal.FRFSF(ref,i))
+            FRFSF = np.append(FRFSF, pymodal.FRFSF(ref, i))
         return FRFSF
 
     def get_FRFRMS(self, ref:int):
         FRFRMS = np.array([])
         for i in range(len(self)):
-            FRFRMS = np.append(FRFRMS, pymodal.FRFRMS(ref,i))
+            FRFRMS = np.append(FRFRMS, pymodal.FRFRMS(ref, i))
         return FRFRMS
 
-    def get_FRFSM(self, ref:int):
+    def get_FRFSM(self, ref:int, std):
         FRFSM = np.array([])
         for i in range(len(self)):
-            FRFSM = np.append(FRFSM, pymodal.FRFSM(ref,i))
+            FRFSM = np.append(FRFSM, pymodal.FRFSM(ref, i, std))
         return FRFSM
 
     def get_ODS_diff(self, ref:int):
         sm = np.array([])
         for i in range(len(self)):
-            sm = np.append(sm, pymodal.ODS_diff(ref,i))
+            sm = np.append(sm, pymodal.ODS_diff(ref, i))
         
         ODS_diff = 1 - sm/np.max(sm)
         return ODS_diff
@@ -828,7 +828,7 @@ class FRF():
     def get_r2_imag(self, ref:int):
         r2_imag = np.array([])
         for i in range(len(self)):
-            r2_imag = np.append(r2_imag, pymodal.r2_imag(ref,i))
+            r2_imag = np.append(r2_imag, pymodal.r2_imag(ref, i))
 
     def get_M2L(self, ref: int, part: str = 'abs'):
         if part == 'abs':
