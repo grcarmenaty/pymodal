@@ -25,6 +25,7 @@ setuptools.setup(
         "matplotlib>=3.1.3",
         "pandas>=1.0.1",
         "ansys-mapdl-core>=0.39",
+        "astropy>=4.3"
     ],
     # Should be as specific as possible
     extras_require={
