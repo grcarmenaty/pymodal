@@ -348,20 +348,20 @@ def unfinished_test_los_alamos_building():
         foundation_depth=0.05,
         foundation_contact_strength=1e12
     )
-    mapdl.eplot()
-    pymodal.mapdl.displacement_bc(
-        mapdl,
-        (-1, 1),
-        (-1, 1),
-        (-1, -0.05+0.01/2),
-        x=False
-    )
-    foundation_points = [
-        (0.052, 0.052, -0.05),
-        (0.305-0.052, 0.052, -0.05),
-        (0.052, 0.305-0.052, -0.05),
-        (0.305-0.052, 0.305-0.052, -0.05),
-    ]
+    # mapdl.eplot()
+    # pymodal.mapdl.displacement_bc(
+    #     mapdl,
+    #     (-1, 1),
+    #     (-1, 1),
+    #     (-1, -0.05+0.01/2),
+    #     x=False
+    # )
+    # foundation_points = [
+    #     (0.052, 0.052, -0.05),
+    #     (0.305-0.052, 0.052, -0.05),
+    #     (0.052, 0.305-0.052, -0.05),
+    #     (0.305-0.052, 0.305-0.052, -0.05),
+    # ]
     # This is for adding a sprind to the base, adds a mode, bad idea
     # for point in foundation_points:
     #     node_list = pymodal.mapdl.add_spring(
@@ -378,7 +378,7 @@ def unfinished_test_los_alamos_building():
         mapdl,
         excitation_coordinates=[0.305, 0.305/2, 0.025/2],
         response_coordinates=[
-            [0.305, 0.305/2, 0.0254/2], # 2
+            # [0.305, 0.305/2, 0.0254/2], # 2
             [0, 0.305-0.025/2-0.025, 3*0.152+3*0.0254+0.0254/2], # 5
             [0, 0.025/2+0.025, 3*0.152+3*0.0254+0.0254/2], # 6
             [0, 0.305-0.025/2-0.025, 2*0.152+2*0.0254+0.0254/2], # 7
@@ -403,6 +403,7 @@ def unfinished_test_los_alamos_building():
         pathlib.Path.cwd() / "tests" / "data" / "experimental_building_frf.zip"
     )
     ref.normalize().plot(color="r")
+    harmonic_analysis.save("free.zip")
     harmonic_analysis.normalize().plot(color="b")
     plt.show()
     plt.close()
