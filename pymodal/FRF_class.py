@@ -608,6 +608,17 @@ class FRF():
     #         G = self[i].get_transformation_matrix()[:, :, 0]
 
     def get_CFDAC(self, ref: int, frf: list = None):
+        """
+        Create a covariance matrix of two different sets of FRF's.
+        Marco A. Pérez and Roger Serra-López. A frequency domain-based correlation approach for structural assessment and damage identification.
+        Mech. Syst. Signal Process
+        DOI: https://doi.org/10.1016/j.ymssp.2018.09.042
+
+        Returns
+        -------
+        out : CFDAC matrix
+            Correlation matrix in the complex domain. The magnitude of the CFDAC corresponds to the FDAC.
+        """
         ref_FRF = self.value[:, :, ref]
         if frf is None:
             CFDAC = pymodal.value_CFDAC(ref_FRF,
@@ -754,8 +765,17 @@ class FRF():
                 )
         return CFDAC_A
 
-    #FDAC function
     def get_FDAC(self, ref: int, frf: list = None):
+        """
+        Create a covariance matrix of two different sets of FRF's.
+        Rodrigo Pascual, J.-C Golinval, and Mario Razeto. A Frequency Domain Correlation Technique for Model Correlation and Updating. 
+        Proc. Int. Modal Anal. Conf. - IMAC, 1, 1997
+        
+        Returns
+        -------
+        out : FDAC matrix
+            Correlation matrix in absolute terms.
+        """
         ref_FRF = self.value[:, :, ref]
         if frf is None:
             FDAC = pymodal.value_FDAC(ref_FRF,
@@ -782,8 +802,20 @@ class FRF():
                 )
         return FDAC
 
-    #RVAC function equivalent to the Global Shape Criterion (GSC) and the Cross Signature Assurance Criterion (CSAC)
     def get_RVAC(self, ref: int, frf: list = None):
+        """
+        Extracts correlation vector at each frequency pair, equivalent to the main diagonal of the FDAC.
+        Ward Heylen, S Lammens, and Paul Sas. Modal Analysis Theory and Testing. 1997.
+        
+        Notes:
+        RVAC function is equivalent to the Global Shape Criterion (GSC) and the Cross Signature Assurance Criterion (CSAC).
+        
+        Returns
+        -------
+        out : RVAC vector
+            Correlation vector in absolute terms.
+        """
+
         ref_FRF = self.value[:, :, ref]
         if frf is None:
             RVAC = pymodal.value_RVAC(ref_FRF,self.value[:, :, 0])
@@ -803,8 +835,18 @@ class FRF():
                 RVAC = np.dstack((RVAC, pymodal.value_RVAC(ref_FRF, self.value[:, :, i])))
         return RVAC
 
-    #RVAC applied to FRF curvatures
     def get_RVAC_2d(self, ref: int, frf: list = None):
+        """
+        Extracts correlation vector at each frequency pair, using the FRF curvature (Second derivative of the FRF).
+        R.P.C. Sampaio and N. M.M. Maia. Strategies for an effcient indicator of structural damage. 
+        Mech. Syst. Signal Process
+        DOI: https://doi.org/10.1016/j.ymssp.2008.07.015
+        
+        Returns
+        -------
+        out : RVAC'' vector
+            Correlation vector in absolute terms.
+        """
         ref_FRF = self.value[:, :, ref]
         if frf is None:
             RVAC_2d = pymodal.value_RVAC_2d(ref_FRF,self.value[:, :, 0])
@@ -822,9 +864,19 @@ class FRF():
             for i in frf[1:]:
                 RVAC_2d = np.dstack((RVAC_2d, pymodal.value_RVAC_2d(ref_FRF, self.value[:, :, i])))
         return RVAC_2d
-    
-    #GAC function equivalent to the Cross Signature Scale Factor (CSF)
+
     def get_GAC(self, ref: int, frf: list = None):
+        """
+        Extracts correlation vector at each frequency pair, this method is sensitive to amplitude changes.
+        C. Zang, H. Grafe, and M. Imregun. Frequency-domain criteria for correlating and updating dynamic finite element models. 
+        Mech Syst Signal Process
+        DOI: https://doi.org/10.1006/mssp.2000.1357
+        
+        Returns
+        -------
+        out : GAC vector
+            Correlation vector in absolute terms, sensitive to amplitude changes.
+        """
         ref_FRF = self.value[:, :, ref]
         if frf is None:
             GAC = pymodal.value_GAC(ref_FRF,self.value[:, :, 0])
@@ -846,6 +898,18 @@ class FRF():
         return GAC
 
     def get_SCI(self, ref: int, part: str = 'abs'):
+        """
+        Scalar damage indicator of two different CFDAC's (Pristine-Pristine) and (Pristine-Damage).
+        This damage indicator is based on the Pearson Correlation.
+        Marco A. Pérez and Roger Serra-López. A frequency domain-based correlation approach for structural assessment and damage identification.
+        Mech. Syst. Signal Process
+        DOI: https://doi.org/10.1016/j.ymssp.2018.09.042
+
+        Returns
+        -------
+        out : SCI value
+            Scalar value between 0 and 1. 0 indicating perfect correlation and 1 completely uncorrelated.
+        """
         if part == 'abs':
             ref_CFDAC = np.abs(self[ref].get_CFDAC(0))
         elif part == 'real':
@@ -1269,8 +1333,21 @@ class FRF():
 
         return CSM
 
-    #The DRQ damage indicator is equivalent to the AIGSC based on the Global Shape Criterion (GSC) 
     def get_DRQ(self, ref:int):
+        """
+        Scalar damage indicator, arithmetic average of the RVAC vector.
+        R.P.C. Sampaio and N. M.M. Maia. Strategies for an effcient indicator of structural damage. 
+        Mech. Syst. Signal Process
+        DOI: https://doi.org/10.1016/j.ymssp.2008.07.015
+        
+        Notes:
+        The DRQ damage indicator is equivalent to the AIGSC based on the Global Shape Criterion (GSC)
+
+        Returns
+        -------
+        out : DRQ value
+            Scalar value between 0 and 1. 1 meaning perfect correlation.
+        """
         DRQ = np.array([])
         for i in range(len(self)):
             RVAC = self.get_RVAC(ref,i)
@@ -1278,6 +1355,17 @@ class FRF():
         return DRQ
 
     def get_AIGAC(self, ref:int):
+        """
+        Scalar damage indicator, arithmetic average of the GAC vector.
+        C. Zang, H. Grafe, and M. Imregun. Frequency-domain criteria for correlating and updating dynamic finite element models. 
+        Mech Syst Signal Process
+        DOI: https://doi.org/10.1006/mssp.2000.1357
+        
+        Returns
+        -------
+        out : AIGAC value
+            Scalar value between 0 and 1. 1 meaning perfect correlation.
+        """
         AIGAC = np.array([])
         for i in range(len(self)):
             GAC = self.get_GAC(ref,i)
@@ -1285,6 +1373,17 @@ class FRF():
         return AIGAC
     
     def get_DRQ_2d(self, ref:int):
+        """
+        Scalar damage indicator, arithmetic average of the RVAC'' vector.
+        R.P.C. Sampaio and N. M.M. Maia. Strategies for an effcient indicator of structural damage. 
+        Mech. Syst. Signal Process
+        DOI: https://doi.org/10.1016/j.ymssp.2008.07.015
+
+        Returns
+        -------
+        out : DRQ'' value
+            Scalar value between 0 and 1. 1 meaning perfect correlation.
+        """
         DRQ_2d = np.array([])
         for i in range(len(self)):
             RVAC_2d = self.get_RVAC_2d(ref,i)
@@ -1292,6 +1391,16 @@ class FRF():
         return DRQ_2d
 
     def get_FRFSF(self, ref:int):
+        """
+        Ratio between pristine and damaged spectrums.
+        Timothy Marinone and Adam Moya. Comparison of frf correlation techniques. 
+        Conf. Proc. Soc. Exp. Mech. Ser
+
+        Returns
+        -------
+        out : FRFSF value
+            Unbounded damage indicator.
+        """
         FRFSF = np.array([])        
         for i in range(len(self)):
             FRFSF_value = np.sum(np.abs(self.value[:,:,ref]))/np.sum(np.abs(self.value[:,:,i]))
@@ -1299,6 +1408,16 @@ class FRF():
         return FRFSF
 
     def get_FRFRMS(self, ref:int):
+        """
+        Dennis Göge and Michael Link. Assessment of computational model updating procedures with regard to model validation. 
+        Aero. Sci. Tech.
+        DOI: https://doi.org/10.1016/S1270-9638(02)01193-8
+
+        Returns
+        -------
+        out : FRFRMS value
+            Unbounded damage indicator.
+        """
         FRFRMS = np.array([])
         for i in range(len(self)):
             num = np.nan_to_num((np.log10(np.abs(self.value[:,:,i]))-np.log10(np.abs(self.value[:,:,ref])))**2)
@@ -1310,6 +1429,21 @@ class FRF():
 
 
     def get_FRFSM(self, ref:int, std:int):
+        """
+        Damage indicator based on the Probability Density Function (PDF)
+        Dooho Lee, Tae Soo Ahn, and Hyeon Seok Kim. A metric on the similarity between two frequency response functions. 
+        J. Sound Vib.
+        DOI: https://doi.org/10.1016/j.jsv.2018.08.051
+        
+        Notes:
+        The argument std is selected by the operator based on his/her expertise.
+        As a rule of thumb, this parameter can be set to 6 dB.
+
+        Returns
+        -------
+        out : FRFSM value
+            Bounded between 0 and 1. 1 meaning perfect correlation.
+        """
         FRFSM = np.array([])
         for i in range(len(self)):
             pristine = np.sum(np.abs(self.value[:,:,ref]), axis=1)**2
@@ -1323,6 +1457,17 @@ class FRF():
         return FRFSM
 
     def get_ODS_diff(self, ref:int):
+        """
+        Damage indicator based on Operating Deflection Shapes (delta_ODS)
+        R.P.C. Sampaio, N. M.M. Maia, R. A.B. Almeida, and A. P.V. Urgueira. A simple damage detection indicator using operational deflection shapes. 
+        Mech Syst Signal Process
+        DOI: https://doi.org/10.1016/j.ymssp.2015.10.023
+
+        Returns
+        -------
+        out : delta_ODS value
+            Unbounded damage indicator
+        """
         sm = np.array([])
         for i in range(len(self)):
             sm_value = np.sum(np.abs(self.value[:,:,i] - self.value[:,:,ref]))
@@ -1336,6 +1481,15 @@ class FRF():
         return sm_value
 
     def get_r2_imag(self, ref:int):
+        """
+        Coefficient of Determination (R2) based on the imaginary part of the FRF.
+        Timothy Marinone and Adam Moya. Comparison of frf correlation techniques. Conf. Proc. Soc. Exp. Mech. Ser
+
+        Returns
+        -------
+        out : R2 value
+            Unbounded damage indicator
+        """
         r2_imag = np.array([])
         for i in range(len(self)):
             pristine = np.reshape(np.imag(self.value[:,:,ref]),-1)
