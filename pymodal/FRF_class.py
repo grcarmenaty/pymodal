@@ -360,8 +360,8 @@ class FRF():
                    name=self.name,
                    part=self.part,
                    modal_frequencies=self.modal_frequencies)
-
-    def generate_transmissibility(self, links):
+    
+    def generate_transmissibility(self):
         """
         Create a new instance of the FRF converting to transmissibility matrix
 
@@ -374,27 +374,27 @@ class FRF():
         Frequencies must be a two-element iterable object.
         """
 
-        shape = np.shape(links)
-        num_t = shape[0]
         count = 0
         frf = np.asarray(self.value[:,:,:])
-        print('Shape')
-        print(frf.shape)
 
-        for l in range(num_t):
-            print('T')
-            print(l)
-            if count == 0:
-                T = frf[:,links[l][0],:]/frf[:,links[l][1],:]
-                T = np.reshape(T, (np.shape(frf)[0],1,-1))
-                count = 1
-            else:
-                t = frf[:,links[l][0],:]/frf[:,links[l][1],:]
-                t = np.reshape(t, (np.shape(frf)[0],1,-1))
-                T = np.hstack((T,t))
+        for output_h in range(frf.shape[1]-1):
+            input_h = output_h + 1
+            while input_h <= frf.shape[1]-1:
+                if count == 0:
+                    T = frf[:,output_h,:]/frf[:,input_h,:]
+                    T = np.reshape(T, (np.shape(frf)[0],1,-1))
+                    count = 1
+                    input_h = input_h + 1
+
+                else:
+                    t = frf[:,output_h,:]/frf[:,input_h,:]
+                    t = np.reshape(t, (np.shape(frf)[0],1,-1))
+                    T = np.hstack((T,t))
+                    input_h = input_h + 1
 
         T = pymodal.FRF(T, min_freq = self.min_freq, max_freq = self.max_freq)
         return T
+
 
     def change_frequencies(self, frequencies: list):
         """
