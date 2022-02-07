@@ -315,11 +315,11 @@ def SCI(CFDAC_pristine: np.ndarray, CFDAC_altered: np.ndarray):
     return SCI_calculation
 
 def DRQ(RVAC: np.ndarray):
-    DRQ = np.mean(RVAC)
+    DRQ = np.real(np.mean(RVAC))
     return DRQ
 
 def AIGAC(GAC:np.ndarray):
-    AIGAC = np.mean(GAC)
+    AIGAC = np.real(np.mean(GAC))
     return AIGAC
 
 def unsigned_SCI(CFDAC_pristine: np.ndarray, CFDAC_altered: np.ndarray):
@@ -328,16 +328,13 @@ def unsigned_SCI(CFDAC_pristine: np.ndarray, CFDAC_altered: np.ndarray):
     SCI_calculation = 1 - np.absolute(PCC)
     return SCI_calculation
 
-
 # Code developped by Joan Fernández Esmerats
 def M2L_func(x, i):
 
     den = (0.95 + 0.05 * i) ** 2
     return (x / den)
 
-
 def M2L(CFDAC):
-
     m = int(np.sqrt(np.size(CFDAC)))
     n = int(0.5 * m)
     M2L_value=np.zeros(int(m))
