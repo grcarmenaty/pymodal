@@ -1506,6 +1506,7 @@ class FRF():
         for i in range(len(self)):
             sm_value = np.sum(np.abs(self.value[:,:,i] - self.value[:,:,ref]))
             sm = np.append(sm, sm_value)
+            ODS = 1 - sm/max(sm)
         
         return sm
 
