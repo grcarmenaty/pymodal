@@ -1,0 +1,18 @@
+Done:
+-Created constructor.
+-Created safeguard measures for input errors.
+-__eq__, __getitem__, __len__ and __repr__
+
+To Do:
+Implementation of methods
+
+---Methods:
+----change_SR(new_SR)
+----cut(new_min_time default old_min_time (if <old_min_time, add zeroes to start), new_max_time default old_max_time(if >old_max_time, add zeroes to end))
+----stitch(new_signal as 1D ndarray or as signal_object)
+----windowing(str from options)
+----to_frequential(estimator default None (other accepted values: H1, H2, Hv), exc as 1D ndarray default None)
+-----If exc. None and est. None: S_yy
+-----If exc. Vector and est. None: H1
+-----If exc. None and est. not None: error
+-----If exc. Vector and est. not None: est. value.
