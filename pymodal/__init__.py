@@ -29,3 +29,4 @@ from .utils import (  # noqa F401
 )
 import pymodal.mapdl
 from .FRF_class import FRF
+from .signal_class import signal
