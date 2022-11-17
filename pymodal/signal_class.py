@@ -1,6 +1,7 @@
 import numpy as np
-from warning import warn
+from warnings import warn
 import pymodal
+from scipy import interpolate
 
 class signal():
     """
@@ -16,11 +17,12 @@ class signal():
                  label: list = None,
                  coordinates: list[tuple[float, float, float]] = None,
                  orientation: list[tuple[float, float, float]] = None,
-                 units: str = "N·mm/s^2"):
+                 units: str = "mm/s^2"):
 
-        self.amplitude = amplitude
+        self.amplitude = np.array(amplitude).reshape((self.amplitude.shape[0], self.amplitude.shape[1], -1))
         self.units = units
         self.samples = self.amplitude.shape[0]
+        self.measurements = self.amplitude.shape[2]
 
         self.label = label
         if self.label is None:
@@ -28,15 +30,15 @@ class signal():
         for i in range(self.samples):
             self.label.append(f"signal {i}")
         
-        self.min_time = min_time  # Minimum frequency is assumed to be 0
+        self.min_time = min_time  # Minimum time is assumed to be 0
         if elapsed_time is None:
             if max_time is None:
-                # If neither elapsed_time nor maximum frequency are defined
+                # If neither elapsed_time nor maximum time are defined
                 self.sample_rate = sample_rate  # Then sample_rate MUST be defined
-                # So elapsed_time and maximum frequency can be calculated
+                # So elapsed_time and maximum time can be calculated
                 self.elapsed_time = (self.samples - 1) * self.sample_rate
                 self.max_time = self.min_time + self.elapsed_time
-            else:  # If elapsed_time is not defined but maximum frequency is
+            else:  # If elapsed_time is not defined but maximum time is
                 self.max_time = max_time
                 self.elapsed_time = self.max_time - self.min_time
                 if sample_rate is None:
@@ -44,21 +46,21 @@ class signal():
                                        (self.samples - 1))
                 else:
                     self.sample_rate = sample_rate
-        else:
+        else: #If elapsed_time is defined
             self.elapsed_time = elapsed_time
-            if max_time is None:
+            if max_time is None: # but max_time is not.
                 self.max_time = self.min_time + self.elapsed_time
-                if sample_rate is None:
+                if sample_rate is None: # and sample_rate isn't either
                     self.sample_rate = (self.elapsed_time /
                                        (self.data_points - 1))
-                else:
+                else: # If sample_rate is defined
                     self.sample_rate = sample_rate
-            else:
+            else: # On the other hand, if max_time is defined
                 self.max_time = max_time
-                if sample_rate is None:
+                if sample_rate is None: # and sample_rate is not
                     self.sample_rate = (self.elapsed_time /
                                        (self.data_points - 1))
-                else:
+                else: # but if sample_rate is defined
                     self.sample_rate = sample_rate
 
         # In case the user inputs more values than is necessary and those
@@ -89,6 +91,8 @@ class signal():
                     raise Exception("At least one coordinate has too many elements.")
                 if len(self.coordinates) > len(self):
                     raise Exception("Too many coordinates were provided.")
+                elif len(self.coordinates) < len(self):
+                    raise Exception("Too few coordinates were provided.")
 
         if len(self.label) > len(self):
             raise Exception("Too many names were provided.")
@@ -147,7 +151,118 @@ class signal():
                       elapsed_time = self.elapsed_time,
                       max_time = self.max_time,
                       min_time = self.min_time,
-                      label = self.label,
+                      label = self.label[index.start:index.stop:index.step],
                       coordinates = self.coordinates[index.start:index.stop:index.step],
                       orientation = self.orientation[index.start:index.stop:index.step],
                       units = self.units)
+
+
+    def extend(self, new_signal):
+        assert self.sample_rate == new_signal.sample_rate
+        assert self.min_time == new_signal.min_time
+        assert self.max_time == new_signal.max_time
+        assert self.units == new_signal.units
+        return signal(amplitude = np.vstack((self.amplitude, new_signal.amplitude)),
+                      sample_rate = self.sample_rate,
+                      elapsed_time = self.elapsed_time,
+                      max_time = self.max_time,
+                      min_time = self.min_time,
+                      label = np.vstack((self.label, new_signal.label)),
+                      coordinates = np.vstack((self.coordinates, new_signal.coordinates)),
+                      orientation = np.vstack((self.amplitude, new_signal.amplitude)),
+                      units = self.units)
+
+    
+    def change_sample_rate(self, new_sample_rate: float):
+        if new_sample_rate % self.sample_rate != 0:
+            warn("The resulting signal will be interpolated according to the desired new"
+                 " sample_rate.")
+            new_time_vector = np.arange(
+                self.min_freq, self.max_freq+new_sample_rate, new_sample_rate
+            )
+            new_value = []
+            for i in range(self.amplitude.shape[-1]):
+                signal = self.amplitude[..., i]
+                new_signal = interpolate.interp1d(new_time_vector, signal)
+                new_value.append(new_signal)
+            new_value = np.array(new_value)
+        else:
+            step = int(new_sample_rate / self.sample_rate)
+            new_value = self.amplitude[0::step, :, :]
+
+        return signal(signal=new_value,
+                      sample_rate=new_sample_rate,
+                      elapsed_time=max(new_time_vector)-min(new_time_vector),
+                      max_time=np.amax(new_time_vector),
+                      min_time=np.amin(new_time_vector),
+                      label=self.label,
+                      coordinates=self.coordinates,
+                      orientation=self.orientation,
+                      units=self.units)
+
+            
+    def change_sample_rate(self, new_min_time: float = None, new_max_time: float = None):
+        if new_min_time is None:
+            new_min_time = self.min_time
+        if new_max_time is None:
+            new_max_time = self.max_time
+        new_time_vector = self.time_vector
+        closest_max_time_index = (np.abs(new_time_vector - new_max_time)).argmin()
+        closest_max_time = new_time_vector[closest_max_time_index]
+        closest_min_time_index = (np.abs(new_time_vector - new_min_time)).argmin()
+        closest_min_time = new_time_vector[closest_min_time_index]
+        new_elapsed_time = closest_max_time - closest_min_time
+        new_sample_rate = new_elapsed_time / (closest_max_time_index-closest_min_time_index)
+        if new_sample_rate != self.sample_rate:
+            new_signal = self.change_sample_rate(new_sample_rate)
+        else:
+            new_signal = self.change_sample_rate(self.sample_rate)
+        new_time_vector = new_signal.time_vector
+
+        if new_max_time > new_signal.max_time:
+            time_extension = np.arange(
+                new_signal.max_time, new_max_time+new_signal.sample_rate, new_signal.sample_rate
+            )
+            new_time_vector = np.hstack((new_time_vector, time_extension))
+            amplitude_extension = np.zeros((
+                time_extension.shape[0], new_signal.amplitude.shape[-1]
+            ))
+            new_amplitude = np.hstack((new_signal.amplitude, amplitude_extension))
+        else:
+            new_time_vector = new_time_vector[0:(np.abs(new_time_vector - new_max_time)).argmin()]
+            new_amplitude = new_amplitude[0:(np.abs(new_time_vector - new_max_time)).argmin(), :]
+
+        if new_min_time < new_signal.min_time:
+            time_extension = np.arange(
+                new_min_time, new_signal.min_time+new_signal.sample_rate, new_signal.sample_rate
+            )
+            new_time_vector = np.hstack((time_extension, new_time_vector))
+            amplitude_extension = np.zeros((
+                time_extension.shape[0], new_signal.amplitude.shape[-1]
+            ))
+            new_amplitude = np.hstack((amplitude_extension, new_signal.amplitude))
+            if new_min_time < 0:
+                new_time_vector = new_time_vector + abs(new_min_time)
+        else:
+            new_time_vector = new_time_vector[(np.abs(new_time_vector - new_max_time)).argmin():]
+            new_amplitude = new_amplitude[(np.abs(new_time_vector - new_max_time)).argmin():, :]
+        return signal(signal=new_amplitude,
+                      sample_rate=new_sample_rate,
+                      elapsed_time=max(new_time_vector)-min(new_time_vector),
+                      max_time=np.amax(new_time_vector),
+                      min_time=np.amin(new_time_vector),
+                      label=self.label,
+                      coordinates=self.coordinates,
+                      orientation=self.orientation,
+                      units=self.units)
+
+
+    def apply_window(self, window: str):
+        if isinstance(window, str):
+            if window == "hanning":
+                self.amplitude = self.amplitude * np.tile(np.hanning(self.samples), (1, len(self)))
+            elif window == "hamming":
+                self.amplitude = self.amplitude * np.tile(np.hamming(self.samples), (1, len(self)))
+        else:
+            window = interpolate.interp1d(self.time_vector, window)
+            self.amplitude = self.amplitude * np.tile(window, (1, len(self)))
