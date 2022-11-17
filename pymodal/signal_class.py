@@ -4,6 +4,7 @@ import pymodal
 from scipy import interpolate
 
 class signal():
+
     """
     Store and manipulate spectral signals.
     """
@@ -15,23 +16,24 @@ class signal():
                  max_time: float = None,
                  min_time: float = 0,
                  label: list = None,
-                 coordinates: list[tuple[float, float, float]] = None,
-                 orientation: list[tuple[float, float, float]] = None,
+                 coordinates: np.ndarray = None,
+                 orientations: np.ndarray = None,
                  units: str = "mm/s^2"):
 
-        self.amplitude = np.array(amplitude).reshape((
-            self.amplitude.shape[0], self.amplitude.shape[1], -1
-        ))
+        self.amplitude = np.array(amplitude)
         self.units = units
         self.samples = self.amplitude.shape[0]
-        self.measurements = self.amplitude.shape[2]
+        self.degrees_of_freedom = self.amplitude.shape[1]
+        if self.amplitude.ndim > 2:
+            raise ValueError(f"Coordinates must be a two-dimensional array"
+                             f", but it is a {self.amplitude.ndim}-dimensional"
+                             f" array.")
 
         self.label = label
+        # If no label is provided, set it ro "Unnamed label"
         if self.label is None:
-            self.label = []
-        for i in range(self.samples):
-            self.label.append(f"signal {i}")
-        
+            self.label = "Unnamed signal"
+
         self.min_time = min_time  # Minimum time is assumed to be 0
         if elapsed_time is None:
             if max_time is None:
@@ -42,14 +44,14 @@ class signal():
                 self.elapsed_time = (self.samples - 1) * self.sample_rate
                 self.max_time = self.min_time + self.elapsed_time
             else:  # If elapsed_time is not defined but maximum time is
-                self.max_time = max_time
+                self.max_time = max_time  # Max time MUST be defined
                 self.elapsed_time = self.max_time - self.min_time
                 if sample_rate is None:
                     self.sample_rate = (self.elapsed_time /
                                        (self.samples - 1))
                 else:
                     self.sample_rate = sample_rate
-        else: #If elapsed_time is defined
+        else:  # If elapsed_time is defined
             self.elapsed_time = elapsed_time
             if max_time is None: # but max_time is not.
                 self.max_time = self.min_time + self.elapsed_time
@@ -67,13 +69,13 @@ class signal():
                     self.sample_rate = sample_rate
 
         # In case the user inputs more values than is necessary and those
-        # values don't make sense together, raise an exception.
+        # values don't make sense together, raise a value error.
         calculated_sample_rate = self.elapsed_time / (self.data_points - 1)
         sample_rate_error = not(self.sample_rate == calculated_sample_rate)
         calculated_elapsed_time = self.max_time - self.min_time
         elapsed_time_error = not(self.elapsed_time == calculated_elapsed_time)
         if sample_rate_error or elapsed_time_error:
-            raise Exception((
+            raise ValueError((
                 f"The sample_rate ({sample_rate} Hz), elapsed_time"
                 f" ({elapsed_time} s), min_time ({min_time} s) and/or max_time"
                 f" ({max_time} s) values introduced were not coherent with"
@@ -87,37 +89,96 @@ class signal():
             self.sample_rate
         )
 
-        self.coordinates = coordinates
         if self.coordinates is None:
-            warn("You will not be able to convert this to frequential.")
+            warn("Coordinates will be assumed to be points spaced one distance"
+                 " unit along the x axis.",
+                 UserWarning)
+            self.coordinates = np.vstack(
+                np.arange(self.degrees_of_freedom),
+                np.zeros((self.degrees_of_freedom, 2))
+            )
         else:
-            for element in coordinates:
-                if len(element) != 3:
-                    raise Exception(
-                        "At least one coordinate has too many elements."
-                    )
-                if len(self.coordinates) > len(self):
-                    raise Exception("Too many coordinates were provided.")
-                elif len(self.coordinates) < len(self):
-                    raise Exception("Too few coordinates were provided.")
+            self.coordinates = np.array(coordinates, dtype=np.float64)
+            # Check for right number of numpy array dimensions.
+            if self.coordinates.ndim != 2:
+                raise ValueError(f"Coordinates must be a two-dimensional array"
+                                 f", but it is a {self.coordinates.ndim}-"
+                                 f"dimensional array.")
+            # Check for right dimensions of coordinates
+            dimension_difference = self.coordinates.shape[1] - 3
+            if dimension_difference > 0:
+                warn(
+                    f"Your coordinates are {self.coordinates.shape[1]}"
+                    f"-dimensional, Only first three dimensions of coordinates"
+                    f"will be used.",
+                    UserWarning
+                )
+                self.coordinates = self.coordinates[:, :2]
+            elif dimension_difference < 0:
+                warn(
+                    f"Your coordinates are {self.coordinates.shape[1]}"
+                    f"-dimensional, Less than three dimensions provided,"
+                    f" missing dimensions are assumed to be 0 for all"
+                    f" coordinates.",
+                    UserWarning)
+                self.coordinates = np.vstack(
+                    self.coordinates,
+                    np.zeros((self.degrees_of_freedom,
+                              abs(dimension_difference)))
+                )
+            # Check for right amount of coordinates
+            if len(self.coordinates) > self.degrees_of_freedom:
+                raise ValueError("Too many coordinates were provided.")
+            elif len(self.coordinates) < self.degrees_of_freedom:
+                raise ValueError("Too few coordinates were provided.")
 
-        if len(self.label) > len(self):
-            raise Exception("Too many names were provided.")
-
-        self.orientation = orientation
-        if self.orientation is None:
-            warn("You will not be able to convert this to frequential.")
+        if self.orientations is None:
+            warn("orientations will be assumed to be points spaced one"
+                 " distance unit along the x axis.",
+                 UserWarning)
+            self.orientations = np.vstack(
+                np.arange(self.degrees_of_freedom),
+                np.zeros((self.degrees_of_freedom, 2))
+            )
         else:
-            for element in coordinates:
-                if len(element) != 3:
-                    raise Exception(
-                        "At least one orientation has too many elements."
-                    )
-                if len(self.orientation) > len(self):
-                    raise Exception("Too many orientations were provided.")
+            self.orientations = np.array(orientations, dtype=np.float64)
+            # Check for right number of numpy array dimensions.
+            if self.orientations.ndim != 2:
+                raise ValueError(f"orientations must be a two-dimensional"
+                                 f" array, but it is a"
+                                 f" {self.orientations.ndim}-dimensional"
+                                 f" array.")
+            # Check for right dimensions of orientations
+            dimension_difference = self.orientations.shape[1] - 3
+            if dimension_difference > 0:
+                warn(
+                    f"Your orientations are {self.orientations.shape[1]}"
+                    f"-dimensional, Only first three dimensions of"
+                    f" orientations will be used.",
+                    UserWarning
+                )
+                self.orientations = self.orientations[:, :2]
+            elif dimension_difference < 0:
+                warn(
+                    f"Your orientations are {self.orientations.shape[1]}"
+                    f"-dimensional, Less than three dimensions provided,"
+                    f" missing dimensions are assumed to be 0 for all"
+                    f" orientations.",
+                    UserWarning)
+                self.orientations = np.vstack(
+                    self.orientations,
+                    np.zeros((self.degrees_of_freedom,
+                              abs(dimension_difference)))
+                )
+            # Check for right amount of orientations
+            if len(self.orientations) > self.degrees_of_freedom:
+                raise ValueError("Too many orientations were provided.")
+            elif len(self.orientations) < self.degrees_of_freedom:
+                raise ValueError("Too few orientations were provided.")
+
 
     def __len__(self):
-        return self.amplitude.shape[1]
+        return self.degrees_of_freedom
 
 
     def __repr__(self):
@@ -163,7 +224,7 @@ class signal():
             min_time = self.min_time,
             label = self.label[index.start:index.stop:index.step],
             coordinates = self.coordinates[index.start:index.stop:index.step],
-            orientation = self.orientation[index.start:index.stop:index.step],
+            orientations = self.orientations[index.start:index.stop:index.step],
             units = self.units
         )
 
@@ -182,7 +243,7 @@ class signal():
             label = np.vstack((self.label, new_signal.label)),
             coordinates = np.vstack((self.coordinates,
                                      new_signal.coordinates)),
-            orientation = np.vstack((self.amplitude, new_signal.amplitude)),
+            orientations = np.vstack((self.amplitude, new_signal.amplitude)),
             units = self.units
         )
 
@@ -211,7 +272,7 @@ class signal():
                       min_time=np.amin(new_time_vector),
                       label=self.label,
                       coordinates=self.coordinates,
-                      orientation=self.orientation,
+                      orientations=self.orientations,
                       units=self.units)
 
             
@@ -291,7 +352,7 @@ class signal():
                       min_time=np.amin(new_time_vector),
                       label=self.label,
                       coordinates=self.coordinates,
-                      orientation=self.orientation,
+                      orientations=self.orientations,
                       units=self.units)
 
 
