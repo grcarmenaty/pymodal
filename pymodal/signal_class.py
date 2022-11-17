@@ -6,7 +6,6 @@ from scipy import interpolate
 class signal():
     """
     Store and manipulate spectral signals.
-    test
     """
 
     def __init__(self,
