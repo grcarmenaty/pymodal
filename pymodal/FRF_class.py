@@ -254,6 +254,14 @@ class FRF():
         The selection can be done with exact = True meaning all FRFs match with all substrings
         or with False at least each FRF correspond to a single substring.
         This function can be useful to extract a set of FRFs given a specific damage scenario or envrionmental condition.
+        
+        Parameters
+        ----------
+        substrings : list
+            FRFs with names whom contain any or all FRFs (depending on variable exact) will be added to the new FRF instance
+        exact : bool
+            True = FRF name contains all substrings
+            False = FRF name contains at least one of the substrings being searched.
 
         Returns
         -------
