@@ -27,9 +27,10 @@ class signal():
         Parameters
         ----------
         amplitude: numpy array
-            2-dimensional vector with the amplitudes of as many signals as have
-            been recorded using the same parameters on the same structure; it
-            is assumed they all correspond to independent degrees of freedom.
+            2-dimensional vector with the amplitudes of as many excitation
+            signals as have been recorded using the same parameters on the same
+            structure; it is assumed they all correspond to independent degrees
+            of freedom.
         sample_rate: float, optional if at least one of max_time, elapsed_time
                      is provided
             How much time passes between one data point and the next in the
@@ -297,7 +298,7 @@ class signal():
         )
 
 
-    def extend(self, new_signal):
+    def append(self, new_signal):
         if self.sample_rate != new_signal.sample_rate:
             raise ValueError(f"Sample rate for the signals to be added is"
                              f" {new_signal.sample_rate}. It should be equal"
@@ -499,3 +500,7 @@ class signal():
                       coordinates=self.coordinates,
                       orientations=self.orientations,
                       units=self.units)
+        
+    
+    def to_frf(self, excitation_signal: pymodal.signal):
+        return frf_object
