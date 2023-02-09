@@ -25,6 +25,17 @@ def change_resolution(domain_array: npt.NDArray[np.float64],
     new_resolution: float
         The desired distance between any two adjacent values of the domain
         array.
+    
+    Returns
+    -------
+    A numpy array of floats
+        An array containing the new temporal dimension, which measures the rate
+        of physical change, be it by using time, frequency or any other
+        suitable quantity; with the new resolution.
+    A numpy array of complexes
+        An array with the new amplitude of the signal recorded along the domain
+        array, with the values corresponding to the values of the new domain
+        array.
     """
     
     new_domain_array = np.arange(
