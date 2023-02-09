@@ -43,7 +43,7 @@ def amplitude_array_constructor(domain_array: npt.NDArray[np.float64]):
             amplitude_array_4d]
 
 
-def test_change_resolution():
+def test_change_resolution(recwarn):
     
     def test_change_resolution_internal_loop(domain_array,
                                              amplitude_array,
@@ -68,6 +68,7 @@ def test_change_resolution():
                                               amplitude_array,
                                               resolution)
                 )
+            assert amplitude_array.dtype == new_amplitude_array.dtype
             assert len(record) == 2
             new_max_domain_value = new_domain_array[-1]
             assert record[0].message.args[0] == (
@@ -148,6 +149,8 @@ def test_change_resolution():
                     test_change_resolution_internal_loop(domain_array,
                                                           amplitude_array,
                                                           resolution)
+    assert len(recwarn) == 160
+
 
 if __name__ == "__main__":
     test_change_resolution()

@@ -65,12 +65,12 @@ def change_resolution(domain_array: npt.NDArray[np.float64],
         flat_amplitude = amplitude_array.reshape((amplitude_array.shape[0],
                                                   -1))
         new_amplitude_array = np.empty((new_domain_array.shape[0],
-                                  flat_amplitude.shape[-1]))
+                                        flat_amplitude.shape[-1]),
+                                       dtype=amplitude_array.dtype)
         for i in range(flat_amplitude.shape[-1]):
-            f = interpolate.interp1d(
-                domain_array, flat_amplitude[:, i]
-            )
-            new_amplitude_array[:, i] = f(new_domain_array)
+            new_amplitude_array[:, i] = np.interp(new_domain_array,
+                                                  domain_array,
+                                                  flat_amplitude[:, i])
         new_amplitude_array = new_amplitude_array.reshape(amplitude_shape)
     else:
         # Keep values corresponding to the new resolution
