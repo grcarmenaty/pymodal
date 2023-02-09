@@ -3,6 +3,7 @@ import numpy.typing as npt
 from warnings import warn
 from scipy import interpolate
 from decimal import Decimal
+from matplotlib import pyplot as plt
 
 
 def change_resolution(domain_array: npt.NDArray[np.float64],
@@ -38,7 +39,6 @@ def change_resolution(domain_array: npt.NDArray[np.float64],
         if new_domain_array[-1] > domain_max_value:
             new_domain_array = new_domain_array[:-1]
         new_max_domain_value = new_domain_array[-1]
-        print(f"there should be a max_time warning for resolution {new_resolution}")
         warn((f"The resulting max time will be"
               f" {new_max_domain_value:.{decimal_places}f}."),
              UserWarning)
@@ -49,7 +49,6 @@ def change_resolution(domain_array: npt.NDArray[np.float64],
     # not constant
     if (not np.allclose(new_resolution % resolution, 0) or
         not np.allclose(domain_diff, np.ones(domain_diff.shape)*resolution)):
-        print(f"there should be an interpolation warning for resolution {new_resolution}")
         warn(("The resulting signal will be interpolated according to the"
               " desired new resolution."), UserWarning)
         # Interpolate the values for each signal according to the new domain
@@ -75,4 +74,13 @@ def change_resolution(domain_array: npt.NDArray[np.float64],
     return new_domain_array, new_amplitude_array
 
 if __name__ == "__main__":
-    pass
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = np.cos(domain_array)
+    new_domain_array, new_amplitude_array = change_resolution(
+        domain_array=domain_array,
+        amplitude_array=amplitude_array,
+        new_resolution=0.07
+    )
+    plt.plot(domain_array, amplitude_array)
+    plt.plot(new_domain_array, new_amplitude_array)
+    plt.show()

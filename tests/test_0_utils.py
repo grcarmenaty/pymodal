@@ -2,8 +2,9 @@ import numpy.typing as npt
 import numpy as np
 import pymodal
 from scipy import interpolate
-from pytest import warns
-from matplotlib import pyplot as plt
+import pytest
+import warnings
+from decimal import Decimal
 
 
 def amplitude_array_constructor(domain_array: npt.NDArray[np.float64]):
@@ -56,30 +57,71 @@ def test_change_resolution(recwarn):
     for array in array_collection:
         domain_array = array[0]
         for amplitude_array in array[1]:
-            resolutions = [0.2, 0.07, 0.13]
+            resolutions = [0.2, 0.07, 0.13, 0.15]
             for resolution in resolutions:
+                decimal_places = abs(
+                    Decimal(str(resolution)).as_tuple().exponent
+                )
                 new_domain_array, new_amplitude_array = (
                     pymodal.change_resolution(domain_array,
                                             amplitude_array,
                                             resolution)
                 )
-                resolution_warning = not np.allclose(resolution % 0.1, 0) or domain_array[-1] > 200
-                max_time_warning = not np.allclose(domain_array[-1], new_domain_array[-1])
-                warning_count = 0
+                resolution_warning = (
+                    not np.allclose(resolution % 0.1, 0) or 
+                    domain_array[-1] > 200
+                )
+                max_time_warning = not np.allclose(domain_array[-1],
+                                                   new_domain_array[-1])
                 if resolution_warning and max_time_warning:
-                    print("there should have been two warnings")
-                    warning_count = warning_count + 2
-                elif resolution_warning ^ max_time_warning:
-                    print("there should have been one warning")
-                    warning_count = warning_count + 1
+                    with pytest.warns(UserWarning) as record:
+                        new_domain_array, new_amplitude_array = (
+                            pymodal.change_resolution(domain_array,
+                                                    amplitude_array,
+                                                    resolution)
+                        )
+                    assert len(record) == 2
+                    new_max_domain_value = new_domain_array[-1]
+                    assert record[0].message.args[0] == (
+                        f"The resulting max time will be"
+                        f" {new_max_domain_value:.{decimal_places}f}."
+                    )
+                    assert record[1].message.args[0] == (
+                        "The resulting signal will be interpolated according"
+                        " to the desired new resolution."
+                    )
+                elif resolution_warning and not max_time_warning:
+                    with pytest.warns(UserWarning) as record:
+                        new_domain_array, new_amplitude_array = (
+                            pymodal.change_resolution(domain_array,
+                                                    amplitude_array,
+                                                    resolution)
+                        )
+                    assert len(record) == 1
+                    assert record[0].message.args[0] == (
+                        "The resulting signal will be interpolated according"
+                        " to the desired new resolution."
+                    )
+                elif not resolution_warning and max_time_warning:
+                    with pytest.warns(UserWarning) as record:
+                        new_domain_array, new_amplitude_array = (
+                            pymodal.change_resolution(domain_array,
+                                                    amplitude_array,
+                                                    resolution)
+                        )
+                    assert len(record) == 1
+                    assert record[0].message.args[0] == (
+                        f"The resulting max time will be"
+                        f"{new_max_domain_value:.{decimal_places}f}."
+                    )
                 else:
-                    print("there should have been no warnings")
-                    pass
-                if warning_count > 0:
-                    w = recwarn.pop()
-                    print(w.message)
-                print(len(recwarn))
-                assert len(recwarn) == warning_count
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("error")
+                        new_domain_array, new_amplitude_array = (
+                            pymodal.change_resolution(domain_array,
+                                                    amplitude_array,
+                                                    resolution)
+                        )
                 amplitude_array = amplitude_array.reshape((
                     amplitude_array.shape[0], -1
                 ))
