@@ -67,6 +67,13 @@ class signal():
         """
 
         self.amplitude = np.array(amplitude)
+        if self.amplitude.ndim > 3:
+            raise ValueError(f"Amplitude must be, at most, a three-dimensional"
+                             f" array, but it is a {self.amplitude.ndim}"
+                             f"-dimensional array.")
+        elif self.amplitude.ndim < 3:
+            for _ in range(3-self.amplitude.ndim):
+                self.amplitude = [..., np.newaxis]
         if units is None:
             self.units = "mm, kg, s, °C"
             warn("Units will be assumed to be mm, kg, s, °C.", UserWarning)
@@ -75,10 +82,6 @@ class signal():
         self.units = units
         self.samples = self.amplitude.shape[0]
         self.degrees_of_freedom = self.amplitude.shape[1]
-        if self.amplitude.ndim > 2:
-            raise ValueError(f"Amplitude must be a two-dimensional array, but"
-                             f" it is a {self.amplitude.ndim}-dimensional"
-                             f" array.")
 
         self.label = label
         # If no label is provided, set it to "Unnamed label {i}" for each label
