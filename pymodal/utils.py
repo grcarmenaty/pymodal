@@ -30,10 +30,16 @@ def change_resolution(domain_array: npt.NDArray[np.float64],
     new_domain_array = np.arange(
         domain_array[0], domain_array[-1]+new_resolution/2, new_resolution
     )
+    # Determine the amount of decimal places the user desires from the amount
+    # of decimals in the desired resolution.
     decimal_places = abs(Decimal(str(new_resolution)).as_tuple().exponent)
     np.around(new_domain_array, decimals=decimal_places)
+    # Infer the current resolution from the average of differences between
+    # elements in the domain array.
     domain_diff = np.diff(domain_array)
     resolution = np.average(domain_diff)
+    # Make sure the new max domain value is smaller than the previous max
+    # domain value.
     domain_max_value = domain_array[-1]
     if not np.allclose(new_domain_array[-1], domain_max_value):
         if new_domain_array[-1] > domain_max_value:
