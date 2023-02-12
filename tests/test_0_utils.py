@@ -172,6 +172,7 @@ def amp_array_constructor(domain_array: npt.NDArray[np.float64],
 #         assert np.allclose(reference, new_reference, atol=1e-2, rtol=1e-2)
 #     return None
 
+
 def __test_change_resolution(domain_array: npt.NDArray[np.float64],
                              amplitude_array: npt.NDArray[np.complex64],
                              new_resolution: float,
@@ -194,7 +195,7 @@ def __test_change_resolution(domain_array: npt.NDArray[np.float64],
                                           new_resolution)
             )
         assert amplitude_array.dtype == new_amplitude_array.dtype
-        assert len(record) == expected_warnings
+        assert len(records) == expected_warnings
         for i, record in enumerate(records):
             assert record.message.args[0] == warning_messages[i]
 
@@ -212,6 +213,9 @@ def __test_change_resolution(domain_array: npt.NDArray[np.float64],
                            new_domain_array,
                            new_amplitude_array[:, i])
         assert np.allclose(reference, result, atol=1e-2, rtol=1e-2)
+    return new_domain_array[-1]
+
+#test with different length domain and amplitude, with disordered domain, assert errors
 
 def test_change_resolution_0to120_0·1to0·2_1d():
     """
@@ -242,39 +246,900 @@ def test_change_resolution_0to120_0·1to0·2_1d_complex():
     __test_change_resolution(domain_array, amplitude_array, new_resolution)
 
 
-# def test_change_resolution(recwarn):
-#     """
-#     This test verifies the proper workings of 
-#     """
-    
-    
-    
-#     # Create a set of domain arrays
-#     array_collection = np.vstack((
-#         np.arange(0, 120.05, 0.1),
-#         np.arange(0, 120.05, 0.1) + 10,
-#         np.hstack((np.arange(0, 60.05, 0.1),
-#                    np.arange(60.25, 210.125, 0.25))),
-#         np.hstack((np.arange(0, 60.05, 0.1),
-#                    np.arange(60.25, 210.125, 0.25))) + 10
-#     ))
-#     # Get the amplitude arrays for said domain arrays
-#     array_collection = [
-#         (array, amp_array_constructor(array)) for array in array_collection
-#     ]
-#     for array in array_collection:
-#         domain_array = array[0]
-#         for base_amplitude_array in array[1]:
-#             amplitude_arrays = [base_amplitude_array,
-#                                 base_amplitude_array+base_amplitude_array*1j]
-#             for amplitude_array in amplitude_arrays:
-#                 resolutions = [0.2, 0.07, 0.13, 0.25]
-#                 for resolution in resolutions:
-#                     test_change_resolution_loop(domain_array,
-#                                                 amplitude_array,
-#                                                 resolution)
-#     assert len(recwarn) == 160
+def test_change_resolution_0to120_0·1to0·2_2d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 2-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.2.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="2d",
+                                            return_complex=False)
+    new_resolution = 0.2
+    __test_change_resolution(domain_array, amplitude_array, new_resolution)
+
+
+def test_change_resolution_0to120_0·1to0·2_2d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 2-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.2.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="2d",
+                                            return_complex=True)
+    new_resolution = 0.2
+    __test_change_resolution(domain_array, amplitude_array, new_resolution)
+
+
+
+
+def test_change_resolution_0to120_0·1to0·2_3d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 3-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.2.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="3d",
+                                            return_complex=False)
+    new_resolution = 0.2
+    __test_change_resolution(domain_array, amplitude_array, new_resolution)
+
+
+def test_change_resolution_0to120_0·1to0·2_3d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 3-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.2.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="3d",
+                                            return_complex=True)
+    new_resolution = 0.2
+    __test_change_resolution(domain_array, amplitude_array, new_resolution)
+
+
+def test_change_resolution_0to120_0·1to0·2_4d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 4-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.2.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="4d",
+                                            return_complex=False)
+    new_resolution = 0.2
+    __test_change_resolution(domain_array, amplitude_array, new_resolution)
+
+
+def test_change_resolution_0to120_0·1to0·2_4d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 4-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.2.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="4d",
+                                            return_complex=True)
+    new_resolution = 0.2
+    __test_change_resolution(domain_array, amplitude_array, new_resolution)
+
+
+def test_change_resolution_0to120_0·1to0·07_1d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 1-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.07.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="1d",
+                                            return_complex=False)
+    new_resolution = 0.07
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to120_0·1to0·07_1d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 1-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.07.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="1d",
+                                            return_complex=True)
+    new_resolution = 0.07
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to120_0·1to0·07_2d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 2-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.07.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="2d",
+                                            return_complex=False)
+    new_resolution = 0.07
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to120_0·1to0·07_2d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 2-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.07.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="2d",
+                                            return_complex=True)
+    new_resolution = 0.07
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+
+
+def test_change_resolution_0to120_0·1to0·07_3d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 3-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.07.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="3d",
+                                            return_complex=False)
+    new_resolution = 0.07
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to120_0·1to0·07_3d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 3-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.07.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="3d",
+                                            return_complex=True)
+    new_resolution = 0.07
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to120_0·1to0·07_4d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 4-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.07.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="4d",
+                                            return_complex=False)
+    new_resolution = 0.07
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to120_0·1to0·07_4d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 4-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.07.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="4d",
+                                            return_complex=True)
+    new_resolution = 0.07
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to120_0·1to0·13_1d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 1-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.13.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="1d",
+                                            return_complex=False)
+    new_resolution = 0.13
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to120_0·1to0·13_1d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 1-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.13.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="1d",
+                                            return_complex=True)
+    new_resolution = 0.13
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to120_0·1to0·13_2d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 2-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.13.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="2d",
+                                            return_complex=False)
+    new_resolution = 0.13
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to120_0·1to0·13_2d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 2-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.13.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="2d",
+                                            return_complex=True)
+    new_resolution = 0.13
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to120_0·1to0·13_3d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 3-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.13.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="3d",
+                                            return_complex=False)
+    new_resolution = 0.13
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to120_0·1to0·13_3d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 3-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.13.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="3d",
+                                            return_complex=True)
+    new_resolution = 0.13
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to120_0·1to0·13_4d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 4-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.13.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="4d",
+                                            return_complex=False)
+    new_resolution = 0.13
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to120_0·1to0·13_4d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 4-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.13.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="4d",
+                                            return_complex=True)
+    new_resolution = 0.13
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to120_0·1to0·25_1d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 1-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.25.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="1d",
+                                            return_complex=False)
+    new_resolution = 0.25
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=1, warning_messages=[
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to120_0·1to0·25_1d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 1-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.25.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="1d",
+                                            return_complex=True)
+    new_resolution = 0.25
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=1, warning_messages=[
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to120_0·1to0·25_2d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 2-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.25.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="2d",
+                                            return_complex=False)
+    new_resolution = 0.25
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=1, warning_messages=[
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to120_0·1to0·25_2d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 2-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.25.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="2d",
+                                            return_complex=True)
+    new_resolution = 0.25
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=1, warning_messages=[
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to120_0·1to0·25_3d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 3-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.25.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="3d",
+                                            return_complex=False)
+    new_resolution = 0.25
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=1, warning_messages=[
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to120_0·1to0·25_3d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 3-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.25.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="3d",
+                                            return_complex=True)
+    new_resolution = 0.25
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=1, warning_messages=[
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to120_0·1to0·25_4d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 4-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.25.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="4d",
+                                            return_complex=False)
+    new_resolution = 0.25
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=1, warning_messages=[
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to120_0·1to0·25_4d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a resolution of 0.1, creating a 4-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.25.
+    """
+    domain_array = np.arange(0, 120.05, 0.1)
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="4d",
+                                            return_complex=True)
+    new_resolution = 0.25
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=1, warning_messages=[
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to240_mixedto0·13_1d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a mixed resolution, creating a 1-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.13.
+    """
+    domain_array = np.hstack((np.arange(0, 120.05, 0.2),
+                              np.arange(120.25, 240.05, 0.25)))
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="1d",
+                                            return_complex=False)
+    new_resolution = 0.13
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to240_mixedto0·13_1d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a mixed resolution, creating a 1-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.13.
+    """
+    domain_array = np.hstack((np.arange(0, 120.05, 0.2),
+                              np.arange(120.25, 240.05, 0.25)))
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="1d",
+                                            return_complex=True)
+    new_resolution = 0.13
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to240_mixedto0·13_2d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a mixed resolution, creating a 2-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.13.
+    """
+    domain_array = np.hstack((np.arange(0, 120.05, 0.2),
+                              np.arange(120.25, 240.05, 0.25)))
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="2d",
+                                            return_complex=False)
+    new_resolution = 0.13
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to240_mixedto0·13_2d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a mixed resolution, creating a 2-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.13.
+    """
+    domain_array = np.hstack((np.arange(0, 120.05, 0.2),
+                              np.arange(120.25, 240.05, 0.25)))
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="2d",
+                                            return_complex=True)
+    new_resolution = 0.13
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to240_mixedto0·13_3d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a mixed resolution, creating a 3-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.13.
+    """
+    domain_array = np.hstack((np.arange(0, 120.05, 0.2),
+                              np.arange(120.25, 240.05, 0.25)))
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="3d",
+                                            return_complex=False)
+    new_resolution = 0.13
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to240_mixedto0·13_3d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a mixed resolution, creating a 3-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.13.
+    """
+    domain_array = np.hstack((np.arange(0, 120.05, 0.2),
+                              np.arange(120.25, 240.05, 0.25)))
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="3d",
+                                            return_complex=True)
+    new_resolution = 0.13
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to240_mixedto0·13_4d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a mixed resolution, creating a 4-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.13.
+    """
+    domain_array = np.hstack((np.arange(0, 120.05, 0.2),
+                              np.arange(120.25, 240.05, 0.25)))
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="4d",
+                                            return_complex=False)
+    new_resolution = 0.13
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to240_mixedto0·13_4d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a mixed resolution, creating a 4-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.13.
+    """
+    domain_array = np.hstack((np.arange(0, 120.05, 0.2),
+                              np.arange(120.25, 240.05, 0.25)))
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="4d",
+                                            return_complex=True)
+    new_resolution = 0.13
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=2, warning_messages=[
+                                 ("The resulting max time will be different to"
+                                  " accommodate for the new resolution."),
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to240_mixedto0·2_1d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a mixed resolution, creating a 1-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.2.
+    """
+    domain_array = np.hstack((np.arange(0, 120.05, 0.2),
+                              np.arange(120.25, 240.05, 0.25)))
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="1d",
+                                            return_complex=False)
+    new_resolution = 0.2
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=1, warning_messages=[
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to240_mixedto0·2_1d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a mixed resolution, creating a 1-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.2.
+    """
+    domain_array = np.hstack((np.arange(0, 120.05, 0.2),
+                              np.arange(120.25, 240.05, 0.25)))
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="1d",
+                                            return_complex=True)
+    new_resolution = 0.2
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=1, warning_messages=[
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to240_mixedto0·2_2d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a mixed resolution, creating a 2-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.2.
+    """
+    domain_array = np.hstack((np.arange(0, 120.05, 0.2),
+                              np.arange(120.25, 240.05, 0.25)))
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="2d",
+                                            return_complex=False)
+    new_resolution = 0.2
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=1, warning_messages=[
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to240_mixedto0·2_2d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a mixed resolution, creating a 2-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.2.
+    """
+    domain_array = np.hstack((np.arange(0, 120.05, 0.2),
+                              np.arange(120.25, 240.05, 0.25)))
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="2d",
+                                            return_complex=True)
+    new_resolution = 0.2
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=1, warning_messages=[
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to240_mixedto0·2_3d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a mixed resolution, creating a 3-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.2.
+    """
+    domain_array = np.hstack((np.arange(0, 120.05, 0.2),
+                              np.arange(120.25, 240.05, 0.25)))
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="3d",
+                                            return_complex=False)
+    new_resolution = 0.2
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=1, warning_messages=[
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to240_mixedto0·2_3d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a mixed resolution, creating a 3-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.2.
+    """
+    domain_array = np.hstack((np.arange(0, 120.05, 0.2),
+                              np.arange(120.25, 240.05, 0.25)))
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="3d",
+                                            return_complex=True)
+    new_resolution = 0.2
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=1, warning_messages=[
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to240_mixedto0·2_4d():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a mixed resolution, creating a 4-dimensional amplitude array
+    of floats and changing the resolution of the domain-amplitude pair to 0.2.
+    """
+    domain_array = np.hstack((np.arange(0, 120.05, 0.2),
+                              np.arange(120.25, 240.05, 0.25)))
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="4d",
+                                            return_complex=False)
+    new_resolution = 0.2
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=1, warning_messages=[
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
+
+
+def test_change_resolution_0to240_mixedto0·2_4d_complex():
+    """
+    This tests the change_resolution function using a domain vector going from
+    0 to 120 with a mixed resolution, creating a 4-dimensional amplitude array
+    of complexes and changing the resolution of the domain-amplitude pair to
+    0.2.
+    """
+    domain_array = np.hstack((np.arange(0, 120.05, 0.2),
+                              np.arange(120.25, 240.05, 0.25)))
+    amplitude_array = amp_array_constructor(domain_array=domain_array,
+                                            dimensions="4d",
+                                            return_complex=True)
+    new_resolution = 0.2
+    __test_change_resolution(domain_array, amplitude_array, new_resolution,
+                             expected_warnings=1, warning_messages=[
+                                 ("The resulting signal will be interpolated"
+                                  " according to the desired new resolution.")
+                             ])
 
 
 if __name__ == "__main__":
-    test_change_resolution_0to120_0·1to0·2_1d()
+    pass

@@ -56,9 +56,8 @@ def change_resolution(domain_array: npt.NDArray[np.float64],
         if new_domain_array[-1] > domain_max_value:
             new_domain_array = new_domain_array[:-1]
         new_max_domain_value = new_domain_array[-1]
-        warn((f"The resulting max time will be"
-              f" {new_max_domain_value:.{decimal_places}f}."),
-             UserWarning)
+        warn(("The resulting max time will be different to accommodate for the"
+              " new resolution."), UserWarning)
     else:
         new_domain_array[-1] = domain_max_value
     
