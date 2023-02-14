@@ -140,7 +140,7 @@ def change_resolution(
     return new_domain_array, new_amplitude_array
 
 
-def change_domain_breadth(
+def change_domain_scope(
     domain_array: npt.NDArray[np.float64],
     amplitude_array: npt.NDArray[np.complex64],
     new_min_domain: Optional[float] = None,
@@ -199,9 +199,7 @@ def change_domain_breadth(
         if not np.allclose(domain_extension[-1], new_max_domain):
             if domain_extension[-1] > new_max_domain:
                 domain_extension = domain_extension[:-1]
-            warn(
-                f"Max domain will be changed to keep sample rate constant", UserWarning
-            )
+            warn("Max domain will be changed to keep sample rate constant", UserWarning)
         new_domain_array = np.hstack((new_domain_array, domain_extension))
         # Add as many amplitude points as domain points were created
         amplitude_extension_shape = list(new_amplitude_array.shape)
@@ -218,9 +216,7 @@ def change_domain_breadth(
         if new_domain_array[-1] != new_max_domain:
             if new_domain_array[-1] > new_max_domain:
                 new_domain_array = new_domain_array[:-1]
-            warn(
-                f"Max domain will be changed to keep sample rate constant", UserWarning
-            )
+            warn("Max domain will be changed to keep sample rate constant", UserWarning)
         # Cut the signals to the new max domain
         new_amplitude_array = new_amplitude_array[0:max_domain_index, ...]
 
@@ -238,9 +234,7 @@ def change_domain_breadth(
             domain_extension = domain_extension + (
                 new_domain_array[0] - domain_extension[-1]
             )
-            warn(
-                f"Min domain will be changed to keep sample rate constant", UserWarning
-            )
+            warn("Min domain will be changed to keep sample rate constant", UserWarning)
         new_domain_array = np.hstack((domain_extension, new_domain_array))
         if new_domain_array[0] < 0:
             new_domain_array = new_domain_array + abs(new_domain_array[0])
@@ -257,9 +251,7 @@ def change_domain_breadth(
         # Make sure the new min domain is the closest to the one specified
         # by the user.
         if np.allclose(new_domain_array[0], new_min_domain):
-            warn(
-                f"Min domain will be changed to keep sample rate constant", UserWarning
-            )
+            warn("Min domain will be changed to keep sample rate constant", UserWarning)
         # Cut the signal from the new min domain
         new_amplitude_array = new_amplitude_array[min_domain_index:, ...]
     return new_domain_array, new_amplitude_array
@@ -280,13 +272,13 @@ if __name__ == "__main__":
     plt.plot(new_domain_array, new_amplitude_array)
     plt.show()
 
-    extended_domain_array, extended_amplitude_array = change_domain_breadth(
+    extended_domain_array, extended_amplitude_array = change_domain_scope(
         domain_array=domain_array,
         amplitude_array=amplitude_array,
         new_min_domain=-2*np.pi,
         new_max_domain=4*np.pi,
     )
-    cut_domain_array, cut_amplitude_array = change_domain_breadth(
+    cut_domain_array, cut_amplitude_array = change_domain_scope(
         domain_array=domain_array,
         amplitude_array=amplitude_array,
         new_min_domain=np.pi/2,
