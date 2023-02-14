@@ -99,11 +99,14 @@ def change_resolution(
 if __name__ == "__main__":
     from matplotlib import pyplot as plt
 
-    domain_array = np.arange(0, 120.05, 0.1)
-    amplitude_array = np.cos(domain_array)
+    # Create a sinusoidal signal from a domain array
+    domain_array = np.arange(0, 2*np.pi, 0.1)
+    amplitude_array = np.sin(domain_array)
+    # Change the resolution to half the original resolution
     new_domain_array, new_amplitude_array = change_resolution(
-        domain_array=domain_array, amplitude_array=amplitude_array, new_resolution=1
+        domain_array=domain_array, amplitude_array=amplitude_array, new_resolution=0.2
     )
+    # You should be able to see the difference in the peaks.
     plt.plot(domain_array, amplitude_array)
     plt.plot(new_domain_array, new_amplitude_array)
     plt.show()
