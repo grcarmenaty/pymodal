@@ -34,6 +34,8 @@ setuptools.setup(
             "docutils>=0.16",
             "doc8>=0.8.0",
             "flake8>=3.7.9",
+            "black>=23.1.0"
+            "docformatter>=1.5.1" # Consider eliminating if black formats docstrings
         ],
     },
     python_requires='>=3.9',
