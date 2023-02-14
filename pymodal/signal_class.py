@@ -406,7 +406,7 @@ class signal():
                     time_extension = time_extension[:-1]
                 warn(f"To keep sample rate constant, the resulting max time"
                      f" will be {time_extension[-1]}", UserWarning)
-            new_time_array = np.hstack((new_time_array, time_extension))
+            new_time_array = np.hstack((new_time_array, time_extension)) # noqa
             new_signal.time_array = new_time_array
             new_signal.max_time = new_time_array[-1]
             # Add as many amplitude points as time points were created
@@ -505,5 +505,5 @@ class signal():
                       units=self.units)
         
     
-    def to_frf(self, excitation_signal: pymodal.signal):
-        return frf_object
+    # def to_frf(self, excitation_signal: pymodal.signal):
+    #     return frf_object
