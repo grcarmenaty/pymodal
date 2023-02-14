@@ -11,27 +11,29 @@ def amp_array_constructor(
     dimensions: str = "1d",
     return_complex: bool = False,
 ):
-    """This function can create a series of four numpy arrays, going from a
-    one-dimensional array to a four-dimensional array. Each of them consists of
-    a combination of cosine signals displaced one sixth of a turn from the
-    provided domain array.
+    """This function can create a series of four numpy arrays, going from a one-
+    dimensional array to a four-dimensional array. Each of them consists of a
+    combination of cosine signals displaced one sixth of a turn from the provided
+    domain array.
 
     Parameters
     ----------
     domain_array (numpy array of floats):
-        A one-dimensional numpy array containing the values for a supposed temporal
+        A one-dimensional numpy array containing the values for a supposed domain
         dimension.
     dimensions (string), "1d" as default:
-        One of four options among "1d", "2d", "3d" or "4d" which selects how
-        many dimensions the output numpy array will have.
+        One of four options among "1d", "2d", "3d" or "4d" which selects how many
+        dimensions the output numpy array will have.
     return_complex (bool), False as default:
-        Whether ot not the resulting array should be complex or not.
+        Whether ot not the resulting array should be complex or not by adding the same
+        amplitude array.
 
     Returns
     -------
     numpy array of floats or complexes:
         A numpy array, of between a one-dimensional array to a four-dimensional
         array, complex or not as specified.
+
     """
 
     assert dimensions in ["1d", "2d", "3d", "4d"]
@@ -75,8 +77,8 @@ def _test_change_resolution(
     Parameters
     ----------
     domain_array (numpy array of floats):
-        A one-dimensional numpy array containing the values for a supposed
-        temporal dimension.
+        A one-dimensional numpy array containing the values for a supposed temporal
+        dimension.
     dimensions (string), "1d" as default:
         One of four options among "1d", "2d", "3d" or "4d" which selects how
         many dimensions the output numpy array will have.
@@ -121,10 +123,11 @@ def _test_change_resolution(
 
 
 def test_change_resolution_0to120_0·1to0·2_1d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a resolution of 0.1, creating a 1-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.2."""
+    """This tests the change_resolution function using a domain vector going from 0 to
+    120 with a resolution of 0.1, creating a 1-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.2.
+    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="1d", return_complex=False
@@ -134,12 +137,11 @@ def test_change_resolution_0to120_0·1to0·2_1d():
 
 
 def test_change_resolution_0to120_0·1to0·2_1d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a resolution of 0.1, creating a 1-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.2.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a resolution of 0.1, creating a 1-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.2.
-    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="1d", return_complex=True
@@ -149,10 +151,11 @@ def test_change_resolution_0to120_0·1to0·2_1d_complex():
 
 
 def test_change_resolution_0to120_0·1to0·2_2d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a resolution of 0.1, creating a 2-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.2."""
+    """This tests the change_resolution function using a domain vector going from 0 to
+    120 with a resolution of 0.1, creating a 2-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.2.
+    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="2d", return_complex=False
@@ -162,12 +165,11 @@ def test_change_resolution_0to120_0·1to0·2_2d():
 
 
 def test_change_resolution_0to120_0·1to0·2_2d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a resolution of 0.1, creating a 2-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.2.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a resolution of 0.1, creating a 2-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.2.
-    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="2d", return_complex=True
@@ -177,10 +179,11 @@ def test_change_resolution_0to120_0·1to0·2_2d_complex():
 
 
 def test_change_resolution_0to120_0·1to0·2_3d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a resolution of 0.1, creating a 3-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.2."""
+    """This tests the change_resolution function using a domain vector going from 0 to
+    120 with a resolution of 0.1, creating a 3-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.2.
+    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="3d", return_complex=False
@@ -190,12 +193,11 @@ def test_change_resolution_0to120_0·1to0·2_3d():
 
 
 def test_change_resolution_0to120_0·1to0·2_3d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a resolution of 0.1, creating a 3-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.2.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a resolution of 0.1, creating a 3-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.2.
-    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="3d", return_complex=True
@@ -205,10 +207,11 @@ def test_change_resolution_0to120_0·1to0·2_3d_complex():
 
 
 def test_change_resolution_0to120_0·1to0·2_4d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a resolution of 0.1, creating a 4-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.2."""
+    """This tests the change_resolution function using a domain vector going from 0 to
+    120 with a resolution of 0.1, creating a 4-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.2.
+    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="4d", return_complex=False
@@ -218,12 +221,11 @@ def test_change_resolution_0to120_0·1to0·2_4d():
 
 
 def test_change_resolution_0to120_0·1to0·2_4d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a resolution of 0.1, creating a 4-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.2.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a resolution of 0.1, creating a 4-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.2.
-    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="4d", return_complex=True
@@ -233,10 +235,11 @@ def test_change_resolution_0to120_0·1to0·2_4d_complex():
 
 
 def test_change_resolution_0to120_0·1to0·07_1d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a resolution of 0.1, creating a 1-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.07."""
+    """This tests the change_resolution function using a domain vector going from 0 to
+    120 with a resolution of 0.1, creating a 1-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.07.
+    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="1d", return_complex=False
@@ -261,12 +264,11 @@ def test_change_resolution_0to120_0·1to0·07_1d():
 
 
 def test_change_resolution_0to120_0·1to0·07_1d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a resolution of 0.1, creating a 1-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.07.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a resolution of 0.1, creating a 1-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.07.
-    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="1d", return_complex=True
@@ -291,10 +293,11 @@ def test_change_resolution_0to120_0·1to0·07_1d_complex():
 
 
 def test_change_resolution_0to120_0·1to0·07_2d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a resolution of 0.1, creating a 2-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.07."""
+    """This tests the change_resolution function using a domain vector going from 0 to
+    120 with a resolution of 0.1, creating a 2-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.07.
+    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="2d", return_complex=False
@@ -319,12 +322,11 @@ def test_change_resolution_0to120_0·1to0·07_2d():
 
 
 def test_change_resolution_0to120_0·1to0·07_2d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a resolution of 0.1, creating a 2-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.07.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a resolution of 0.1, creating a 2-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.07.
-    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="2d", return_complex=True
@@ -349,10 +351,11 @@ def test_change_resolution_0to120_0·1to0·07_2d_complex():
 
 
 def test_change_resolution_0to120_0·1to0·07_3d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a resolution of 0.1, creating a 3-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.07."""
+    """This tests the change_resolution function using a domain vector going from 0 to
+    120 with a resolution of 0.1, creating a 3-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.07.
+    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="3d", return_complex=False
@@ -377,12 +380,11 @@ def test_change_resolution_0to120_0·1to0·07_3d():
 
 
 def test_change_resolution_0to120_0·1to0·07_3d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a resolution of 0.1, creating a 3-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.07.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a resolution of 0.1, creating a 3-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.07.
-    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="3d", return_complex=True
@@ -407,10 +409,11 @@ def test_change_resolution_0to120_0·1to0·07_3d_complex():
 
 
 def test_change_resolution_0to120_0·1to0·07_4d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a resolution of 0.1, creating a 4-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.07."""
+    """This tests the change_resolution function using a domain vector going from 0 to
+    120 with a resolution of 0.1, creating a 4-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.07.
+    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="4d", return_complex=False
@@ -435,12 +438,11 @@ def test_change_resolution_0to120_0·1to0·07_4d():
 
 
 def test_change_resolution_0to120_0·1to0·07_4d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a resolution of 0.1, creating a 4-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.07.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a resolution of 0.1, creating a 4-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.07.
-    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="4d", return_complex=True
@@ -465,10 +467,11 @@ def test_change_resolution_0to120_0·1to0·07_4d_complex():
 
 
 def test_change_resolution_0to120_0·1to0·13_1d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a resolution of 0.1, creating a 1-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.13."""
+    """This tests the change_resolution function using a domain vector going from 0 to
+    120 with a resolution of 0.1, creating a 1-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.13.
+    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="1d", return_complex=False
@@ -493,12 +496,11 @@ def test_change_resolution_0to120_0·1to0·13_1d():
 
 
 def test_change_resolution_0to120_0·1to0·13_1d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a resolution of 0.1, creating a 1-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.13.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a resolution of 0.1, creating a 1-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.13.
-    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="1d", return_complex=True
@@ -523,10 +525,11 @@ def test_change_resolution_0to120_0·1to0·13_1d_complex():
 
 
 def test_change_resolution_0to120_0·1to0·13_2d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a resolution of 0.1, creating a 2-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.13."""
+    """This tests the change_resolution function using a domain vector going from 0 to
+    120 with a resolution of 0.1, creating a 2-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.13.
+    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="2d", return_complex=False
@@ -551,12 +554,11 @@ def test_change_resolution_0to120_0·1to0·13_2d():
 
 
 def test_change_resolution_0to120_0·1to0·13_2d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a resolution of 0.1, creating a 2-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.13.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a resolution of 0.1, creating a 2-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.13.
-    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="2d", return_complex=True
@@ -581,10 +583,11 @@ def test_change_resolution_0to120_0·1to0·13_2d_complex():
 
 
 def test_change_resolution_0to120_0·1to0·13_3d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a resolution of 0.1, creating a 3-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.13."""
+    """This tests the change_resolution function using a domain vector going from 0 to
+    120 with a resolution of 0.1, creating a 3-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.13.
+    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="3d", return_complex=False
@@ -609,12 +612,11 @@ def test_change_resolution_0to120_0·1to0·13_3d():
 
 
 def test_change_resolution_0to120_0·1to0·13_3d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a resolution of 0.1, creating a 3-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.13.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a resolution of 0.1, creating a 3-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.13.
-    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="3d", return_complex=True
@@ -639,10 +641,11 @@ def test_change_resolution_0to120_0·1to0·13_3d_complex():
 
 
 def test_change_resolution_0to120_0·1to0·13_4d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a resolution of 0.1, creating a 4-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.13."""
+    """This tests the change_resolution function using a domain vector going from 0 to
+    120 with a resolution of 0.1, creating a 4-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.13.
+    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="4d", return_complex=False
@@ -667,12 +670,11 @@ def test_change_resolution_0to120_0·1to0·13_4d():
 
 
 def test_change_resolution_0to120_0·1to0·13_4d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a resolution of 0.1, creating a 4-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.13.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a resolution of 0.1, creating a 4-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.13.
-    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="4d", return_complex=True
@@ -697,10 +699,11 @@ def test_change_resolution_0to120_0·1to0·13_4d_complex():
 
 
 def test_change_resolution_0to120_0·1to0·25_1d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a resolution of 0.1, creating a 1-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.25."""
+    """This tests the change_resolution function using a domain vector going from 0 to
+    120 with a resolution of 0.1, creating a 1-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.25.
+    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="1d", return_complex=False
@@ -721,12 +724,11 @@ def test_change_resolution_0to120_0·1to0·25_1d():
 
 
 def test_change_resolution_0to120_0·1to0·25_1d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a resolution of 0.1, creating a 1-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.25.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a resolution of 0.1, creating a 1-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.25.
-    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="1d", return_complex=True
@@ -747,10 +749,11 @@ def test_change_resolution_0to120_0·1to0·25_1d_complex():
 
 
 def test_change_resolution_0to120_0·1to0·25_2d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a resolution of 0.1, creating a 2-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.25."""
+    """This tests the change_resolution function using a domain vector going from 0 to
+    120 with a resolution of 0.1, creating a 2-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.25.
+    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="2d", return_complex=False
@@ -771,12 +774,11 @@ def test_change_resolution_0to120_0·1to0·25_2d():
 
 
 def test_change_resolution_0to120_0·1to0·25_2d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a resolution of 0.1, creating a 2-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.25.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a resolution of 0.1, creating a 2-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.25.
-    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="2d", return_complex=True
@@ -797,10 +799,11 @@ def test_change_resolution_0to120_0·1to0·25_2d_complex():
 
 
 def test_change_resolution_0to120_0·1to0·25_3d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a resolution of 0.1, creating a 3-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.25."""
+    """This tests the change_resolution function using a domain vector going from 0 to
+    120 with a resolution of 0.1, creating a 3-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.25.
+    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="3d", return_complex=False
@@ -821,12 +824,11 @@ def test_change_resolution_0to120_0·1to0·25_3d():
 
 
 def test_change_resolution_0to120_0·1to0·25_3d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a resolution of 0.1, creating a 3-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.25.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a resolution of 0.1, creating a 3-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.25.
-    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="3d", return_complex=True
@@ -847,10 +849,11 @@ def test_change_resolution_0to120_0·1to0·25_3d_complex():
 
 
 def test_change_resolution_0to120_0·1to0·25_4d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a resolution of 0.1, creating a 4-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.25."""
+    """This tests the change_resolution function using a domain vector going from 0 to
+    120 with a resolution of 0.1, creating a 4-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.25.
+    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="4d", return_complex=False
@@ -871,12 +874,11 @@ def test_change_resolution_0to120_0·1to0·25_4d():
 
 
 def test_change_resolution_0to120_0·1to0·25_4d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a resolution of 0.1, creating a 4-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.25.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a resolution of 0.1, creating a 4-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.25.
-    """
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = amp_array_constructor(
         domain_array=domain_array, dimensions="4d", return_complex=True
@@ -897,10 +899,11 @@ def test_change_resolution_0to120_0·1to0·25_4d_complex():
 
 
 def test_change_resolution_0to240_mixedto0·13_1d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a mixed resolution, creating a 1-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.13."""
+    """This tests the change_resolution function using a domain vector going from 0
+    to 120 with a mixed resolution, creating a 1-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.13.
+    """
+
     domain_array = np.hstack(
         (np.arange(0, 120.05, 0.2), np.arange(120.25, 240.05, 0.25))
     )
@@ -927,12 +930,11 @@ def test_change_resolution_0to240_mixedto0·13_1d():
 
 
 def test_change_resolution_0to240_mixedto0·13_1d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a mixed resolution, creating a 1-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.13.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a mixed resolution, creating a 1-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.13.
-    """
+
     domain_array = np.hstack(
         (np.arange(0, 120.05, 0.2), np.arange(120.25, 240.05, 0.25))
     )
@@ -959,10 +961,11 @@ def test_change_resolution_0to240_mixedto0·13_1d_complex():
 
 
 def test_change_resolution_0to240_mixedto0·13_2d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a mixed resolution, creating a 2-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.13."""
+    """This tests the change_resolution function using a domain vector going from 0
+    to 120 with a mixed resolution, creating a 2-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.13.
+    """
+
     domain_array = np.hstack(
         (np.arange(0, 120.05, 0.2), np.arange(120.25, 240.05, 0.25))
     )
@@ -989,12 +992,11 @@ def test_change_resolution_0to240_mixedto0·13_2d():
 
 
 def test_change_resolution_0to240_mixedto0·13_2d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a mixed resolution, creating a 2-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.13.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a mixed resolution, creating a 2-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.13.
-    """
+
     domain_array = np.hstack(
         (np.arange(0, 120.05, 0.2), np.arange(120.25, 240.05, 0.25))
     )
@@ -1021,10 +1023,11 @@ def test_change_resolution_0to240_mixedto0·13_2d_complex():
 
 
 def test_change_resolution_0to240_mixedto0·13_3d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a mixed resolution, creating a 3-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.13."""
+    """This tests the change_resolution function using a domain vector going from 0
+    to 120 with a mixed resolution, creating a 3-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.13.
+    """
+
     domain_array = np.hstack(
         (np.arange(0, 120.05, 0.2), np.arange(120.25, 240.05, 0.25))
     )
@@ -1051,12 +1054,11 @@ def test_change_resolution_0to240_mixedto0·13_3d():
 
 
 def test_change_resolution_0to240_mixedto0·13_3d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a mixed resolution, creating a 3-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.13.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a mixed resolution, creating a 3-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.13.
-    """
+
     domain_array = np.hstack(
         (np.arange(0, 120.05, 0.2), np.arange(120.25, 240.05, 0.25))
     )
@@ -1083,10 +1085,11 @@ def test_change_resolution_0to240_mixedto0·13_3d_complex():
 
 
 def test_change_resolution_0to240_mixedto0·13_4d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a mixed resolution, creating a 4-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.13."""
+    """This tests the change_resolution function using a domain vector going from 0
+    to 120 with a mixed resolution, creating a 4-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.13.
+    """
+
     domain_array = np.hstack(
         (np.arange(0, 120.05, 0.2), np.arange(120.25, 240.05, 0.25))
     )
@@ -1113,12 +1116,11 @@ def test_change_resolution_0to240_mixedto0·13_4d():
 
 
 def test_change_resolution_0to240_mixedto0·13_4d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a mixed resolution, creating a 4-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.13.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a mixed resolution, creating a 4-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.13.
-    """
+
     domain_array = np.hstack(
         (np.arange(0, 120.05, 0.2), np.arange(120.25, 240.05, 0.25))
     )
@@ -1145,10 +1147,11 @@ def test_change_resolution_0to240_mixedto0·13_4d_complex():
 
 
 def test_change_resolution_0to240_mixedto0·2_1d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a mixed resolution, creating a 1-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.2."""
+    """This tests the change_resolution function using a domain vector going from 0
+    to 120 with a mixed resolution, creating a 1-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.2.
+    """
+
     domain_array = np.hstack(
         (np.arange(0, 120.05, 0.2), np.arange(120.25, 240.05, 0.25))
     )
@@ -1171,12 +1174,11 @@ def test_change_resolution_0to240_mixedto0·2_1d():
 
 
 def test_change_resolution_0to240_mixedto0·2_1d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a mixed resolution, creating a 1-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.2.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a mixed resolution, creating a 1-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.2.
-    """
+
     domain_array = np.hstack(
         (np.arange(0, 120.05, 0.2), np.arange(120.25, 240.05, 0.25))
     )
@@ -1199,10 +1201,11 @@ def test_change_resolution_0to240_mixedto0·2_1d_complex():
 
 
 def test_change_resolution_0to240_mixedto0·2_2d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a mixed resolution, creating a 2-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.2."""
+    """This tests the change_resolution function using a domain vector going from 0
+    to 120 with a mixed resolution, creating a 2-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.2.
+    """
+
     domain_array = np.hstack(
         (np.arange(0, 120.05, 0.2), np.arange(120.25, 240.05, 0.25))
     )
@@ -1225,12 +1228,11 @@ def test_change_resolution_0to240_mixedto0·2_2d():
 
 
 def test_change_resolution_0to240_mixedto0·2_2d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a mixed resolution, creating a 2-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.2.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a mixed resolution, creating a 2-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.2.
-    """
+
     domain_array = np.hstack(
         (np.arange(0, 120.05, 0.2), np.arange(120.25, 240.05, 0.25))
     )
@@ -1253,10 +1255,11 @@ def test_change_resolution_0to240_mixedto0·2_2d_complex():
 
 
 def test_change_resolution_0to240_mixedto0·2_3d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a mixed resolution, creating a 3-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.2."""
+    """This tests the change_resolution function using a domain vector going from 0
+    to 120 with a mixed resolution, creating a 3-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.2.
+    """
+
     domain_array = np.hstack(
         (np.arange(0, 120.05, 0.2), np.arange(120.25, 240.05, 0.25))
     )
@@ -1279,12 +1282,11 @@ def test_change_resolution_0to240_mixedto0·2_3d():
 
 
 def test_change_resolution_0to240_mixedto0·2_3d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a mixed resolution, creating a 3-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.2.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a mixed resolution, creating a 3-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.2.
-    """
+
     domain_array = np.hstack(
         (np.arange(0, 120.05, 0.2), np.arange(120.25, 240.05, 0.25))
     )
@@ -1307,10 +1309,11 @@ def test_change_resolution_0to240_mixedto0·2_3d_complex():
 
 
 def test_change_resolution_0to240_mixedto0·2_4d():
-    """This tests the change_resolution function using a domain vector going
-    from 0 to 120 with a mixed resolution, creating a 4-dimensional amplitude
-    array of floats and changing the resolution of the domain-amplitude pair to
-    0.2."""
+    """This tests the change_resolution function using a domain vector going from 0
+    to 120 with a mixed resolution, creating a 4-dimensional amplitude array of floats
+    and changing the resolution of the domain-amplitude pair to 0.2.
+    """
+
     domain_array = np.hstack(
         (np.arange(0, 120.05, 0.2), np.arange(120.25, 240.05, 0.25))
     )
@@ -1333,12 +1336,11 @@ def test_change_resolution_0to240_mixedto0·2_4d():
 
 
 def test_change_resolution_0to240_mixedto0·2_4d_complex():
+    """This tests the change_resolution function using a domain vector going tofrom 0
+    to 120 with a mixed resolution, creating a 4-dimensional amplitude array of
+    complexes and changing the resolution of the domain-amplitude pair to 0.2.
     """
-    This tests the change_resolution function using a domain vector going from
-    0 to 120 with a mixed resolution, creating a 4-dimensional amplitude array
-    of complexes and changing the resolution of the domain-amplitude pair to
-    0.2.
-    """
+
     domain_array = np.hstack(
         (np.arange(0, 120.05, 0.2), np.arange(120.25, 240.05, 0.25))
     )

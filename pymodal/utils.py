@@ -2,7 +2,6 @@ import numpy as np
 import numpy.typing as npt
 from warnings import warn
 from decimal import Decimal
-from matplotlib import pyplot as plt
 
 
 def change_resolution(
@@ -10,33 +9,29 @@ def change_resolution(
     amplitude_array: npt.NDArray[np.complex64],
     new_resolution: float,
 ):
-    """
-    Change the resolution of an array of signals, assuming the temporal
-    dimension of said signal is the first dimension of the array.
+    """Change the resolution of an array of signals, assuming the temporal dimension of
+    said signal is the first dimension of the array.
 
     Parameters
     ----------
     domain_array: np.ndarray of float
-        An array containing the temporal dimension, which measures the rate of
-        physical change, be it by using time, frequency or any other suitable
-        quantity.
+        An array containing the temporal dimension, which measures the rate of physical
+        change, be it by using time, frequency or any other suitable quantity.
     amplitude_array: np.ndarray of complex
-        An array with the amplitude of the signal recorded along the domain
-        array.
+        An array with the amplitude of the signal recorded along the domain array.
     new_resolution: float
-        The desired distance between any two adjacent values of the domain
-        array.
+        The desired distance between any two adjacent values of the domain array.
 
     Returns
     -------
     A numpy array of floats
-        An array containing the new temporal dimension, which measures the rate
-        of physical change, be it by using time, frequency or any other
-        suitable quantity; with the new resolution.
+        An array containing the new temporal dimension, which measures the rate of
+        physical change, be it by using time, frequency or any other suitable quantity;
+        with the new resolution.
     A numpy array of complexes
-        An array with the new amplitude of the signal recorded along the domain
-        array, with the values corresponding to the values of the new domain
-        array.
+        An array with the new amplitude of the signal recorded along the domain array,
+        with the values corresponding to the values of the new domain array.
+
     """
 
     new_domain_array = np.arange(
@@ -102,10 +97,12 @@ def change_resolution(
 
 
 if __name__ == "__main__":
+    from matplotlib import pyplot as plt
+
     domain_array = np.arange(0, 120.05, 0.1)
     amplitude_array = np.cos(domain_array)
     new_domain_array, new_amplitude_array = change_resolution(
-        domain_array=domain_array, amplitude_array=amplitude_array, new_resolution=0.07
+        domain_array=domain_array, amplitude_array=amplitude_array, new_resolution=1
     )
     plt.plot(domain_array, amplitude_array)
     plt.plot(new_domain_array, new_amplitude_array)
