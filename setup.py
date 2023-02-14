@@ -36,5 +36,5 @@ setuptools.setup(
             "flake8>=3.7.9",
         ],
     },
-    python_requires='>=3.6',
+    python_requires='>=3.9',
 )
