@@ -69,110 +69,6 @@ def amp_array_constructor(domain_array: npt.NDArray[np.float64],
     return amplitude_array
 
 
-# def __change_resolution_test(domain_array: npt.NDArray[np.float64],
-#                              amplitude_array: npt.NDArray[np.complex64],
-#                              resolution: float):
-#     """
-#     This function is looped over multiple combinations of inputs further
-#     down this test.
-
-#     Parameters
-#     ----------
-#     domain_array: np.ndarray of float
-#         An array containing the temporal dimension, which measures the rate
-#         of physical change, be it by using time, frequency or any other
-#         suitable quantity.
-#     amplitude_array: np.ndarray of complex
-#         An array with the amplitude of the signal recorded along the domain
-#         array.
-#     resolution: float
-#         The desired distance between any two adjacent values of the domain
-#         array.
-
-#     Returns
-#     -------
-#     None
-#     """
-#     decimal_places = abs(
-#         Decimal(str(resolution)).as_tuple().exponent
-#     )
-#     new_domain_array, new_amplitude_array = (
-#         pymodal.change_resolution(domain_array,
-#                                   amplitude_array,
-#                                   resolution)
-#     )
-#     resolution_warning = (
-#         not np.allclose(resolution % 0.1, 0) or domain_array[-1] > 200
-#     )
-#     max_time_warning = not np.allclose(domain_array[-1],
-#                                        new_domain_array[-1])
-#     if resolution_warning and max_time_warning:
-#         with pytest.warns(UserWarning) as record:
-#             new_domain_array, new_amplitude_array = (
-#                 pymodal.change_resolution(domain_array,
-#                                           amplitude_array,
-#                                           resolution)
-#             )
-#         assert amplitude_array.dtype == new_amplitude_array.dtype
-#         assert len(record) == 2
-#         new_max_domain_value = new_domain_array[-1]
-#         assert record[0].message.args[0] == (
-#             f"The resulting max time will be"
-#             f" {new_max_domain_value:.{decimal_places}f}."
-#         )
-#         assert record[1].message.args[0] == (
-#             "The resulting signal will be interpolated according to the"
-#             " desired new resolution."
-#         )
-#     elif resolution_warning and not max_time_warning:
-#         with pytest.warns(UserWarning) as record:
-#             new_domain_array, new_amplitude_array = (
-#                 pymodal.change_resolution(domain_array,
-#                                           amplitude_array,
-#                                           resolution)
-#             )
-#         assert len(record) == 1
-#         assert record[0].message.args[0] == (
-#             "The resulting signal will be interpolated according to the"
-#             " desired new resolution."
-#         )
-#     elif not resolution_warning and max_time_warning:
-#         with pytest.warns(UserWarning) as record:
-#             new_domain_array, new_amplitude_array = (
-#                 pymodal.change_resolution(domain_array,
-#                                           amplitude_array,
-#                                           resolution)
-#             )
-#         assert len(record) == 1
-#         assert record[0].message.args[0] == (
-#             f"The resulting max time will be"
-#             f" {new_max_domain_value:.{decimal_places}f}."
-#         )
-#     else:
-#         with warnings.catch_warnings():
-#             warnings.simplefilter("error")
-#             new_domain_array, new_amplitude_array = (
-#                 pymodal.change_resolution(domain_array,
-#                                           amplitude_array,
-#                                           resolution)
-#             )
-#     amplitude_array = amplitude_array.reshape((
-#         amplitude_array.shape[0], -1
-#     ))
-#     new_amplitude_array = new_amplitude_array.reshape((
-#         new_amplitude_array.shape[0], -1
-#     ))
-    
-#     for i in range(amplitude_array.shape[-1]):
-#         f = interpolate.interp1d(domain_array, amplitude_array[:, i])
-#         new_f = interpolate.interp1d(new_domain_array,
-#                                      new_amplitude_array[:, i])
-#         reference = f(np.arange(50, 60, 0.01))
-#         new_reference = new_f(np.arange(50, 60, 0.01))
-#         assert np.allclose(reference, new_reference, atol=1e-2, rtol=1e-2)
-#     return None
-
-
 def __test_change_resolution(domain_array: npt.NDArray[np.float64],
                              amplitude_array: npt.NDArray[np.complex64],
                              new_resolution: float,
@@ -215,7 +111,6 @@ def __test_change_resolution(domain_array: npt.NDArray[np.float64],
         assert np.allclose(reference, result, atol=1e-2, rtol=1e-2)
     return new_domain_array[-1]
 
-#test with different length domain and amplitude, with disordered domain, assert errors
 
 def test_change_resolution_0to120_0·1to0·2_1d():
     """
