@@ -252,7 +252,7 @@ def test_change_resolution_0to120_0·1to0·07_1d():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -281,7 +281,7 @@ def test_change_resolution_0to120_0·1to0·07_1d_complex():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -310,7 +310,7 @@ def test_change_resolution_0to120_0·1to0·07_2d():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -339,7 +339,7 @@ def test_change_resolution_0to120_0·1to0·07_2d_complex():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -368,7 +368,7 @@ def test_change_resolution_0to120_0·1to0·07_3d():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -397,7 +397,7 @@ def test_change_resolution_0to120_0·1to0·07_3d_complex():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -426,7 +426,7 @@ def test_change_resolution_0to120_0·1to0·07_4d():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -455,7 +455,7 @@ def test_change_resolution_0to120_0·1to0·07_4d_complex():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -484,7 +484,7 @@ def test_change_resolution_0to120_0·1to0·13_1d():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -513,7 +513,7 @@ def test_change_resolution_0to120_0·1to0·13_1d_complex():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -542,7 +542,7 @@ def test_change_resolution_0to120_0·1to0·13_2d():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -571,7 +571,7 @@ def test_change_resolution_0to120_0·1to0·13_2d_complex():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -600,7 +600,7 @@ def test_change_resolution_0to120_0·1to0·13_3d():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -629,7 +629,7 @@ def test_change_resolution_0to120_0·1to0·13_3d_complex():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -658,7 +658,7 @@ def test_change_resolution_0to120_0·1to0·13_4d():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -687,7 +687,7 @@ def test_change_resolution_0to120_0·1to0·13_4d_complex():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -918,7 +918,7 @@ def test_change_resolution_0to240_mixedto0·13_1d():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -949,7 +949,7 @@ def test_change_resolution_0to240_mixedto0·13_1d_complex():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -980,7 +980,7 @@ def test_change_resolution_0to240_mixedto0·13_2d():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -1011,7 +1011,7 @@ def test_change_resolution_0to240_mixedto0·13_2d_complex():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -1042,7 +1042,7 @@ def test_change_resolution_0to240_mixedto0·13_3d():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -1073,7 +1073,7 @@ def test_change_resolution_0to240_mixedto0·13_3d_complex():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -1104,7 +1104,7 @@ def test_change_resolution_0to240_mixedto0·13_4d():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
@@ -1135,7 +1135,7 @@ def test_change_resolution_0to240_mixedto0·13_4d_complex():
         expected_warnings=2,
         warning_messages=[
             (
-                "The resulting max time will be different to"
+                "The resulting max domain will be different to"
                 " accommodate for the new resolution."
             ),
             (
