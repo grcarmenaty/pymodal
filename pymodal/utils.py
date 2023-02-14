@@ -1,7 +1,6 @@
 import numpy as np
 import numpy.typing as npt
 from warnings import warn
-from scipy import interpolate
 from decimal import Decimal
 from matplotlib import pyplot as plt
 
@@ -25,7 +24,7 @@ def change_resolution(domain_array: npt.NDArray[np.float64],
     new_resolution: float
         The desired distance between any two adjacent values of the domain
         array.
-    
+
     Returns
     -------
     A numpy array of floats
@@ -37,7 +36,7 @@ def change_resolution(domain_array: npt.NDArray[np.float64],
         array, with the values corresponding to the values of the new domain
         array.
     """
-    
+
     new_domain_array = np.arange(
         domain_array[0], domain_array[-1]+new_resolution/2, new_resolution
     )
@@ -55,16 +54,17 @@ def change_resolution(domain_array: npt.NDArray[np.float64],
     if not np.allclose(new_domain_array[-1], domain_max_value):
         if new_domain_array[-1] > domain_max_value:
             new_domain_array = new_domain_array[:-1]
-        new_max_domain_value = new_domain_array[-1]
         warn(("The resulting max time will be different to accommodate for the"
               " new resolution."), UserWarning)
     else:
         new_domain_array[-1] = domain_max_value
-    
+
     # Check if new resolution is multiple of old resolution or resolution is
     # not constant
-    if (not np.allclose(new_resolution % resolution, 0) or
-        not np.allclose(domain_diff, np.ones(domain_diff.shape)*resolution)):
+    is_multiple = np.allclose(new_resolution % resolution, 0)
+    is_constant = np.allclose(domain_diff,
+                              np.ones(domain_diff.shape)*resolution)
+    if not is_multiple or not is_constant:
         warn(("The resulting signal will be interpolated according to the"
               " desired new resolution."), UserWarning)
         # Interpolate the values for each signal according to the new domain
@@ -88,6 +88,7 @@ def change_resolution(domain_array: npt.NDArray[np.float64],
         new_amplitude_array = amplitude_array[0::step, ...]
 
     return new_domain_array, new_amplitude_array
+
 
 if __name__ == "__main__":
     domain_array = np.arange(0, 120.05, 0.1)

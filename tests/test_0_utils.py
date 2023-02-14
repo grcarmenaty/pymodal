@@ -1,10 +1,8 @@
 import numpy.typing as npt
 import numpy as np
 import pymodal
-from scipy import interpolate
 import pytest
 import warnings
-from decimal import Decimal
 from typing import Optional
 
 
@@ -30,12 +28,12 @@ def amp_array_constructor(domain_array: npt.NDArray[np.float64],
 
     Returns
     -------
-    numpy array of floats or complexes: 
+    numpy array of floats or complexes:
         A numpy array, of between a one-dimensional array to a four-dimensional
         array, complex or not as specified.
     """
     assert dimensions in ["1d", "2d", "3d", "4d"]
-    
+
     amplitude_array = np.empty((domain_array.shape[0], 2, 3, 4))
     amplitude_array[:, 0, 0, 0] = np.cos(domain_array)
     amplitude_array[:, 0, 1, 0] = np.cos(domain_array + 2*np.pi/6)
@@ -50,20 +48,20 @@ def amp_array_constructor(domain_array: npt.NDArray[np.float64],
 
     if dimensions == "3d":
         amplitude_array = amplitude_array[:, ..., 0]
-    
+
     elif dimensions == "2d":
         amplitude_array = amplitude_array[:, ..., 0]
         amplitude_array = amplitude_array.reshape(
             (domain_array.shape[0], 6)
         )
-    
+
     elif dimensions == "1d":
         amplitude_array = amplitude_array[:, ..., 0]
         amplitude_array = amplitude_array.reshape(
             (domain_array.shape[0], 6)
         )
         amplitude_array = amplitude_array[:, 4]
-    
+
     if return_complex:
         amplitude_array = amplitude_array + amplitude_array*1j
     return amplitude_array
@@ -74,14 +72,14 @@ def __test_change_resolution(domain_array: npt.NDArray[np.float64],
                              new_resolution: float,
                              expected_warnings: int = 0,
                              warning_messages: Optional[list[str]] = None):
-    
+
     if expected_warnings == 0:
         with warnings.catch_warnings():
             warnings.simplefilter("error")
             new_domain_array, new_amplitude_array = (
                 pymodal.change_resolution(domain_array,
-                                        amplitude_array,
-                                        new_resolution)
+                                          amplitude_array,
+                                          new_resolution)
             )
     else:
         with pytest.warns(UserWarning) as records:
@@ -168,8 +166,6 @@ def test_change_resolution_0to120_0·1to0·2_2d_complex():
                                             return_complex=True)
     new_resolution = 0.2
     __test_change_resolution(domain_array, amplitude_array, new_resolution)
-
-
 
 
 def test_change_resolution_0to120_0·1to0·2_3d():
@@ -310,8 +306,6 @@ def test_change_resolution_0to120_0·1to0·07_2d_complex():
                                  ("The resulting signal will be interpolated"
                                   " according to the desired new resolution.")
                              ])
-
-
 
 
 def test_change_resolution_0to120_0·1to0·07_3d():
