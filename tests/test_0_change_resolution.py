@@ -72,24 +72,24 @@ def _test_change_resolution(
     expected_warnings: int = 0,
     warning_messages: Optional[list[str]] = None,
 ):
-    """This function tests the change resolution .
+    """This function tests the change_resolution function given a certain combination
+    of domain, amplitude and desired new resolution. If warnings are expected, it checks
+    that the right amount are triggered, and that their messages are as expected.
 
     Parameters
     ----------
-    domain_array (numpy array of floats):
-        A one-dimensional numpy array containing the values for a supposed temporal
-        dimension.
-    dimensions (string), "1d" as default:
-        One of four options among "1d", "2d", "3d" or "4d" which selects how
-        many dimensions the output numpy array will have.
-    return_complex (bool), False as default:
-        Whether ot not the resulting array should be complex or not.
-
-    Returns
-    -------
-    numpy array of floats or complexes:
-        A numpy array, of between a one-dimensional array to a four-dimensional
-        array, complex or not as specified.
+    domain_array: np.ndarray of float
+        An array containing the temporal dimension, which measures the rate of physical
+        change, be it by using domain, frequency or any other suitable quantity.
+    amplitude_array: np.ndarray of complex
+        An array with the amplitude of the signal recorded along the domain array.
+    new_resolution: float
+        The desired distance between any two adjacent values of the domain array.
+    expected_warnings: int
+        The amount of warnings which are expected to be raised during the execution of
+        the change_resolution function given the input parameters.
+    warning_messages (optional): list of strings:
+        The messages that should be contained withing the warnings being raised, if any.
     """
 
     if expected_warnings == 0:
