@@ -29,7 +29,7 @@ setuptools.setup(
     extras_require={
         "dev": [
             "pytest>=3.7",
-            "pytest-cov>=2.10.0"
+            "pytest-cov>=2.10.0",
             "docutils>=0.16",
             "doc8>=0.8.0",
             "flake8>=3.7.9",
