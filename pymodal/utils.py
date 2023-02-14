@@ -2,15 +2,36 @@ import numpy as np
 import numpy.typing as npt
 from warnings import warn
 from decimal import Decimal
+from typing import Optional
 
 
 def __check_domain_amplitude_pair(
     domain_array: npt.NDArray[np.float64],
     amplitude_array: npt.NDArray[np.complex64],
 ):
+    """An auxiliary function that makes sure that a given domain and amplitude pair are
+    adequately typed, formatted and matched.
+
+    Parameters
+    ----------
+    domain_array: numpy array of floats
+        An array containing the temporal dimension, which measures the rate of physical
+        change, be it by using domain, frequency or any other suitable quantity.
+    amplitude_array: numpy array of complex
+        An array with the amplitude of the signal recorded along the domain array.
+
+    Returns
+    -------
+    A numpy array of floats
+        An array containing the new temporal dimension, which measures the rate of
+        physical change, be it by using domain, frequency or any other suitable
+        quantity.
+    A numpy array of complexes
+        An array with the amplitude of the signal recorded along the domain array, with
+        the values corresponding to the values of the domain array.
+    """
     domain_array = np.asarray(domain_array)
     amplitude_array = np.asarray(amplitude_array)
-    new_resolution = float(new_resolution)
     if domain_array.shape[0] != amplitude_array.shape[0]:
         raise ValueError(
             "Both the domain array and the amplitude array should be of the same"
@@ -33,10 +54,10 @@ def change_resolution(
 
     Parameters
     ----------
-    domain_array: np.ndarray of float
+    domain_array: numpy array of floats
         An array containing the temporal dimension, which measures the rate of physical
         change, be it by using domain, frequency or any other suitable quantity.
-    amplitude_array: np.ndarray of complex
+    amplitude_array: numpy array of complex
         An array with the amplitude of the signal recorded along the domain array.
     new_resolution: float
         The desired distance between any two adjacent values of the domain array.
@@ -45,8 +66,8 @@ def change_resolution(
     -------
     A numpy array of floats
         An array containing the new temporal dimension, which measures the rate of
-        physical change, be it by using domain, frequency or any other suitable quantity;
-        with the new resolution.
+        physical change, be it by using domain, frequency or any other suitable
+        quantity; with the new resolution.
     A numpy array of complexes
         An array with the new amplitude of the signal recorded along the domain array,
         with the values corresponding to the values of the new domain array.
@@ -56,6 +77,7 @@ def change_resolution(
     domain_array, amplitude_array = __check_domain_amplitude_pair(
         domain_array, amplitude_array
     )
+    new_resolution = float(new_resolution)
     new_domain_array = np.arange(
         domain_array[0], domain_array[-1] + new_resolution / 2, new_resolution
     )
@@ -121,9 +143,39 @@ def change_resolution(
 def change_domain(
     domain_array: npt.NDArray[np.float64],
     amplitude_array: npt.NDArray[np.complex64],
-    new_min_domain: float = None,
-    new_max_domain: float = None,
+    new_min_domain: Optional[float] = None,
+    new_max_domain: Optional[float] = None,
 ):
+    """Change the resolution of an array of signals, assuming the temporal dimension of
+    said signal is the first dimension of the array.
+
+    Parameters
+    ----------
+    domain_array: numpy array of floats
+        An array containing the temporal dimension, which measures the rate of physical
+        change, be it by using domain, frequency or any other suitable quantity.
+    amplitude_array: numpy array of complex
+        An array with the amplitude of the signal recorded along the domain array.
+    new_min_domain: float, default None
+        The desired new minimum value for the domain array.
+    new_max_domain: float, default None
+        The desired new maximum value for the domain array.
+
+    Returns
+    -------
+    A numpy array of floats
+        An array containing the new temporal dimension, which measures the rate of
+        physical change, be it by using domain, frequency or any other suitable quantity
+        with the new resolution.
+    A numpy array of complexes
+        An array with the new amplitude of the signal recorded along the domain array,
+        with the values corresponding to the values of the new domain array.
+
+    """    
+    
+    domain_array, amplitude_array = __check_domain_amplitude_pair(
+        domain_array, amplitude_array
+    )
     # Make sure both new max and min domains exist
     if new_min_domain is None:
         new_min_domain = domain_array[0]
@@ -202,11 +254,10 @@ def change_domain(
             warn(
                 f"Min domain will be changed to keep sample rate constant", UserWarning
             )
-        new_signal.domain_array = new_domain_array
         domain_array[-1] = new_domain_array[-1]
         # Cut the signal from the new min domain
-        new_signal.amplitude = new_signal.amplitude[min_domain_index:, :]
-    return new_signal
+        new_amplitude_array = amplitude_array[min_domain_index:, ...]
+    return new_domain_array, new_amplitude_array
 
 
 if __name__ == "__main__":

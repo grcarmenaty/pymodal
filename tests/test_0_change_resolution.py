@@ -78,10 +78,10 @@ def _test_change_resolution(
 
     Parameters
     ----------
-    domain_array: np.ndarray of float
+    domain_array: numpy array of float
         An array containing the temporal dimension, which measures the rate of physical
         change, be it by using domain, frequency or any other suitable quantity.
-    amplitude_array: np.ndarray of complex
+    amplitude_array: numpy array of complex
         An array with the amplitude of the signal recorded along the domain array.
     new_resolution: float
         The desired distance between any two adjacent values of the domain array.
