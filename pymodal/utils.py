@@ -140,7 +140,7 @@ def change_resolution(
     return new_domain_array, new_amplitude_array
 
 
-def change_domain(
+def change_domain_breadth(
     domain_array: npt.NDArray[np.float64],
     amplitude_array: npt.NDArray[np.complex64],
     new_min_domain: Optional[float] = None,
@@ -171,8 +171,8 @@ def change_domain(
         An array with the new amplitude of the signal recorded along the domain array,
         with the values corresponding to the values of the new domain array.
 
-    """    
-    
+    """
+
     domain_array, amplitude_array = __check_domain_amplitude_pair(
         domain_array, amplitude_array
     )
@@ -185,10 +185,12 @@ def change_domain(
     domain_diff = np.diff(domain_array)
     resolution = np.average(domain_diff)
 
+    new_amplitude_array = np.copy(amplitude_array)
+    new_domain_array = np.copy(domain_array)
     # Add a tail of 0s if max domain is greater than the current max domain
-    if new_max_domain > domain_array[-1]:
+    if new_max_domain > new_domain_array[-1]:
         domain_extension = np.arange(
-            domain_array[-1],
+            new_domain_array[-1],
             new_max_domain + resolution / 2,
             resolution,
         )[1:]
@@ -200,15 +202,17 @@ def change_domain(
             warn(
                 f"Max domain will be changed to keep sample rate constant", UserWarning
             )
-        new_domain_array = np.hstack((domain_array, domain_extension))
+        new_domain_array = np.hstack((new_domain_array, domain_extension))
         # Add as many amplitude points as domain points were created
-        amplitude_extension_shape = amplitude_array.shape
+        amplitude_extension_shape = list(new_amplitude_array.shape)
         amplitude_extension_shape[0] = domain_extension.shape[0]
-        amplitude_extension = np.zeros(amplitude_extension_shape)
-        new_amplitude_array = np.hstack((amplitude_array, amplitude_extension))
+        amplitude_extension = np.zeros(
+            tuple(amplitude_extension_shape), dtype=amplitude_array.dtype
+        )
+        new_amplitude_array = np.hstack((new_amplitude_array, amplitude_extension))
     else:
-        max_domain_index = (np.abs(domain_array - new_max_domain)).argmin()
-        new_domain_array = domain_array[0:max_domain_index]
+        max_domain_index = (np.abs(new_domain_array - new_max_domain)).argmin()
+        new_domain_array = new_domain_array[0:max_domain_index]
         # Make sure the last domain is coherent with sample rate and not
         # greater than the new max domain desired
         if new_domain_array[-1] != new_max_domain:
@@ -218,21 +222,21 @@ def change_domain(
                 f"Max domain will be changed to keep sample rate constant", UserWarning
             )
         # Cut the signals to the new max domain
-        new_amplitude_array = amplitude_array[0:max_domain_index, ...]
+        new_amplitude_array = new_amplitude_array[0:max_domain_index, ...]
 
     # Add a head of 0s to the signals if the new min domain is smaller than
     # the precious min domain
-    if new_min_domain < domain_array[0]:
+    if new_min_domain < new_domain_array[0]:
         domain_extension = np.arange(
             new_min_domain,
-            domain_array[0] + resolution / 2,
+            new_domain_array[0] + resolution / 2,
             resolution,
         )
         # Make sure the domain extension is compatible with the previous domain
         # vector
-        if not np.allclose(domain_extension[-1], domain_array[0]):
+        if not np.allclose(domain_extension[-1], new_domain_array[0]):
             domain_extension = domain_extension + (
-                domain_array[0] - domain_extension[-1]
+                new_domain_array[0] - domain_extension[-1]
             )
             warn(
                 f"Min domain will be changed to keep sample rate constant", UserWarning
@@ -241,22 +245,23 @@ def change_domain(
         if new_domain_array[0] < 0:
             new_domain_array = new_domain_array + abs(new_domain_array[0])
         # Add as many amplitude points as domain points were created
-        amplitude_extension_shape = amplitude_array.shape
+        amplitude_extension_shape = list(new_amplitude_array.shape)
         amplitude_extension_shape[0] = domain_extension.shape[0]
-        amplitude_extension = np.zeros(amplitude_extension_shape)
-        new_amplitude_array = np.hstack((amplitude_extension, amplitude_array))
+        amplitude_extension = np.zeros(
+            tuple(amplitude_extension_shape), dtype=amplitude_array.dtype
+        )
+        new_amplitude_array = np.hstack((amplitude_extension, new_amplitude_array))
     else:
-        min_domain_index = (np.abs(new_domain_array - new_max_domain)).argmin()
-        new_domain_array = domain_array[min_domain_index:]
+        min_domain_index = (np.abs(new_domain_array - new_min_domain)).argmin()
+        new_domain_array = new_domain_array[min_domain_index:]
         # Make sure the new min domain is the closest to the one specified
         # by the user.
         if np.allclose(new_domain_array[0], new_min_domain):
             warn(
                 f"Min domain will be changed to keep sample rate constant", UserWarning
             )
-        domain_array[-1] = new_domain_array[-1]
         # Cut the signal from the new min domain
-        new_amplitude_array = amplitude_array[min_domain_index:, ...]
+        new_amplitude_array = new_amplitude_array[min_domain_index:, ...]
     return new_domain_array, new_amplitude_array
 
 
@@ -264,7 +269,7 @@ if __name__ == "__main__":
     from matplotlib import pyplot as plt
 
     # Create a sinusoidal signal from a domain array
-    domain_array = np.arange(0, 2 * np.pi, 0.1)
+    domain_array = np.arange(0, 2*np.pi + 0.05, 0.1)
     amplitude_array = np.sin(domain_array)
     # Change the resolution to half the original resolution
     new_domain_array, new_amplitude_array = change_resolution(
@@ -273,4 +278,22 @@ if __name__ == "__main__":
     # You should be able to see the difference in the peaks.
     plt.plot(domain_array, amplitude_array)
     plt.plot(new_domain_array, new_amplitude_array)
+    plt.show()
+
+    extended_domain_array, extended_amplitude_array = change_domain_breadth(
+        domain_array=domain_array,
+        amplitude_array=amplitude_array,
+        new_min_domain=-2*np.pi,
+        new_max_domain=4*np.pi,
+    )
+    cut_domain_array, cut_amplitude_array = change_domain_breadth(
+        domain_array=domain_array,
+        amplitude_array=amplitude_array,
+        new_min_domain=np.pi/2,
+        new_max_domain=3*np.pi/2,
+    )
+    # You should be able to see the difference in the peaks.
+    plt.plot(domain_array, amplitude_array)
+    plt.plot(extended_domain_array, extended_amplitude_array)
+    plt.plot(cut_domain_array, cut_amplitude_array)
     plt.show()
