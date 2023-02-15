@@ -77,7 +77,7 @@ def _generate_domain_array(
     A tuple of floats:
 
     """
-    
+
     if scope is None:
         if end is None:  # max, scope are None, rate is defined
             if rate is None:
@@ -124,6 +124,75 @@ def _generate_domain_array(
         raise ValueError("The temporal domain parameters introduced are inconsistent.")
     domain_parameters = (start, end, scope, rate)
     return domain_array, domain_parameters
+
+
+def _check_coordinates_orientations(
+    coordinates: npt.NDArray[np.float64] = None,
+    orientations: npt.NDArray[np.float64] = None,
+    dof: float = None
+):
+    if coordinates is None and orientations is None:
+        if dof is None:
+            raise ValueError(
+                "At least one of coordinates, orientations or dof must be specified"
+            )
+        warn(
+            "Coordinates will be assumed to be points spaced one distance unit"
+            " along the x axis.",
+            UserWarning,
+        )
+        coordinates = np.vstack(np.arange(dof), np.zeros((dof, 2)))
+        warn("orientations will be assumed to be unit vectors on the z axis.",
+             UserWarning)
+        orientations = np.vstack(np.zeros((dof, 2)), np.ones(dof))
+    elif coordinates is None:
+        orientations = np.asarray(orientations)
+        if dof is None:
+            dof = orientations.shape[0]
+        warn(
+            "Coordinates will be assumed to be points spaced one distance unit along"
+            " the x axis.",
+            UserWarning,
+        )
+        coordinates = np.vstack(np.arange(dof), np.zeros((dof, 2)))
+    elif orientations is None:
+        coordinates = np.asarray(coordinates)
+        if dof is None:
+            dof = coordinates.shape[0]
+        warn(
+            "Coordinates will be assumed to be points spaced one distance unit along"
+            " the x axis.",
+            UserWarning,
+        )
+        orientations = np.vstack(np.arange(dof), np.zeros((dof, 2)))
+    else:
+        coordinates = np.asarray(coordinates)
+        orientations = np.asarray(orientations)
+        if dof is None:
+            dof = coordinates.shape[0]
+    
+    if not dof == orientations.shape[0] or not dof == coordinates.shape[0]:
+        raise ValueError(
+            "There should be exactly the same amount of coordinates and orientations."
+        )
+    # Check how many unique coordinate-orientation pairs there are and how many times
+    # they appear.
+    unq, cnt = np.unique(np.hstack((coordinates, orientations)), axis=0)
+    unq = unq.shape[0]
+    if not np.all(cnt == cnt[0]):
+        raise ValueError(
+            "One of the coordinate-orientation pairs provided appears more or less than"
+            " the others. If any coordinate-orientation pair repeats at all, all should"
+            " repeat as many times as there are degrees of freedom in the system."
+        )
+    cnt = cnt[0]
+    if unq == cnt:
+        matrix_completion = 0  # Full matrix
+    elif unq > cnt:
+        matrix_completion = 1  # Only outputs
+    else:
+        matrix_completion = 2  # Only inputs
+    return coordinates, orientations, dof, matrix_completion
 
 
 def change_resolution(

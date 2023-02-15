@@ -2,22 +2,38 @@ import numpy as np
 from warnings import warn
 from typing import Optional
 import numpy.typing as npt
+import pymodal
+from .utils import _check_coordinates_orientations
 
-class signal:
 
+class _signal:
     def __init__(
         self,
         measurements: npt.NDArray[np.complex64],
-        coordinates: Optional[npt.NDArray[np.float64]] = None,
-        orientations: Optional[npt.NDArray[np.float64]] = None,
+        coordinates: npt.NDArray[np.float64] = None,
+        orientations: npt.NDArray[np.float64] = None,
         units: Optional[str] = None,
     ):
         self.measurements = np.asarray(measurements)
-        if self.measurements.ndim > 3:
-            raise ValueError("Measurements must be, at most, a three-dimensional array")
-        elif self.measurements.ndim < 3:
-            for _ in range(3 - self.measurements.ndim):
-                self.measurements = [..., np.newaxis]
+        self.dof = max(self.measurements.shape[1], self.measurements.shape[2])
+        (
+            self.coordinates,
+            self.orientations,
+            self.dof,
+            matrix_completion,
+        ) = _check_coordinates_orientations(
+            coordinates=coordinates,
+            orientations=orientations,
+            dof=self.dof
+        )
+        if matrix_completion == 0:
+            assert self.measurements.shape[1] == self.measurements.shape[2]
+        if matrix_completion == 1:
+            assert self.measurements.shape[1] == self.dof
+            assert self.measurements.shape[2] == 1
+        if matrix_completion == 2:
+            assert self.measurements.shape[2] == self.dof
+            assert self.measurements.shape[1] == 1
         if units is None:
             self.units = "mm, kg, s, °C"
             warn("Units will be assumed to be mm, kg, s, °C.", UserWarning)
@@ -25,97 +41,35 @@ class signal:
             self.units = units
         self.units = units
         self.samples = self.measurements.shape[0]
-        self.degrees_of_freedom = self.measurements.shape[1]
-        if self.coordinates is None:
-            warn(
-                "Coordinates will be assumed to be points spaced one distance"
-                " unit along the x axis.",
-                UserWarning,
-            )
-            self.coordinates = np.vstack(
-                np.arange(self.degrees_of_freedom),
-                np.zeros((self.degrees_of_freedom, 2)),
-            )
-        else:
-            self.coordinates = np.array(coordinates, dtype=np.float64)
-            # Check for right number of numpy array dimensions.
-            if self.coordinates.ndim != 2:
-                raise ValueError(
-                    f"Coordinates must be a two-dimensional array"
-                    f", but it is a {self.coordinates.ndim}-"
-                    f"dimensional array."
-                )
-            # Check for right dimensions of coordinates
-            dimension_difference = self.coordinates.shape[1] - 3
-            if dimension_difference > 0:
-                warn(
-                    f"Your coordinates are {self.coordinates.shape[1]}"
-                    f"-dimensional, Only first three dimensions of"
-                    f" coordinates will be used.",
-                    UserWarning,
-                )
-                self.coordinates = self.coordinates[:, :2]
-            elif dimension_difference < 0:
-                warn(
-                    f"Your coordinates are {self.coordinates.shape[1]}"
-                    f"-dimensional, Less than three dimensions provided,"
-                    f" missing dimensions are assumed to be 0 for all"
-                    f" coordinates.",
-                    UserWarning,
-                )
-                self.coordinates = np.vstack(
-                    self.coordinates,
-                    np.zeros((self.degrees_of_freedom, abs(dimension_difference))),
-                )
-            # Check for right amount of coordinates
-            if len(self.coordinates) > self.degrees_of_freedom:
-                raise ValueError("Too many coordinates were provided.")
-            elif len(self.coordinates) < self.degrees_of_freedom:
-                raise ValueError("Too few coordinates were provided.")
-        if self.orientations is None:
-            warn(
-                "orientations will be assumed to be unit vectors on the z" " axis.",
-                UserWarning,
-            )
-            self.orientations = np.vstack(
-                np.zeros((self.degrees_of_freedom, 2)), np.ones(self.degrees_of_freedom)
-            )
-        else:
-            self.orientations = np.array(orientations, dtype=np.float64)
-            # Check for right number of numpy array dimensions.
-            if self.orientations.ndim != 2:
-                raise ValueError(
-                    f"orientations must be a two-dimensional"
-                    f" array, but it is a"
-                    f" {self.orientations.ndim}-dimensional"
-                    f" array."
-                )
-            # Check for right dimensions of orientations
-            dimension_difference = self.orientations.shape[1] - 3
-            if dimension_difference > 0:
-                warn(
-                    f"Your orientations are {self.orientations.shape[1]}"
-                    f"-dimensional, Only first three dimensions of"
-                    f" orientations will be used.",
-                    UserWarning,
-                )
-                self.orientations = self.orientations[:, :2]
-            elif dimension_difference < 0:
-                warn(
-                    f"Your orientations are {self.orientations.shape[1]}"
-                    f"-dimensional, Less than three dimensions provided,"
-                    f" missing dimensions are assumed to be 0 for all"
-                    f" orientations.",
-                    UserWarning,
-                )
-                self.orientations = np.vstack(
-                    self.orientations,
-                    np.zeros((self.degrees_of_freedom, abs(dimension_difference))),
-                )
-            # Check for right amount of orientations
-            if len(self.orientations) > self.degrees_of_freedom:
-                raise ValueError("Too many orientations were provided.")
-            elif len(self.orientations) < self.degrees_of_freedom:
-                raise ValueError("Too few orientations were provided.")
 
+    def __len__(self):
+        return self.dof
 
+    def __eq__(self, other):
+        if isinstance(other, pymodal.signal):
+            own_dict = dict(self.__dict__)
+            own_arrays = []
+            key_list = list(own_dict.keys())
+            # Separate all arrays in current instance to a list
+            for key in key_list:
+                if isinstance(own_dict[key], np.ndarray):
+                    own_arrays.append(own_dict[key])
+                    del own_dict[key]
+            other_dict = dict(other.__dict__)
+            other_arrays = []
+            key_list = list(other_dict.keys())
+            # Separate all arrays in instance being compared to a list
+            for key in key_list:
+                if isinstance(other_dict[key], np.ndarray):
+                    other_arrays.append(other_dict[key])
+                    del other_dict[key]
+            # Determine if arrays are equal
+            equal_array = len(own_arrays) == len(other_arrays)
+            for i, own_array in enumerate(own_arrays):
+                if not (equal_array):
+                    break
+                equal_array = np.array_equal(own_array, other_arrays[i]) and equal_array
+            # Instances are equal if both array and non-array parts are equal.
+            return own_dict == other_dict and equal_array
+        else:
+            return False
