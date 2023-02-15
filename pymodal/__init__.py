@@ -1,3 +1,4 @@
-from .utils import (  # noqa F401
-    change_resolution
+from .utils import (
+    change_resolution,
+    change_domain_scope
 )

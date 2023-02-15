@@ -4,6 +4,10 @@ from warnings import warn
 from decimal import Decimal
 from typing import Optional
 
+# If a function will only be used internally in the utils, use __ before its name, if
+# it is intended for use in other modules but not by an end user, use _ before its name
+# instead. Don't use preceding _ in any combination except in those cases.
+
 
 def __check_domain_amplitude_pair(
     domain_array: npt.NDArray[np.float64],
@@ -34,14 +38,92 @@ def __check_domain_amplitude_pair(
     amplitude_array = np.asarray(amplitude_array)
     if domain_array.shape[0] != amplitude_array.shape[0]:
         raise ValueError(
-            "Both the domain array and the amplitude array should be of the same"
-            " length along their first axis."
+            "Both the domain array and the amplitude array should be of the same length"
+            " along their first axis."
         )
     if np.all(np.diff(domain_array) <= 0):
         raise ValueError(
             "Domain array values should be strictly increasing and non-repeating."
         )
     return domain_array, amplitude_array
+
+
+def _generate_domain_array(
+    samples: float,
+    start: float = 0,
+    end: Optional[float] = None,
+    scope: Optional[float] = None,
+    rate: Optional[float] = None,
+):
+    """_summary_
+
+    Parameters
+    ----------
+    samples: float
+        How many data points the signal associated with the desired domain array has.
+    start: float, default None
+        Minimum value of the desired domain array.
+    end: float, default None
+        Maximum value of the desired domain array.
+    scope: float, default None
+        Distance from minimum to maximum value of the desired domain array.
+    rate: float, default None
+        Distance between any two points of the desired domain array.
+
+    Returns
+    -------
+    A numpy array of floats:
+        _description_
+    A tuple of floats:
+
+    """
+    
+    if scope is None:
+        if end is None:  # max, scope are None, rate is defined
+            if rate is None:
+                raise ValueError("Insufficient temporal domain parameters.")
+            scope = (samples - 1) * rate
+            end = start + scope
+        else:  # max is defined, scope is not, rate not considered
+            scope = end - start
+            if rate is None:  # scope, rate are None, max is defined
+                rate = scope / (samples - 1)
+            else:  # scope is None, max and rate are defined
+                calculated_rate = scope / (samples - 1)
+                if not np.allclose(rate, calculated_rate):
+                    raise ValueError(
+                        "The temporal domain parameters introduced are inconsistent."
+                    )
+    else:
+        if end is None:  # max is None, scope is defined.
+            end = start + scope
+            if rate is None:  # max and rate are None, scope is defined
+                rate = scope / (samples - 1)
+            else:  # scope is None, max and rate are defined
+                calculated_rate = scope / (samples - 1)
+                if not np.allclose(rate, calculated_rate):
+                    raise ValueError(
+                        "The temporal domain parameters introduced are inconsistent."
+                    )
+        else:  # max and scope are defined
+            calculated_max = start + scope
+            if not np.allclose(end, calculated_max):
+                raise ValueError(
+                    "The temporal domain parameters introduced are inconsistent."
+                )
+            if rate is None:  # rate is None, max and scope are defined
+                rate = scope / (samples - 1)
+            else:  # everything is defined
+                calculated_rate = scope / (samples - 1)
+                if not np.allclose(rate, calculated_rate):
+                    raise ValueError(
+                        "The temporal domain parameters introduced are inconsistent."
+                    )
+    domain_array = np.arange(start, end + rate / 2, rate)
+    if not np.allclose(len(domain_array), samples):
+        raise ValueError("The temporal domain parameters introduced are inconsistent.")
+    domain_parameters = (start, end, scope, rate)
+    return domain_array, domain_parameters
 
 
 def change_resolution(
@@ -112,8 +194,8 @@ def change_resolution(
     if not is_multiple or not is_constant:
         warn(
             (
-                "The resulting signal will be interpolated according to the"
-                " desired new resolution."
+                "The resulting signal will be interpolated according to the desired new"
+                " resolution."
             ),
             UserWarning,
         )
@@ -184,7 +266,8 @@ def change_domain_scope(
     # Get current resolution
     domain_diff = np.diff(domain_array)
     resolution = np.average(domain_diff)
-
+    # Create copies of inputs to work on them, there are problems if both a new min and
+    # max domain values are given otherwise
     new_amplitude_array = np.copy(amplitude_array)
     new_domain_array = np.copy(domain_array)
     # Add a tail of 0s if max domain is greater than the current max domain
@@ -261,11 +344,13 @@ if __name__ == "__main__":
     from matplotlib import pyplot as plt
 
     # Create a sinusoidal signal from a domain array
-    domain_array = np.arange(0, 2*np.pi + 0.05, 0.1)
+    domain_array = np.arange(0, 2 * np.pi + np.pi / 200, np.pi / 100)
     amplitude_array = np.sin(domain_array)
     # Change the resolution to half the original resolution to test change_resolution
     new_domain_array, new_amplitude_array = change_resolution(
-        domain_array=domain_array, amplitude_array=amplitude_array, new_resolution=0.2
+        domain_array=domain_array,
+        amplitude_array=amplitude_array,
+        new_resolution=np.pi / 10,
     )
     # You should be able to see the difference in the peaks.
     plt.plot(domain_array, amplitude_array)
@@ -277,15 +362,15 @@ if __name__ == "__main__":
     extended_domain_array, extended_amplitude_array = change_domain_scope(
         domain_array=domain_array,
         amplitude_array=amplitude_array,
-        new_min_domain=-2*np.pi,
-        new_max_domain=4*np.pi,
+        new_min_domain=-2 * np.pi,
+        new_max_domain=4 * np.pi,
     )
     # then to cut it to the middle half of the period
     cut_domain_array, cut_amplitude_array = change_domain_scope(
         domain_array=domain_array,
         amplitude_array=amplitude_array,
-        new_min_domain=np.pi/2,
-        new_max_domain=3*np.pi/2,
+        new_min_domain=np.pi / 2,
+        new_max_domain=3 * np.pi / 2,
     )
     # You should be able to see two overlapping signals and a displaced one
     plt.plot(domain_array, amplitude_array)
