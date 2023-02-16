@@ -11,10 +11,15 @@ class _signal:
         measurements: npt.NDArray[npt.complex64],
         coordinates: npt.NDArray[npt.float64] = None,
         orientations: npt.NDArray[npt.float64] = None,
+        dof: Optional[float] = None,
+        domain_start: Optional[float] = None,
+        domain_end: Optional[float] = None,
+        domain_span: Optional[float] = None,
+        domain_resolution: Optional[float] = None,
         units: Optional[str] = None,
         system_type: str = "SIMO",
     ):
-        
+
         # Measurement checks
         assert system_type in ["MISO", "SIMO", "MIMO"]
         self.measurements = np.asarray(measurements)
@@ -28,8 +33,11 @@ class _signal:
         else:
             assert system_type == "MIMO"
             assert self.measurements.shape[1] == self.measurements.shape[2]
-        self.dof = max(self.measurements.shape[1], self.measurements.shape[2])
-        
+        if dof is None:
+            self.dof = max(self.measurements.shape[1], self.measurements.shape[2])
+        else:
+            self.dof = dof
+
         # Coordinates and orientations checks
         if coordinates is None and orientations is None:
             warn(
@@ -77,7 +85,7 @@ class _signal:
             assert self.measurements.shape[2] == self.dof
             self.coordinates = np.tile(self.coordinates, (1, 1, self.dof))
             self.orientations = np.tile(self.orientations, (1, 1, self.dof))
-        
+
         if units is None:
             self.units = "mm, kg, s, °C"
             print("Units will be assumed to be mm, kg, s, °C.")
@@ -85,6 +93,81 @@ class _signal:
             self.units = units
         self.units = units
         self.samples = self.measurements.shape[0]
+
+        # Create domain array
+        self.domain_start = float(domain_start)
+        self.domain_end = float(domain_end)
+        self.domain_span = float(domain_span)
+        self.domain_resolution = float(domain_resolution)
+        if self.domain_span is None:
+            if self.domain_end is None:  # max, span are None, rate is defined
+                if self.domain_resolution is None:
+                    raise ValueError("Insufficient temporal domain parameters.")
+                self.domain_span = (self.samples - 1) * self.domain_resolution
+                self.domain_end = self.domain_start + self.domain_span
+        else:  # max is defined, span is not, rate not considered
+            self.domain_span = self.domain_end - self.domain_start
+            if self.domain_resolution is None:  # span, rate are None, max is defined
+                self.domain_resolution = self.domain_span / (self.samples - 1)
+            else:  # span is None, max and rate are defined
+                calculated_resolution = self.domain_span / (self.samples - 1)
+                if not np.allclose(self.domain_resolution, calculated_resolution):
+                    raise ValueError(
+                        "The temporal domain parameters introduced are inconsistent."
+                    )
+                else:
+                    if self.domain_end is None:  # max is None, span is defined.
+                        self.domain_end = self.domain_start + self.domain_span
+                        if (
+                            self.domain_resolution is None
+                        ):  # max and rate are None, span is defined
+                            self.domain_resolution = self.domain_span / (
+                                self.samples - 1
+                            )
+                        else:  # span is None, max and rate are defined
+                            calculated_resolution = self.domain_span / (
+                                self.samples - 1
+                            )
+                            if not np.allclose(
+                                self.domain_resolution, calculated_resolution
+                            ):
+                                raise ValueError(
+                                    "The temporal domain parameters introduced are"
+                                    " inconsistent."
+                                )
+                    else:  # max and span are defined
+                        calculated_end = self.domain_start + self.domain_span
+                        if not np.allclose(self.domain_end, calculated_end):
+                            raise ValueError(
+                                "The temporal domain parameters introduced are"
+                                " inconsistent."
+                            )
+                        if (
+                            self.domain_resolution is None
+                        ):  # rate is None, max and span are defined
+                            self.domain_resolution = self.domain_span / (
+                                self.samples - 1
+                            )
+                        else:  # everything is defined
+                            calculated_resolution = self.domain_span / (
+                                self.samples - 1
+                            )
+                            if not np.allclose(
+                                self.domain_resolution, calculated_resolution
+                            ):
+                                raise ValueError(
+                                    "The temporal domain parameters introduced are"
+                                    " inconsistent."
+                                )
+                self.domain_array = np.arange(
+                    self.domain_start,
+                    self.domain_end + self.domain_resolution / 2,
+                    self.domain_resolution,
+                )
+                if not np.allclose(len(self.domain_array), self.samples):
+                    raise ValueError(
+                        "The temporal domain parameters introduced are inconsistent."
+                    )
 
     def __len__(self):
         return self.dof
