@@ -50,9 +50,9 @@ def __check_domain_amplitude_pair(
 
 def _generate_domain_array(
     samples: float,
-    start: float = 0,
-    end: Optional[float] = None,
-    scope: Optional[float] = None,
+    domain_start: float = 0,
+    domain_end: Optional[float] = None,
+    span: Optional[float] = None,
     rate: Optional[float] = None,
 ):
     """_summary_
@@ -65,7 +65,7 @@ def _generate_domain_array(
         Minimum value of the desired domain array.
     end: float, default None
         Maximum value of the desired domain array.
-    scope: float, default None
+    span: float, default None
         Distance from minimum to maximum value of the desired domain array.
     rate: float, default None
         Distance between any two points of the desired domain array.
@@ -78,121 +78,52 @@ def _generate_domain_array(
 
     """
 
-    if scope is None:
-        if end is None:  # max, scope are None, rate is defined
+    if span is None:
+        if domain_end is None:  # max, span are None, rate is defined
             if rate is None:
                 raise ValueError("Insufficient temporal domain parameters.")
-            scope = (samples - 1) * rate
-            end = start + scope
-        else:  # max is defined, scope is not, rate not considered
-            scope = end - start
-            if rate is None:  # scope, rate are None, max is defined
-                rate = scope / (samples - 1)
-            else:  # scope is None, max and rate are defined
-                calculated_rate = scope / (samples - 1)
+            span = (samples - 1) * rate
+            domain_end = domain_start + span
+        else:  # max is defined, span is not, rate not considered
+            span = domain_end - domain_start
+            if rate is None:  # span, rate are None, max is defined
+                rate = span / (samples - 1)
+            else:  # span is None, max and rate are defined
+                calculated_rate = span / (samples - 1)
                 if not np.allclose(rate, calculated_rate):
                     raise ValueError(
                         "The temporal domain parameters introduced are inconsistent."
                     )
     else:
-        if end is None:  # max is None, scope is defined.
-            end = start + scope
-            if rate is None:  # max and rate are None, scope is defined
-                rate = scope / (samples - 1)
-            else:  # scope is None, max and rate are defined
-                calculated_rate = scope / (samples - 1)
+        if domain_end is None:  # max is None, span is defined.
+            domain_end = domain_start + span
+            if rate is None:  # max and rate are None, span is defined
+                rate = span / (samples - 1)
+            else:  # span is None, max and rate are defined
+                calculated_rate = span / (samples - 1)
                 if not np.allclose(rate, calculated_rate):
                     raise ValueError(
                         "The temporal domain parameters introduced are inconsistent."
                     )
-        else:  # max and scope are defined
-            calculated_max = start + scope
-            if not np.allclose(end, calculated_max):
+        else:  # max and span are defined
+            calculated_max = domain_start + span
+            if not np.allclose(domain_end, calculated_max):
                 raise ValueError(
                     "The temporal domain parameters introduced are inconsistent."
                 )
-            if rate is None:  # rate is None, max and scope are defined
-                rate = scope / (samples - 1)
+            if rate is None:  # rate is None, max and span are defined
+                rate = span / (samples - 1)
             else:  # everything is defined
-                calculated_rate = scope / (samples - 1)
+                calculated_rate = span / (samples - 1)
                 if not np.allclose(rate, calculated_rate):
                     raise ValueError(
                         "The temporal domain parameters introduced are inconsistent."
                     )
-    domain_array = np.arange(start, end + rate / 2, rate)
+    domain_array = np.arange(domain_start, domain_end + rate / 2, rate)
     if not np.allclose(len(domain_array), samples):
         raise ValueError("The temporal domain parameters introduced are inconsistent.")
-    domain_parameters = (start, end, scope, rate)
+    domain_parameters = (domain_start, domain_end, span, rate)
     return domain_array, domain_parameters
-
-
-def _check_coordinates_orientations(
-    coordinates: npt.NDArray[np.float64] = None,
-    orientations: npt.NDArray[np.float64] = None,
-    dof: float = None
-):
-    if coordinates is None and orientations is None:
-        if dof is None:
-            raise ValueError(
-                "At least one of coordinates, orientations or dof must be specified"
-            )
-        warn(
-            "Coordinates will be assumed to be points spaced one distance unit"
-            " along the x axis.",
-            UserWarning,
-        )
-        coordinates = np.vstack(np.arange(dof), np.zeros((dof, 2)))
-        warn("orientations will be assumed to be unit vectors on the z axis.",
-             UserWarning)
-        orientations = np.vstack(np.zeros((dof, 2)), np.ones(dof))
-    elif coordinates is None:
-        orientations = np.asarray(orientations)
-        if dof is None:
-            dof = orientations.shape[0]
-        warn(
-            "Coordinates will be assumed to be points spaced one distance unit along"
-            " the x axis.",
-            UserWarning,
-        )
-        coordinates = np.vstack(np.arange(dof), np.zeros((dof, 2)))
-    elif orientations is None:
-        coordinates = np.asarray(coordinates)
-        if dof is None:
-            dof = coordinates.shape[0]
-        warn(
-            "Coordinates will be assumed to be points spaced one distance unit along"
-            " the x axis.",
-            UserWarning,
-        )
-        orientations = np.vstack(np.arange(dof), np.zeros((dof, 2)))
-    else:
-        coordinates = np.asarray(coordinates)
-        orientations = np.asarray(orientations)
-        if dof is None:
-            dof = coordinates.shape[0]
-    
-    if not dof == orientations.shape[0] or not dof == coordinates.shape[0]:
-        raise ValueError(
-            "There should be exactly the same amount of coordinates and orientations."
-        )
-    # Check how many unique coordinate-orientation pairs there are and how many times
-    # they appear.
-    unq, cnt = np.unique(np.hstack((coordinates, orientations)), axis=0)
-    unq = unq.shape[0]
-    if not np.all(cnt == cnt[0]):
-        raise ValueError(
-            "One of the coordinate-orientation pairs provided appears more or less than"
-            " the others. If any coordinate-orientation pair repeats at all, all should"
-            " repeat as many times as there are degrees of freedom in the system."
-        )
-    cnt = cnt[0]
-    if unq == cnt:
-        matrix_completion = 0  # Full matrix
-    elif unq > cnt:
-        matrix_completion = 1  # Only outputs
-    else:
-        matrix_completion = 2  # Only inputs
-    return coordinates, orientations, dof, matrix_completion
 
 
 def change_resolution(
@@ -200,8 +131,8 @@ def change_resolution(
     amplitude_array: npt.NDArray[np.complex64],
     new_resolution: float,
 ):
-    """Change the resolution of an array of signals, assuming the temporal dimension of
-    said signal is the first dimension of the array.
+    """Change the temporal resolution of an array of signals, assuming the temporal
+    dimension of said signal is the first dimension of the array.
 
     Parameters
     ----------
@@ -218,7 +149,7 @@ def change_resolution(
     A numpy array of floats
         An array containing the new temporal dimension, which measures the rate of
         physical change, be it by using domain, frequency or any other suitable
-        quantity; with the new resolution.
+        quantity; with the new temporal resolution.
     A numpy array of complexes
         An array with the new amplitude of the signal recorded along the domain array,
         with the values corresponding to the values of the new domain array.
@@ -233,10 +164,10 @@ def change_resolution(
         domain_array[0], domain_array[-1] + new_resolution / 2, new_resolution
     )
     # Determine the amount of decimal places the user desires from the amount
-    # of decimals in the desired resolution.
+    # of decimals in the desired temporal resolution.
     decimal_places = abs(Decimal(str(new_resolution)).as_tuple().exponent)
     np.around(new_domain_array, decimals=decimal_places)
-    # Infer the current resolution from the average of differences between
+    # Infer the current temporal resolution from the average of differences between
     # elements in the domain array.
     domain_diff = np.diff(domain_array)
     resolution = np.average(domain_diff)
@@ -249,7 +180,7 @@ def change_resolution(
         warn(
             (
                 "The resulting max domain will be different to accommodate for the"
-                " new resolution."
+                " new temporal resolution."
             ),
             UserWarning,
         )
@@ -264,7 +195,7 @@ def change_resolution(
         warn(
             (
                 "The resulting signal will be interpolated according to the desired new"
-                " resolution."
+                " temporal resolution."
             ),
             UserWarning,
         )
@@ -284,21 +215,21 @@ def change_resolution(
             )
         new_amplitude_array = new_amplitude_array.reshape(amplitude_shape)
     else:
-        # Keep values corresponding to the new resolution
+        # Keep values corresponding to the new temporal resolution
         step = int(new_resolution / resolution)
         new_amplitude_array = amplitude_array[0::step, ...]
 
     return new_domain_array, new_amplitude_array
 
 
-def change_domain_scope(
+def change_domain_span(
     domain_array: npt.NDArray[np.float64],
     amplitude_array: npt.NDArray[np.complex64],
     new_min_domain: Optional[float] = None,
     new_max_domain: Optional[float] = None,
 ):
-    """Change the resolution of an array of signals, assuming the temporal dimension of
-    said signal is the first dimension of the array.
+    """Change the span of the temporal domain of an array of signals, assuming the
+    temporal dimension of said signal is the first dimension of the array.
 
     Parameters
     ----------
@@ -317,7 +248,7 @@ def change_domain_scope(
     A numpy array of floats
         An array containing the new temporal dimension, which measures the rate of
         physical change, be it by using domain, frequency or any other suitable quantity
-        with the new resolution.
+        with the new temporal resolution.
     A numpy array of complexes
         An array with the new amplitude of the signal recorded along the domain array,
         with the values corresponding to the values of the new domain array.
@@ -332,7 +263,7 @@ def change_domain_scope(
         new_min_domain = domain_array[0]
     if new_max_domain is None:
         new_max_domain = domain_array[-1]
-    # Get current resolution
+    # Get current temporal resolution
     domain_diff = np.diff(domain_array)
     resolution = np.average(domain_diff)
     # Create copies of inputs to work on them, there are problems if both a new min and
@@ -346,7 +277,7 @@ def change_domain_scope(
             new_max_domain + resolution / 2,
             resolution,
         )[1:]
-        # Make sure the last domain is coherent with resolution and not
+        # Make sure the last domain is coherent with temporal resolution and not
         # greater than the new max domain desired
         if not np.allclose(domain_extension[-1], new_max_domain):
             if domain_extension[-1] > new_max_domain:
@@ -426,16 +357,16 @@ if __name__ == "__main__":
     plt.plot(new_domain_array, new_amplitude_array)
     plt.show()
 
-    # Use the previously created sinusoidal signal and domain and change_domain_scope
+    # Use the previously created sinusoidal signal and domain and change_domain_span
     # first to extend it by a period after and before
-    extended_domain_array, extended_amplitude_array = change_domain_scope(
+    extended_domain_array, extended_amplitude_array = change_domain_span(
         domain_array=domain_array,
         amplitude_array=amplitude_array,
         new_min_domain=-2 * np.pi,
         new_max_domain=4 * np.pi,
     )
     # then to cut it to the middle half of the period
-    cut_domain_array, cut_amplitude_array = change_domain_scope(
+    cut_domain_array, cut_amplitude_array = change_domain_span(
         domain_array=domain_array,
         amplitude_array=amplitude_array,
         new_min_domain=np.pi / 2,
