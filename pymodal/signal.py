@@ -200,3 +200,7 @@ class _signal:
             return own_dict == other_dict and equal_array
         else:
             return False
+    
+    
+    def __getitem__(self, tuple):
+        pass
