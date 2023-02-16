@@ -39,7 +39,7 @@ class _signal:
             )
             self.coordinates = np.vstack(np.arange(self.dof), np.zeros((self.dof, 2)))
             warn(
-                "orientations will be assumed to be unit vectors on the z axis.",
+                "Orientations will be assumed to be unit vectors on the z axis.",
                 UserWarning,
             )
             self.orientations = np.vstack(np.zeros((self.dof, 2)), np.ones(self.dof))
