@@ -14,6 +14,8 @@ class _signal:
         units: Optional[str] = None,
         system_type: str = "SIMO",
     ):
+        
+        # Measurement checks
         assert system_type in ["MISO", "SIMO", "MIMO"]
         self.measurements = np.asarray(measurements)
         if self.measurements.ndim < 3:
@@ -27,6 +29,8 @@ class _signal:
             assert system_type == "MIMO"
             assert self.measurements.shape[1] == self.measurements.shape[2]
         self.dof = max(self.measurements.shape[1], self.measurements.shape[2])
+        
+        # Coordinates and orientations checks
         if coordinates is None and orientations is None:
             warn(
                 "Coordinates will be assumed to be points spaced one distance unit"
@@ -73,6 +77,7 @@ class _signal:
             assert self.measurements.shape[2] == self.dof
             self.coordinates = np.tile(self.coordinates, (1, 1, self.dof))
             self.orientations = np.tile(self.orientations, (1, 1, self.dof))
+        
         if units is None:
             self.units = "mm, kg, s, °C"
             print("Units will be assumed to be mm, kg, s, °C.")
