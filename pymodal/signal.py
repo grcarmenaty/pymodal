@@ -3,40 +3,79 @@ from warnings import warn
 from typing import Optional
 import numpy.typing as npt
 import pymodal
-from .utils import _check_coordinates_orientations
 
 
 class _signal:
     def __init__(
         self,
-        measurements: npt.NDArray[np.complex64],
-        coordinates: npt.NDArray[np.float64] = None,
-        orientations: npt.NDArray[np.float64] = None,
+        measurements: npt.NDArray[npt.complex64],
+        coordinates: npt.NDArray[npt.float64] = None,
+        orientations: npt.NDArray[npt.float64] = None,
         units: Optional[str] = None,
+        system_type: str = "SIMO",
     ):
+        assert system_type in ["MISO", "SIMO", "MIMO"]
         self.measurements = np.asarray(measurements)
-        self.dof = max(self.measurements.shape[1], self.measurements.shape[2])
-        (
-            self.coordinates,
-            self.orientations,
-            self.dof,
-            matrix_completion,
-        ) = _check_coordinates_orientations(
-            coordinates=coordinates,
-            orientations=orientations,
-            dof=self.dof
-        )
-        if matrix_completion == 0:
+        if self.measurements.ndim < 3:
+            for _ in range(3 - self.measurements.ndim):
+                self.measurements = [..., np.newaxis]
+        if system_type is "SIMO":
+            self.measurements.reshape((self.measurements.shape[0], -1, 1))
+        elif system_type is "MISO":
+            self.measurements.reshape((self.measurements.shape[0], 1, -1))
+        else:
+            assert system_type == "MIMO"
             assert self.measurements.shape[1] == self.measurements.shape[2]
-        if matrix_completion == 1:
+        self.dof = max(self.measurements.shape[1], self.measurements.shape[2])
+        if coordinates is None and orientations is None:
+            warn(
+                "Coordinates will be assumed to be points spaced one distance unit"
+                " along the x axis.",
+                UserWarning,
+            )
+            self.coordinates = np.vstack(np.arange(self.dof), np.zeros((self.dof, 2)))
+            warn(
+                "orientations will be assumed to be unit vectors on the z axis.",
+                UserWarning,
+            )
+            self.orientations = np.vstack(np.zeros((self.dof, 2)), np.ones(self.dof))
+        elif coordinates is None:
+            self.orientations = np.asarray(orientations)
+            warn(
+                "Coordinates will be assumed to be points spaced one distance unit"
+                " along the x axis.",
+                UserWarning,
+            )
+            self.coordinates = np.vstack(np.arange(self.dof), np.zeros((self.dof, 2)))
+        elif orientations is None:
+            self.coordinates = np.asarray(coordinates)
+            warn(
+                "Coordinates will be assumed to be points spaced one distance unit"
+                " along the x axis.",
+                UserWarning,
+            )
+            self.orientations = np.vstack(np.arange(self.dof), np.zeros((self.dof, 2)))
+        else:
+            self.coordinates = np.asarray(coordinates)
+            self.orientations = np.asarray(orientations)
+        combination = np.hstack((self.coordinates, self.orientations))
+        unq, cnt = np.unique(combination, axis=0)
+        assert np.all(cnt == 1)
+        cnt = cnt[0]
+        if system_type is "SIMO":
             assert self.measurements.shape[1] == self.dof
             assert self.measurements.shape[2] == 1
-        if matrix_completion == 2:
-            assert self.measurements.shape[2] == self.dof
+        elif system_type is "MISO":
             assert self.measurements.shape[1] == 1
+            assert self.measurements.shape[2] == self.dof
+        elif system_type is "MIMO":
+            assert self.measurements.shape[1] == self.dof
+            assert self.measurements.shape[2] == self.dof
+            self.coordinates = np.tile(self.coordinates, (1, 1, self.dof))
+            self.orientations = np.tile(self.orientations, (1, 1, self.dof))
         if units is None:
             self.units = "mm, kg, s, °C"
-            warn("Units will be assumed to be mm, kg, s, °C.", UserWarning)
+            print("Units will be assumed to be mm, kg, s, °C.")
         else:
             self.units = units
         self.units = units
