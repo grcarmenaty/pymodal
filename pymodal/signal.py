@@ -275,6 +275,7 @@ class _signal:
             system_type=self.system_type,
         )
 
+
     def change_domain_span(
         self,
         new_min_domain: Optional[float] = None,
