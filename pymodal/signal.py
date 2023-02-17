@@ -8,9 +8,9 @@ import pymodal
 class _signal:
     def __init__(
         self,
-        measurements: npt.NDArray[npt.complex64],
-        coordinates: npt.NDArray[npt.float64] = None,
-        orientations: npt.NDArray[npt.float64] = None,
+        measurements: npt.NDArray[np.complex64],
+        coordinates: npt.NDArray[np.float64] = None,
+        orientations: npt.NDArray[np.float64] = None,
         dof: Optional[float] = None,
         domain_start: Optional[float] = 0,
         domain_end: Optional[float] = None,
@@ -26,9 +26,9 @@ class _signal:
         if self.measurements.ndim < 3:
             for _ in range(3 - self.measurements.ndim):
                 self.measurements = [..., np.newaxis]
-        if self.system_type is "SIMO":
+        if self.system_type == "SIMO":
             self.measurements.reshape((self.measurements.shape[0], -1, 1))
-        elif self.system_type is "MISO" or self.system_type is "excitation":
+        elif self.system_type == "MISO" or self.system_type == "excitation":
             self.measurements.reshape((self.measurements.shape[0], 1, -1))
         else:
             assert self.system_type == "MIMO"
@@ -74,13 +74,13 @@ class _signal:
         unq, cnt = np.unique(combination, axis=0)
         assert np.all(cnt == 1)
         cnt = cnt[0]
-        if self.system_type is "SIMO":
+        if self.system_type == "SIMO":
             assert self.measurements.shape[1] == self.dof
             assert self.measurements.shape[2] == 1
-        elif self.system_type is "MISO" or self.system_type is "excitation":
+        elif self.system_type == "MISO" or self.system_type == "excitation":
             assert self.measurements.shape[1] == 1
             assert self.measurements.shape[2] == self.dof
-        elif self.system_type is "MIMO":
+        elif self.system_type == "MIMO":
             assert self.measurements.shape[1] == self.dof
             assert self.measurements.shape[2] == self.dof
             self.coordinates = np.tile(self.coordinates, (1, 1, self.dof))
