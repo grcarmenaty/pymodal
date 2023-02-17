@@ -169,7 +169,7 @@ class _signal:
                 "The temporal domain parameters introduced are inconsistent."
             )
         assert np.allclose(
-            self.domain_resolution, np.average(np.diff(self.domain, axis=0))
+            self.domain_resolution, np.average(np.diff(self.domain_array, axis=0))
         )
 
     def __len__(self):
@@ -215,46 +215,14 @@ class _signal:
                 key[i] = slice(index, index + 1)
         if len(key) is 1:
             if self.system_type in ["SIMO", "MIMO"]:
-                return _signal(
-                    measurements=self.measurements[:, key[0], :],
-                    coordinates=self.coordinates,
-                    orientations=self.orientations,
-                    dof=self.dof,
-                    domain_start=self.domain_start,
-                    domain_end=self.domain_end,
-                    domain_span=self.domain_span,
-                    domain_resolution=self.domain_resolution,
-                    units=self.units,
-                    system_type=self.system_type,
-                )
+                self.measurements[:, key[0], :],
             elif self.system_type in ["MISO", "excitation"]:
-                return _signal(
-                    measurements=self.measurements[:, :, key[0]],
-                    coordinates=self.coordinates,
-                    orientations=self.orientations,
-                    dof=self.dof,
-                    domain_start=self.domain_start,
-                    domain_end=self.domain_end,
-                    domain_span=self.domain_span,
-                    domain_resolution=self.domain_resolution,
-                    units=self.units,
-                    system_type=self.system_type,
-                )
+                self.measurements[:, :, key[0]],
         elif len(key) is 2:
-            return _signal(
-                measurements=self.measurements[:, key[0], key[1]],
-                coordinates=self.coordinates,
-                orientations=self.orientations,
-                dof=self.dof,
-                domain_start=self.domain_start,
-                domain_end=self.domain_end,
-                domain_span=self.domain_span,
-                domain_resolution=self.domain_resolution,
-                units=self.units,
-                system_type=self.system_type,
-            )
+            self.measurements[:, key[0], key[1]],
         else:
             raise ValueError("Too many keys provided.")
+        return self
 
     def change_domain_resolution(self, new_resolution):
         new_domain_array, new_measurements_array = pymodal.change_domain_resolution(
@@ -262,18 +230,12 @@ class _signal:
             amplitude_array=self.amplitude_array,
             new_resolution=new_resolution,
         )
-        return _signal(
-            measurements=new_measurements_array,
-            coordinates=self.coordinates,
-            orientations=self.orientations,
-            dof=self.dof,
-            domain_start=new_domain_array[0],
-            domain_end=new_domain_array[1],
-            domain_span=new_domain_array[1] - new_domain_array[0],
-            domain_resolution=new_resolution,
-            units=self.units,
-            system_type=self.system_type,
-        )
+        self.measurements=new_measurements_array
+        self.domain_start=new_domain_array[0]
+        self.domain_end=new_domain_array[1]
+        self.domain_span=new_domain_array[1] - new_domain_array[0]
+        self.domain_resolution=new_resolution
+        return self
 
 
     def change_domain_span(
@@ -287,15 +249,12 @@ class _signal:
             new_min_domain=new_min_domain,
             new_max_domain=new_max_domain,
         )
-        return _signal(
-            measurements=cut_measurements_array,
-            coordinates=self.coordinates,
-            orientations=self.orientations,
-            dof=self.dof,
-            domain_start=cut_domain_array[0],
-            domain_end=cut_domain_array[1],
-            domain_span=cut_domain_array[1] - cut_domain_array[0],
-            domain_resolution=self.domain_resolution,
-            units=self.units,
-            system_type=self.system_type,
+        self.measurements=cut_measurements_array
+        self.domain_start=cut_domain_array[0]
+        self.domain_end=cut_domain_array[1]
+        self.domain_span=cut_domain_array[1] - cut_domain_array[0]
+        self.domain_resolution=self.domain_resolution
+        assert np.allclose(
+            self.domain_resolution, np.average(np.diff(self.domain_array, axis=0))
         )
+        return self
