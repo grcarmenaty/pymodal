@@ -4,3 +4,4 @@ from .utils import (
 )
 
 from .timeseries import timeseries
+from .frf import frf
