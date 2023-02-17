@@ -12,26 +12,26 @@ class _signal:
         coordinates: npt.NDArray[npt.float64] = None,
         orientations: npt.NDArray[npt.float64] = None,
         dof: Optional[float] = None,
-        domain_start: Optional[float] = None,
+        domain_start: Optional[float] = 0,
         domain_end: Optional[float] = None,
         domain_span: Optional[float] = None,
         domain_resolution: Optional[float] = None,
         units: Optional[str] = None,
         system_type: str = "SIMO",
     ):
-
         # Measurement checks
-        assert system_type in ["MISO", "SIMO", "MIMO"]
+        self.system_type = system_type
+        assert self.system_type in ["MISO", "SIMO", "MIMO", "excitation"]
         self.measurements = np.asarray(measurements)
         if self.measurements.ndim < 3:
             for _ in range(3 - self.measurements.ndim):
                 self.measurements = [..., np.newaxis]
-        if system_type is "SIMO":
+        if self.system_type is "SIMO":
             self.measurements.reshape((self.measurements.shape[0], -1, 1))
-        elif system_type is "MISO":
+        elif self.system_type is "MISO" or self.system_type is "excitation":
             self.measurements.reshape((self.measurements.shape[0], 1, -1))
         else:
-            assert system_type == "MIMO"
+            assert self.system_type == "MIMO"
             assert self.measurements.shape[1] == self.measurements.shape[2]
         if dof is None:
             self.dof = max(self.measurements.shape[1], self.measurements.shape[2])
@@ -74,13 +74,13 @@ class _signal:
         unq, cnt = np.unique(combination, axis=0)
         assert np.all(cnt == 1)
         cnt = cnt[0]
-        if system_type is "SIMO":
+        if self.system_type is "SIMO":
             assert self.measurements.shape[1] == self.dof
             assert self.measurements.shape[2] == 1
-        elif system_type is "MISO":
+        elif self.system_type is "MISO" or self.system_type is "excitation":
             assert self.measurements.shape[1] == 1
             assert self.measurements.shape[2] == self.dof
-        elif system_type is "MIMO":
+        elif self.system_type is "MIMO":
             assert self.measurements.shape[1] == self.dof
             assert self.measurements.shape[2] == self.dof
             self.coordinates = np.tile(self.coordinates, (1, 1, self.dof))
@@ -169,8 +169,10 @@ class _signal:
                         "The temporal domain parameters introduced are inconsistent."
                     )
 
+
     def __len__(self):
         return self.dof
+
 
     def __eq__(self, other):
         if isinstance(other, pymodal.signal):
@@ -200,7 +202,54 @@ class _signal:
             return own_dict == other_dict and equal_array
         else:
             return False
-    
-    
-    def __getitem__(self, tuple):
-        pass
+
+
+    def __getitem__(self, key: tuple[slice]):
+        if type(key) is int:
+            key = slice(key, key + 1)
+        if type(key) is slice:
+            key = [key]
+        key = list(key)
+        for i, index in enumerate(key):
+            if type(index) is int:
+                key[i] = slice(index, index + 1)
+        if len(key) is 1:
+            if self.system_type in ["SIMO", "MIMO"]:
+                return _signal(
+                    measurements=self.measurements[:, key[0], :],
+                    coordinates=self.coordinates,
+                    orientations=self.orientations,
+                    dof=self.dof,
+                    domain_start=self.domain_start,
+                    domain_end=self.domain_end,
+                    domain_span=self.domain_span,
+                    domain_resolution=self.domain_resolution,
+                    units=self.units,
+                    system_type=self.system_type,
+                )
+            elif self.system_type in ["MISO", "excitation"]:
+                return _signal(
+                    measurements=self.measurements[:, :, key[0]],
+                    coordinates=self.coordinates,
+                    orientations=self.orientations,
+                    dof=self.dof,
+                    domain_start=self.domain_start,
+                    domain_end=self.domain_end,
+                    domain_span=self.domain_span,
+                    domain_resolution=self.domain_resolution,
+                    units=self.units,
+                    system_type=self.system_type,
+                )
+        elif len(key) is 2:
+            return _signal(
+                measurements=self.measurements[:, key[0], key[1]],
+                coordinates=self.coordinates,
+                orientations=self.orientations,
+                dof=self.dof,
+                domain_start=self.domain_start,
+                domain_end=self.domain_end,
+                domain_span=self.domain_span,
+                domain_resolution=self.domain_resolution,
+                units=self.units,
+                system_type=self.system_type,
+            )
