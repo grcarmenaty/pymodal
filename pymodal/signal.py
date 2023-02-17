@@ -159,20 +159,21 @@ class _signal:
                                     "The temporal domain parameters introduced are"
                                     " inconsistent."
                                 )
-                self.domain_array = np.arange(
-                    self.domain_start,
-                    self.domain_end + self.domain_resolution / 2,
-                    self.domain_resolution,
-                )
-                if not np.allclose(len(self.domain_array), self.samples):
-                    raise ValueError(
-                        "The temporal domain parameters introduced are inconsistent."
-                    )
-
+        self.domain_array = np.arange(
+            self.domain_start,
+            self.domain_end + self.domain_resolution / 2,
+            self.domain_resolution,
+        )
+        if not np.allclose(len(self.domain_array), self.samples):
+            raise ValueError(
+                "The temporal domain parameters introduced are inconsistent."
+            )
+        assert np.allclose(
+            self.domain_resolution, np.average(np.diff(self.domain, axis=0))
+        )
 
     def __len__(self):
         return self.dof
-
 
     def __eq__(self, other):
         if isinstance(other, pymodal.signal):
@@ -202,7 +203,6 @@ class _signal:
             return own_dict == other_dict and equal_array
         else:
             return False
-
 
     def __getitem__(self, key: tuple[slice]):
         if type(key) is int:
@@ -253,7 +253,8 @@ class _signal:
                 units=self.units,
                 system_type=self.system_type,
             )
-
+        else:
+            raise ValueError("Too many keys provided.")
 
     def change_domain_resolution(self, new_resolution):
         new_domain_array, new_measurements_array = pymodal.change_domain_resolution(
@@ -262,15 +263,38 @@ class _signal:
             new_resolution=new_resolution,
         )
         return _signal(
-                measurements=self.measurements[:, key[0], key[1]],
-                coordinates=self.coordinates,
-                orientations=self.orientations,
-                dof=self.dof,
-                domain_start=self.domain_start,
-                domain_end=self.domain_end,
-                domain_span=self.domain_span,
-                domain_resolution=self.domain_resolution,
-                units=self.units,
-                system_type=self.system_type,
+            measurements=new_measurements_array,
+            coordinates=self.coordinates,
+            orientations=self.orientations,
+            dof=self.dof,
+            domain_start=new_domain_array[0],
+            domain_end=new_domain_array[1],
+            domain_span=new_domain_array[1] - new_domain_array[0],
+            domain_resolution=new_resolution,
+            units=self.units,
+            system_type=self.system_type,
         )
-    
+
+    def change_domain_span(
+        self,
+        new_min_domain: Optional[float] = None,
+        new_max_domain: Optional[float] = None,
+    ):
+        cut_domain_array, cut_measurements_array = pymodal.change_domain_span(
+            domain_array=self.domain_array,
+            measurements_array=self.measurements_array,
+            new_min_domain=new_min_domain,
+            new_max_domain=new_max_domain,
+        )
+        return _signal(
+            measurements=cut_measurements_array,
+            coordinates=self.coordinates,
+            orientations=self.orientations,
+            dof=self.dof,
+            domain_start=cut_domain_array[0],
+            domain_end=cut_domain_array[1],
+            domain_span=cut_domain_array[1] - cut_domain_array[0],
+            domain_resolution=self.domain_resolution,
+            units=self.units,
+            system_type=self.system_type,
+        )
