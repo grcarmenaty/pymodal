@@ -41,7 +41,7 @@ def __check_domain_measurements_pair(
             "Both the domain array and the measurements array should be of the same"
             " length along their first axis."
         )
-    if np.all(np.diff(domain_array) <= 0):
+    if np.all(np.diff(domain_array, axis=0) <= 0):
         raise ValueError(
             "Domain array values should be strictly increasing and non-repeating."
         )
@@ -91,7 +91,7 @@ def change_domain_resolution(
     np.around(new_domain_array, decimals=decimal_places)
     # Infer the current temporal resolution from the average of differences between
     # elements in the domain array.
-    domain_diff = np.diff(domain_array)
+    domain_diff = np.diff(domain_array, axis=0)
     resolution = np.average(domain_diff)
     # Make sure the new max domain value is smaller than the previous max
     # domain value.
@@ -188,7 +188,7 @@ def change_domain_span(
     if new_max_domain is None:
         new_max_domain = domain_array[-1]
     # Get current temporal resolution
-    domain_diff = np.diff(domain_array)
+    domain_diff = np.diff(domain_array, axis=0)
     resolution = np.average(domain_diff)
     # Create copies of inputs to work on them, there are problems if both a new min and
     # max domain values are given otherwise
