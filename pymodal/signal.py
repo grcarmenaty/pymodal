@@ -253,3 +253,24 @@ class _signal:
                 units=self.units,
                 system_type=self.system_type,
             )
+
+
+    def change_domain_resolution(self, new_resolution):
+        new_domain_array, new_measurements_array = pymodal.change_domain_resolution(
+            domain_array=self.domain_array,
+            amplitude_array=self.amplitude_array,
+            new_resolution=new_resolution,
+        )
+        return _signal(
+                measurements=self.measurements[:, key[0], key[1]],
+                coordinates=self.coordinates,
+                orientations=self.orientations,
+                dof=self.dof,
+                domain_start=self.domain_start,
+                domain_end=self.domain_end,
+                domain_span=self.domain_span,
+                domain_resolution=self.domain_resolution,
+                units=self.units,
+                system_type=self.system_type,
+        )
+    
