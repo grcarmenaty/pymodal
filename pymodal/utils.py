@@ -48,7 +48,7 @@ def __check_domain_amplitude_pair(
     return domain_array, amplitude_array
 
 
-def change_resolution(
+def change_domain_resolution(
     domain_array: npt.NDArray[np.float64],
     amplitude_array: npt.NDArray[np.complex64],
     new_resolution: float,
