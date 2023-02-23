@@ -34,8 +34,6 @@ def __check_domain_measurements_pair(
         An array with the measurements of the signal recorded along the domain array,
         with the values corresponding to the values of the domain array.
     """
-    domain_array = np.asarray(domain_array)
-    measurements_array = np.asarray(measurements_array)
     if domain_array.shape[0] != measurements_array.shape[0]:
         raise ValueError(
             "Both the domain array and the measurements array should be of the same"

@@ -3,14 +3,18 @@ from warnings import warn
 from typing import Optional
 import numpy.typing as npt
 import pymodal
+from pint import UnitRegistry
 
 
-class _signal:
+ureg = UnitRegistry()
+
+
+class _signal():
     def __init__(
         self,
         measurements: npt.NDArray[np.complex64],
-        coordinates: npt.NDArray[np.float64] = None,
-        orientations: npt.NDArray[np.float64] = None,
+        coordinates: Optional[npt.NDArray[np.float64]] = None,
+        orientations: Optional[npt.NDArray[np.float64]] = None,
         dof: Optional[float] = None,
         domain_start: Optional[float] = 0,
         domain_end: Optional[float] = None,
@@ -22,7 +26,13 @@ class _signal:
         # Measurement checks
         self.system_type = system_type
         assert self.system_type in ["MISO", "SIMO", "MIMO", "excitation"]
-        self.measurements = np.asarray(measurements)
+        if units is None:
+            if system_type == "excitation":
+                units = ureg.parse_expression("newton")
+            else:
+                units = ureg.parse_expression("millimeter/second**2")
+        self.units = units
+        self.measurements = np.asarray(measurements) * self.units
         if self.measurements.ndim < 3:
             for _ in range(3 - self.measurements.ndim):
                 self.measurements = self.measurements[..., np.newaxis]
@@ -98,12 +108,6 @@ class _signal:
             self.coordinates = np.tile(self.coordinates, (1, 1, self.dof))
             self.orientations = np.tile(self.orientations, (1, 1, self.dof))
 
-        if units is None:
-            self.units = "mm, kg, s, °C"
-            print("Units will be assumed to be mm, kg, s, °C.")
-        else:
-            self.units = units
-        self.units = units
         self.samples = self.measurements.shape[0]
 
         # Create domain array
@@ -237,13 +241,15 @@ class _signal:
                 key[i] = slice(index, index + 1)
         if len(key) == 1:
             if self.system_type in ["SIMO", "MIMO"]:
-                self.measurements[:, key[0], :],
+                key = key[0]
+                self.measurements = self.measurements[:, key, :],
             elif self.system_type in ["MISO", "excitation"]:
-                self.measurements[:, :, key[0]],
+                self.measurements = self.measurements[:, :, key[0]],
         elif len(key) == 2:
-            self.measurements[:, key[0], key[1]],
+            self.measurements = self.measurements[:, key[0], key[1]],
         else:
             raise ValueError("Too many keys provided.")
+        self.measurements = self.measurements[0]
         return self
 
     def change_domain_resolution(self, new_resolution):
