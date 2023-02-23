@@ -1,9 +1,8 @@
 import numpy as np
-from warnings import warn
 from typing import Optional
 import numpy.typing as npt
-import pymodal
 from .signal import _signal
+
 
 class frf(_signal):
     def __init__(

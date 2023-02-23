@@ -1,9 +1,8 @@
 import numpy as np
-from warnings import warn
 from typing import Optional
 import numpy.typing as npt
-import pymodal
 from .signal import _signal
+
 
 class timeseries(_signal):
     def __init__(
@@ -38,3 +37,7 @@ class timeseries(_signal):
         self.time_array = self.domain_array
         self.change_time_span = self.change_domain_span
         self.change_time_resolution = self.change_domain_resolution
+
+
+if __name__ == "__main__":
+    pass

@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.typing as npt
 
+
 def amp_array_constructor(
     domain_array: npt.NDArray[np.float64],
     dimensions: str = "1d",

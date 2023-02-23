@@ -213,12 +213,12 @@ class _signal:
         for i, index in enumerate(key):
             if type(index) is int:
                 key[i] = slice(index, index + 1)
-        if len(key) is 1:
+        if len(key) == 1:
             if self.system_type in ["SIMO", "MIMO"]:
                 self.measurements[:, key[0], :],
             elif self.system_type in ["MISO", "excitation"]:
                 self.measurements[:, :, key[0]],
-        elif len(key) is 2:
+        elif len(key) == 2:
             self.measurements[:, key[0], key[1]],
         else:
             raise ValueError("Too many keys provided.")
@@ -230,13 +230,12 @@ class _signal:
             amplitude_array=self.amplitude_array,
             new_resolution=new_resolution,
         )
-        self.measurements=new_measurements_array
-        self.domain_start=new_domain_array[0]
-        self.domain_end=new_domain_array[1]
-        self.domain_span=new_domain_array[1] - new_domain_array[0]
-        self.domain_resolution=new_resolution
+        self.measurements = new_measurements_array
+        self.domain_start = new_domain_array[0]
+        self.domain_end = new_domain_array[1]
+        self.domain_span = new_domain_array[1] - new_domain_array[0]
+        self.domain_resolution = new_resolution
         return self
-
 
     def change_domain_span(
         self,
@@ -249,11 +248,11 @@ class _signal:
             new_min_domain=new_min_domain,
             new_max_domain=new_max_domain,
         )
-        self.measurements=cut_measurements_array
-        self.domain_start=cut_domain_array[0]
-        self.domain_end=cut_domain_array[1]
-        self.domain_span=cut_domain_array[1] - cut_domain_array[0]
-        self.domain_resolution=self.domain_resolution
+        self.measurements = cut_measurements_array
+        self.domain_start = cut_domain_array[0]
+        self.domain_end = cut_domain_array[1]
+        self.domain_span = cut_domain_array[1] - cut_domain_array[0]
+        self.domain_resolution = self.domain_resolution
         assert np.allclose(
             self.domain_resolution, np.average(np.diff(self.domain_array, axis=0))
         )
