@@ -1,7 +1,12 @@
 import numpy as np
 from typing import Optional
 import numpy.typing as npt
-from pymodal import _signal
+from pymodal import _signal, frf
+from pyFRF import FRF
+from pint import UnitRegistry
+
+
+ureg = UnitRegistry()
 
 
 class timeseries(_signal):
@@ -46,6 +51,103 @@ class timeseries(_signal):
     def change_time_resolution(self, new_resolution):
         return super().change_domain_resolution(new_resolution=new_resolution)
 
+    def to_FRF(self, excitation, type="H1"):
+        if self.system_type == "excitation":
+            raise ValueError("This method should only be used with responses.")
+        else:
+            assert excitation.system_type == "excitation"
+            if self.measurements.check("[length]"):
+                resp_type = "d"
+                form = "receptance"
+            elif self.measurements.check("[length] / [time]"):
+                resp_type = "v"
+                form = "mobility"
+            elif self.measurements.check("[length] / [time]**2"):
+                resp_type = "a"
+                form = "accelerance"
+            elif self.measurements.check(""):
+                resp_type = "e"
+                form = "receptance"
+
+            if excitation.measurements.check("[force]"):
+                exc_type = "f"
+            elif excitation.measurements.check("[length]"):
+                exc_type = "d"
+            elif excitation.measurements.check("[length] / [time]"):
+                exc_type = "v"
+            elif excitation.measurements.check("[length] / [time]**2"):
+                exc_type = "a"
+            elif excitation.measurements.check(""):
+                exc_type = "e"
+
+            if self.system_type == "SIMO":
+                assert excitation.dof == 1
+                exc = excitation.measurements[:, 0, 0].magnitude
+                frf_amp = []
+                for i in range(self.dof):
+                    resp = self.measurements[:, i, 0].magnitude
+                    frf_amp.append(
+                        FRF(
+                            sampling_freq=self.time_resolution,
+                            exc=exc,
+                            resp=resp,
+                            exc_type=exc_type,
+                            resp_type=resp_type,
+                            exc_window="None",
+                            resp_window="None",
+                        ).get_FRF(type=type, form=form)
+                    )
+                frf_amp = np.array(frf_amp).reshape((-1, self.dof, 1))
+            elif self.system_type == "MISO":
+                frf_amp = []
+                for i in range(self.dof):
+                    exc = excitation.measurements[:, 0, i].magnitude
+                    resp = self.measurements[:, 0, i].magnitude
+                    frf_amp.append(
+                        FRF(
+                            sampling_freq=self.time_resolution,
+                            exc=exc,
+                            resp=resp,
+                            exc_type=exc_type,
+                            resp_type=resp_type,
+                            exc_window="None",
+                            resp_window="None",
+                        ).get_FRF(type=type, form=form)
+                    )
+                frf_amp = np.array(frf_amp).reshape((-1, 1, self.dof))
+            elif self.system_type == "MIMO":
+                outer_frf_amp = []
+                for i in range(self.dof):
+                    inner_frf = []
+                    for j in range(self.dof):
+                        exc = excitation.measurements[:, 0, i].magnitude
+                        resp = self.measurements[:, i, j].magnitude
+                        inner_frf.append(
+                            FRF(
+                                sampling_freq=self.time_resolution,
+                                exc=exc,
+                                resp=resp,
+                                exc_type=exc_type,
+                                resp_type=resp_type,
+                                exc_window="None",
+                                resp_window="None",
+                            ).get_FRF(type=type, form=form)
+                        )
+                    outer_frf_amp.append(np.array(inner_frf))
+                frf_amp = np.array(outer_frf_amp).reshape((-1, self.dof, self.dof))
+        return frf(
+            data=frf_amp,
+            coordinates=self.coordinates,
+            orientations=self.orientations,
+            dof=self.dof,
+            freq_start=0,
+            freq_end=1/(2*self.time_resolution),
+            freq_span=1/(2*self.time_resolution),
+            freq_resolution=1/self.time_span,
+            units=self.units/excitation.units,
+            system_type=self.system_type,
+        )
+
 
 if __name__ == "__main__":
     time = np.arange(0, 30 + 0.05, 0.1)
@@ -56,6 +158,10 @@ if __name__ == "__main__":
     signal = np.vstack((signal, np.sin(5 * time)))
     signal = signal.reshape((time.shape[0], -1))
     test_object = timeseries(signal, time_end=30)
+    excitation_test = timeseries(np.sin(1*time), time_end=30, system_type="excitation")
+    print(test_object.to_FRF(excitation_test).measurements.shape)
     assert np.allclose(time, test_object.time_array)
     test_object.change_time_span(new_max_time=20)
     test_object.change_time_resolution(new_resolution=0.2)
+    print(test_object.measurements.dimensionality)
+    print(test_object[0:2].measurements.shape)
