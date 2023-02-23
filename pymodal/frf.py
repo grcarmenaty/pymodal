@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Optional
 import numpy.typing as npt
-from .signal import _signal
+from pymodal import _signal
 
 
 class frf(_signal):
@@ -35,5 +35,27 @@ class frf(_signal):
         self.freq_span = self.domain_span
         self.freq_resolution = self.domain_resolution
         self.freq_array = self.domain_array
-        self.change_freq_span = self.change_domain_span
-        self.change_freq_resolution = self.change_domain_resolution
+
+    def change_freq_span(
+        self, new_min_freq: Optional[float] = None, new_max_freq: Optional[float] = None
+    ):
+        return super().change_domain_span(
+            new_min_domain=new_min_freq, new_max_domain=new_max_freq
+        )
+
+    def change_freq_resolution(self, new_resolution):
+        return super().change_domain_resolution(new_resolution=new_resolution)
+
+
+if __name__ == "__main__":
+    freq = np.arange(0, 30 + 0.05, 0.1)
+    signal = np.sin(1 * freq) + np.sin(1 * freq)*1j
+    signal = np.vstack((signal, np.sin(2 * freq) + np.sin(2 * freq)*1j))
+    signal = np.vstack((signal, np.sin(3 * freq) + np.sin(3 * freq)*1j))
+    signal = np.vstack((signal, np.sin(4 * freq) + np.sin(4 * freq)*1j))
+    signal = np.vstack((signal, np.sin(5 * freq) + np.sin(5 * freq)*1j))
+    signal = signal.reshape((freq.shape[0], -1))
+    test_object = frf(signal, freq_end=30)
+    assert np.allclose(freq, test_object.freq_array)
+    test_object.change_freq_span(new_max_freq=20)
+    test_object.change_freq_resolution(new_resolution=0.2)

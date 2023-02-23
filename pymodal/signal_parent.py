@@ -25,11 +25,15 @@ class _signal:
         self.measurements = np.asarray(measurements)
         if self.measurements.ndim < 3:
             for _ in range(3 - self.measurements.ndim):
-                self.measurements = [..., np.newaxis]
+                self.measurements = self.measurements[..., np.newaxis]
         if self.system_type == "SIMO":
-            self.measurements.reshape((self.measurements.shape[0], -1, 1))
+            self.measurements = self.measurements.reshape(
+                (self.measurements.shape[0], -1, 1)
+            )
         elif self.system_type == "MISO" or self.system_type == "excitation":
-            self.measurements.reshape((self.measurements.shape[0], 1, -1))
+            self.measurements = self.measurements.reshape(
+                (self.measurements.shape[0], 1, -1)
+            )
         else:
             assert self.system_type == "MIMO"
             assert self.measurements.shape[1] == self.measurements.shape[2]
@@ -45,12 +49,16 @@ class _signal:
                 " along the x axis.",
                 UserWarning,
             )
-            self.coordinates = np.vstack(np.arange(self.dof), np.zeros((self.dof, 2)))
+            self.coordinates = np.vstack(
+                (np.arange(self.dof).T, np.zeros((self.dof, 2)).T)
+            ).T
             warn(
                 "Orientations will be assumed to be unit vectors on the z axis.",
                 UserWarning,
             )
-            self.orientations = np.vstack(np.zeros((self.dof, 2)), np.ones(self.dof))
+            self.orientations = np.vstack(
+                (np.zeros((self.dof, 2)).T, np.ones(self.dof).T)
+            ).T
         elif coordinates is None:
             self.orientations = np.asarray(orientations)
             warn(
@@ -58,7 +66,9 @@ class _signal:
                 " along the x axis.",
                 UserWarning,
             )
-            self.coordinates = np.vstack(np.arange(self.dof), np.zeros((self.dof, 2)))
+            self.coordinates = np.vstack(
+                (np.arange(self.dof).T, np.zeros((self.dof, 2))).T
+            ).T
         elif orientations is None:
             self.coordinates = np.asarray(coordinates)
             warn(
@@ -66,12 +76,14 @@ class _signal:
                 " along the x axis.",
                 UserWarning,
             )
-            self.orientations = np.vstack(np.arange(self.dof), np.zeros((self.dof, 2)))
+            self.orientations = np.vstack(
+                (np.arange(self.dof).T, np.zeros((self.dof, 2)).T).T
+            )
         else:
             self.coordinates = np.asarray(coordinates)
             self.orientations = np.asarray(orientations)
         combination = np.hstack((self.coordinates, self.orientations))
-        unq, cnt = np.unique(combination, axis=0)
+        _, cnt = np.unique(combination, axis=0, return_counts=True)
         assert np.all(cnt == 1)
         cnt = cnt[0]
         if self.system_type == "SIMO":
@@ -96,15 +108,25 @@ class _signal:
 
         # Create domain array
         self.domain_start = float(domain_start)
-        self.domain_end = float(domain_end)
-        self.domain_span = float(domain_span)
-        self.domain_resolution = float(domain_resolution)
+        self.domain_end = float(domain_end) if domain_end is not None else domain_end
+        self.domain_span = (
+            float(domain_span) if domain_span is not None else domain_span
+        )
+        self.domain_resolution = (
+            float(domain_resolution)
+            if domain_resolution is not None
+            else domain_resolution
+        )
         if self.domain_span is None:
             if self.domain_end is None:  # max, span are None, rate is defined
                 if self.domain_resolution is None:
                     raise ValueError("Insufficient temporal domain parameters.")
                 self.domain_span = (self.samples - 1) * self.domain_resolution
                 self.domain_end = self.domain_start + self.domain_span
+            else:
+                self.domain_span = self.domain_end - self.domain_start
+                if self.domain_resolution is None:
+                    self.domain_resolution = self.domain_span / (self.samples - 1)
         else:  # max is defined, span is not, rate not considered
             self.domain_span = self.domain_end - self.domain_start
             if self.domain_resolution is None:  # span, rate are None, max is defined
@@ -227,7 +249,7 @@ class _signal:
     def change_domain_resolution(self, new_resolution):
         new_domain_array, new_measurements_array = pymodal.change_domain_resolution(
             domain_array=self.domain_array,
-            amplitude_array=self.amplitude_array,
+            measurements_array=self.measurements,
             new_resolution=new_resolution,
         )
         self.measurements = new_measurements_array
@@ -244,7 +266,7 @@ class _signal:
     ):
         cut_domain_array, cut_measurements_array = pymodal.change_domain_span(
             domain_array=self.domain_array,
-            measurements_array=self.measurements_array,
+            measurements_array=self.measurements,
             new_min_domain=new_min_domain,
             new_max_domain=new_max_domain,
         )
@@ -253,6 +275,7 @@ class _signal:
         self.domain_end = cut_domain_array[1]
         self.domain_span = cut_domain_array[1] - cut_domain_array[0]
         self.domain_resolution = self.domain_resolution
+        self.domain_array = cut_domain_array
         assert np.allclose(
             self.domain_resolution, np.average(np.diff(self.domain_array, axis=0))
         )

@@ -219,7 +219,7 @@ def change_domain_span(
         )
     else:
         max_domain_index = (np.abs(new_domain_array - new_max_domain)).argmin()
-        new_domain_array = new_domain_array[0:max_domain_index]
+        new_domain_array = new_domain_array[0:max_domain_index+1]
         # Make sure the last domain is coherent with sample rate and not
         # greater than the new max domain desired
         if new_domain_array[-1] != new_max_domain:
@@ -227,7 +227,7 @@ def change_domain_span(
                 new_domain_array = new_domain_array[:-1]
             warn("Max domain will be changed to keep sample rate constant", UserWarning)
         # Cut the signals to the new max domain
-        new_measurements_array = new_measurements_array[0:max_domain_index, ...]
+        new_measurements_array = new_measurements_array[0:max_domain_index+1, ...]
 
     # Add a head of 0s to the signals if the new min domain is smaller than
     # the precious min domain
@@ -261,7 +261,7 @@ def change_domain_span(
         new_domain_array = new_domain_array[min_domain_index:]
         # Make sure the new min domain is the closest to the one specified
         # by the user.
-        if np.allclose(new_domain_array[0], new_min_domain):
+        if not np.allclose(new_domain_array[0], new_min_domain):
             warn("Min domain will be changed to keep sample rate constant", UserWarning)
         # Cut the signal from the new min domain
         new_measurements_array = new_measurements_array[min_domain_index:, ...]

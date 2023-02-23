@@ -1,5 +1,6 @@
 from .utils import change_domain_resolution, change_domain_span
 
+from .signal_parent import _signal
 from .timeseries import timeseries
 from .frf import frf
 
@@ -8,6 +9,7 @@ from .frf import frf
 __all__ = [
     "change_domain_resolution",
     "change_domain_span",
+    "_signal",
     "timeseries",
     "frf",
 ]
