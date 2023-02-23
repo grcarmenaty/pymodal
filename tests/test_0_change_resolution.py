@@ -195,11 +195,11 @@ def test_change_domain_resolution_0to120_0·1to0·07_1d():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -224,11 +224,11 @@ def test_change_domain_resolution_0to120_0·1to0·07_1d_complex():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -253,11 +253,11 @@ def test_change_domain_resolution_0to120_0·1to0·07_2d():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -282,11 +282,11 @@ def test_change_domain_resolution_0to120_0·1to0·07_2d_complex():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -311,11 +311,11 @@ def test_change_domain_resolution_0to120_0·1to0·07_3d():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -340,11 +340,11 @@ def test_change_domain_resolution_0to120_0·1to0·07_3d_complex():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -369,11 +369,11 @@ def test_change_domain_resolution_0to120_0·1to0·07_4d():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -398,11 +398,11 @@ def test_change_domain_resolution_0to120_0·1to0·07_4d_complex():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -427,11 +427,11 @@ def test_change_domain_resolution_0to120_0·1to0·13_1d():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -456,11 +456,11 @@ def test_change_domain_resolution_0to120_0·1to0·13_1d_complex():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -485,11 +485,11 @@ def test_change_domain_resolution_0to120_0·1to0·13_2d():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -514,11 +514,11 @@ def test_change_domain_resolution_0to120_0·1to0·13_2d_complex():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -543,11 +543,11 @@ def test_change_domain_resolution_0to120_0·1to0·13_3d():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -572,11 +572,11 @@ def test_change_domain_resolution_0to120_0·1to0·13_3d_complex():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -601,11 +601,11 @@ def test_change_domain_resolution_0to120_0·1to0·13_4d():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -630,11 +630,11 @@ def test_change_domain_resolution_0to120_0·1to0·13_4d_complex():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -659,7 +659,7 @@ def test_change_domain_resolution_0to120_0·1to0·25_1d():
         warning_messages=[
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             )
         ],
     )
@@ -684,7 +684,7 @@ def test_change_domain_resolution_0to120_0·1to0·25_1d_complex():
         warning_messages=[
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             )
         ],
     )
@@ -709,7 +709,7 @@ def test_change_domain_resolution_0to120_0·1to0·25_2d():
         warning_messages=[
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             )
         ],
     )
@@ -734,7 +734,7 @@ def test_change_domain_resolution_0to120_0·1to0·25_2d_complex():
         warning_messages=[
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             )
         ],
     )
@@ -759,7 +759,7 @@ def test_change_domain_resolution_0to120_0·1to0·25_3d():
         warning_messages=[
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             )
         ],
     )
@@ -784,7 +784,7 @@ def test_change_domain_resolution_0to120_0·1to0·25_3d_complex():
         warning_messages=[
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             )
         ],
     )
@@ -809,7 +809,7 @@ def test_change_domain_resolution_0to120_0·1to0·25_4d():
         warning_messages=[
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             )
         ],
     )
@@ -834,7 +834,7 @@ def test_change_domain_resolution_0to120_0·1to0·25_4d_complex():
         warning_messages=[
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             )
         ],
     )
@@ -861,11 +861,11 @@ def test_change_domain_resolution_0to240_mixedto0·13_1d():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -892,11 +892,11 @@ def test_change_domain_resolution_0to240_mixedto0·13_1d_complex():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -923,11 +923,11 @@ def test_change_domain_resolution_0to240_mixedto0·13_2d():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -954,11 +954,11 @@ def test_change_domain_resolution_0to240_mixedto0·13_2d_complex():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -985,11 +985,11 @@ def test_change_domain_resolution_0to240_mixedto0·13_3d():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -1016,11 +1016,11 @@ def test_change_domain_resolution_0to240_mixedto0·13_3d_complex():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -1047,11 +1047,11 @@ def test_change_domain_resolution_0to240_mixedto0·13_4d():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -1078,11 +1078,11 @@ def test_change_domain_resolution_0to240_mixedto0·13_4d_complex():
         warning_messages=[
             (
                 "The resulting max domain will be different to"
-                " accommodate for the new resolution."
+                " accommodate for the new temporal resolution."
             ),
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             ),
         ],
     )
@@ -1109,7 +1109,7 @@ def test_change_domain_resolution_0to240_mixedto0·2_1d():
         warning_messages=[
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             )
         ],
     )
@@ -1136,7 +1136,7 @@ def test_change_domain_resolution_0to240_mixedto0·2_1d_complex():
         warning_messages=[
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             )
         ],
     )
@@ -1163,7 +1163,7 @@ def test_change_domain_resolution_0to240_mixedto0·2_2d():
         warning_messages=[
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             )
         ],
     )
@@ -1190,7 +1190,7 @@ def test_change_domain_resolution_0to240_mixedto0·2_2d_complex():
         warning_messages=[
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             )
         ],
     )
@@ -1217,7 +1217,7 @@ def test_change_domain_resolution_0to240_mixedto0·2_3d():
         warning_messages=[
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             )
         ],
     )
@@ -1244,7 +1244,7 @@ def test_change_domain_resolution_0to240_mixedto0·2_3d_complex():
         warning_messages=[
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             )
         ],
     )
@@ -1271,7 +1271,7 @@ def test_change_domain_resolution_0to240_mixedto0·2_4d():
         warning_messages=[
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             )
         ],
     )
@@ -1298,7 +1298,7 @@ def test_change_domain_resolution_0to240_mixedto0·2_4d_complex():
         warning_messages=[
             (
                 "The resulting signal will be interpolated"
-                " according to the desired new resolution."
+                " according to the desired new temporal resolution."
             )
         ],
     )
