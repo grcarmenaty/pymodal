@@ -19,7 +19,7 @@ class timeseries(_signal):
         time_start: Optional[float] = 0,
         time_end: Optional[float] = None,
         time_span: Optional[float] = None,
-        time_resolution: Optional[float] = None,
+        sampling_rate: Optional[float] = None,
         units: Optional[str] = None,
         system_type: str = "SIMO",
     ):
@@ -31,14 +31,14 @@ class timeseries(_signal):
             domain_start=time_start,
             domain_end=time_end,
             domain_span=time_span,
-            domain_resolution=time_resolution,
+            domain_resolution=sampling_rate,
             units=units,
             system_type=system_type,
         )
         self.time_start = self.domain_start
         self.time_end = self.domain_end
         self.time_span = self.domain_span
-        self.time_resolution = self.domain_resolution
+        self.sampling_rate = self.domain_resolution
         self.time_array = self.domain_array
 
     def change_time_span(
@@ -48,8 +48,8 @@ class timeseries(_signal):
             new_min_domain=new_min_time, new_max_domain=new_max_time
         )
 
-    def change_time_resolution(self, new_resolution):
-        return super().change_domain_resolution(new_resolution=new_resolution)
+    def change_sampling_rate(self, new_sampling_rate):
+        return super().change_domain_resolution(new_resolution=new_sampling_rate)
 
     def to_FRF(self, excitation, type="H1"):
         if self.system_type == "excitation":
@@ -88,7 +88,7 @@ class timeseries(_signal):
                     resp = self.measurements[:, i, 0].magnitude
                     frf_amp.append(
                         FRF(
-                            sampling_freq=self.time_resolution,
+                            sampling_freq=self.sampling_rate,
                             exc=exc,
                             resp=resp,
                             exc_type=exc_type,
@@ -105,7 +105,7 @@ class timeseries(_signal):
                     resp = self.measurements[:, 0, i].magnitude
                     frf_amp.append(
                         FRF(
-                            sampling_freq=self.time_resolution,
+                            sampling_freq=self.sampling_rate,
                             exc=exc,
                             resp=resp,
                             exc_type=exc_type,
@@ -124,7 +124,7 @@ class timeseries(_signal):
                         resp = self.measurements[:, i, j].magnitude
                         inner_frf.append(
                             FRF(
-                                sampling_freq=self.time_resolution,
+                                sampling_freq=self.sampling_rate,
                                 exc=exc,
                                 resp=resp,
                                 exc_type=exc_type,
@@ -141,8 +141,8 @@ class timeseries(_signal):
             orientations=self.orientations,
             dof=self.dof,
             freq_start=0,
-            freq_end=1/(2*self.time_resolution),
-            freq_span=1/(2*self.time_resolution),
+            freq_end=1/(2*self.sampling_rate),
+            freq_span=1/(2*self.sampling_rate),
             freq_resolution=1/self.time_span,
             units=self.units/excitation.units,
             system_type=self.system_type,
@@ -162,6 +162,6 @@ if __name__ == "__main__":
     print(test_object.to_FRF(excitation_test).measurements.shape)
     assert np.allclose(time, test_object.time_array)
     test_object.change_time_span(new_max_time=20)
-    test_object.change_time_resolution(new_resolution=0.2)
+    test_object.change_sampling_rate(new_resolution=0.2)
     print(test_object.measurements.dimensionality)
     print(test_object[0:2].measurements.shape)
