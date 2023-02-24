@@ -241,15 +241,19 @@ class _signal():
                 key[i] = slice(index, index + 1)
         if len(key) == 1:
             if self.system_type in ["SIMO", "MIMO"]:
-                key = key[0]
-                self.measurements = self.measurements[:, key, :],
+                selected_measurements = self.measurements[:, key[0], :]
+                selected_coordinates = self.coordinates[:, key[0]]
+                selected_orientations = self.orientations[:, key[0]]
             elif self.system_type in ["MISO", "excitation"]:
-                self.measurements = self.measurements[:, :, key[0]],
+                selected_measurements = self.measurements[:, :, key[0]]
+                selected_coordinates = self.coordinates[:, key[0]]
+                selected_orientations = self.orientations[:, key[0]]
         elif len(key) == 2:
-            self.measurements = self.measurements[:, key[0], key[1]],
+            selected_measurements = self.measurements[:, key[0], key[1]]
+            selected_coordinates = self.coordinates[:, key[0], key[1]]
+            selected_orientations = self.orientations[:, key[0], key[1]]
         else:
             raise ValueError("Too many keys provided.")
-        self.measurements = self.measurements[0]
         return self
 
     def change_domain_resolution(self, new_resolution):
