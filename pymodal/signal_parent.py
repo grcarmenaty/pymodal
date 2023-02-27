@@ -28,6 +28,8 @@ class _signal():
         # Measurement checks
         self.system_type = system_type
         assert self.system_type in ["MISO", "SIMO", "MIMO", "excitation"]
+        # Set units to millimeter, second, Newton if not defined, else parse if a string is given or set units to
+        # whatever the user has setup.
         if measurements_units is None:
             if system_type == "excitation":
                 measurements_units = ureg.parse_expression("newton")
@@ -37,14 +39,23 @@ class _signal():
             self.units = ureg.parse_expression(measurements_units)
         self.units = measurements_units
         self.measurements = np.asarray(measurements) * self.units
+        # Make sure the measurements array is three-dimensional array.
         if self.measurements.ndim < 3:
             for _ in range(3 - self.measurements.ndim):
                 self.measurements = self.measurements[..., np.newaxis]
+        # Make sure the shape of the measurements array is coherent with the type of system the user has specified:
+        # - First axis is for the domain dimension.
+        # - Second axis is for referencing output.
+        # - Third axis is for referencing input.
         if self.system_type == "SIMO":
             self.measurements = self.measurements.reshape(
                 (self.measurements.shape[0], -1, 1)
             )
-        elif self.system_type == "MISO" or self.system_type == "excitation":
+        elif self.system_type == "MISO":
+            self.measurements = self.measurements.reshape(
+                (self.measurements.shape[0], 1, 1)
+            )
+        elif self.system_type == "excitation":
             self.measurements = self.measurements.reshape(
                 (self.measurements.shape[0], 1, -1)
             )
@@ -55,7 +66,6 @@ class _signal():
             self.dof = max(self.measurements.shape[1], self.measurements.shape[2])
         else:
             self.dof = dof
-
         # Coordinates and orientations checks
         if coordinates is None and orientations is None:
             warn(
@@ -96,13 +106,17 @@ class _signal():
         else:
             self.coordinates = np.asarray(coordinates)
             self.orientations = np.asarray(orientations)
+        # Normalize orientations
         self.orientations = (self.orientations.T / np.linalg.norm(self.orientations, axis=1)).T
+        # Assign space units to coordinates.
         if space_units is None:
             space_units = ureg.parse_expression("millimeter")
         elif space_units is str:
             self.units = ureg.parse_expression(space_units)
         self.space_units = space_units
         self.coordinates = self.coordinates * self.space_units
+        # Make sure coordinates-orientations pairs are unique and both them and measurements' shapes are coherent with
+        # the system type specified by the user.
         combination = np.hstack((np.asarray(self.coordinates), self.orientations))
         _, cnt = np.unique(combination, axis=0, return_counts=True)
         assert np.all(cnt == 1)
@@ -110,18 +124,23 @@ class _signal():
         if self.system_type == "SIMO":
             assert self.measurements.shape[1] == self.dof
             assert self.measurements.shape[2] == 1
-        elif self.system_type == "MISO" or self.system_type == "excitation":
+            assert cnt == self.dof
+        elif self.system_type == "MISO":
+            assert self.measurements.shape[1] == 1
+            assert self.measurements.shape[2] == 1
+            assert cnt == 1
+        elif self.system_type == "excitation":
             assert self.measurements.shape[1] == 1
             assert self.measurements.shape[2] == self.dof
+            assert cnt == self.dof
         elif self.system_type == "MIMO":
             assert self.measurements.shape[1] == self.dof
             assert self.measurements.shape[2] == self.dof
             self.coordinates = np.tile(self.coordinates, (1, 1, self.dof))
             self.orientations = np.tile(self.orientations, (1, 1, self.dof))
-
+            assert cnt == self.dof
         self.samples = self.measurements.shape[0]
-
-        # Create domain array
+        # Make sure domain parameters are coherent, calculate the missing domain parameters
         self.domain_start = float(domain_start)
         self.domain_end = float(domain_end) if domain_end is not None else domain_end
         self.domain_span = (
@@ -196,6 +215,7 @@ class _signal():
                                     "The temporal domain parameters introduced are"
                                     " inconsistent."
                                 )
+        # Build the domain array and make sure it is coherent with the measurements.
         self.domain_array = np.arange(
             self.domain_start,
             self.domain_end + self.domain_resolution / 2,
@@ -210,7 +230,7 @@ class _signal():
         )
 
     def __len__(self):
-        return self.dof
+        return self.samples
 
     def __eq__(self, other):
         if isinstance(other, pymodal.signal):
@@ -242,7 +262,8 @@ class _signal():
             return False
 
     def __getitem__(self, key: tuple[slice]):
-        self_copy = deepcopy(self)
+        self_copy = deepcopy(self) # Make a deepcopy of self to work on it.
+        # Make sure key is a list of slices. If it isn't, turn it into one.
         if type(key) is int:
             key = slice(key, key + 1)
         if type(key) is slice:
@@ -251,6 +272,9 @@ class _signal():
         for i, index in enumerate(key):
             if type(index) is int:
                 key[i] = slice(index, index + 1)
+        # If only one key is provided, it is assumed to refer to an output selection, unless the system type is
+        # supposed to have only one input, in which case it will be assumed to refer to an input selection. If
+        # two keys are provided, the first one is assumed to refer to an output, the second to an input.
         if len(key) == 1:
             if self.system_type in ["SIMO", "MIMO"]:
                 self_copy.measurements = self.measurements[:, key[0], :]
