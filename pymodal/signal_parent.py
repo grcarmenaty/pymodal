@@ -21,18 +21,21 @@ class _signal():
         domain_end: Optional[float] = None,
         domain_span: Optional[float] = None,
         domain_resolution: Optional[float] = None,
-        units: Optional[str] = None,
+        measurements_units: Optional[str] = None,
+        space_units: Optional[str] = None,
         system_type: str = "SIMO",
     ):
         # Measurement checks
         self.system_type = system_type
         assert self.system_type in ["MISO", "SIMO", "MIMO", "excitation"]
-        if units is None:
+        if measurements_units is None:
             if system_type == "excitation":
-                units = ureg.parse_expression("newton")
+                measurements_units = ureg.parse_expression("newton")
             else:
-                units = ureg.parse_expression("millimeter/second**2")
-        self.units = units
+                measurements_units = ureg.parse_expression("millimeter/second**2")
+        elif measurements_units is str:
+            self.units = ureg.parse_expression(measurements_units)
+        self.units = measurements_units
         self.measurements = np.asarray(measurements) * self.units
         if self.measurements.ndim < 3:
             for _ in range(3 - self.measurements.ndim):
@@ -93,7 +96,14 @@ class _signal():
         else:
             self.coordinates = np.asarray(coordinates)
             self.orientations = np.asarray(orientations)
-        combination = np.hstack((self.coordinates, self.orientations))
+        self.orientations = (self.orientations.T / np.linalg.norm(self.orientations, axis=1)).T
+        if space_units is None:
+            space_units = ureg.parse_expression("millimeter")
+        elif space_units is str:
+            self.units = ureg.parse_expression(space_units)
+        self.space_units = space_units
+        self.coordinates = self.coordinates * self.space_units
+        combination = np.hstack((np.asarray(self.coordinates), self.orientations))
         _, cnt = np.unique(combination, axis=0, return_counts=True)
         assert np.all(cnt == 1)
         cnt = cnt[0]

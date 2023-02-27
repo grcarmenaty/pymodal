@@ -12,7 +12,7 @@ ureg = UnitRegistry()
 class timeseries(_signal):
     def __init__(
         self,
-        data: npt.NDArray[np.complex64],
+        measurements: npt.NDArray[np.complex64],
         coordinates: npt.NDArray[np.float64] = None,
         orientations: npt.NDArray[np.float64] = None,
         dof: Optional[float] = None,
@@ -20,11 +20,12 @@ class timeseries(_signal):
         time_end: Optional[float] = None,
         time_span: Optional[float] = None,
         sampling_rate: Optional[float] = None,
-        units: Optional[str] = None,
+        measurements_units: Optional[str] = None,
+        space_units: Optional[str] = None,
         system_type: str = "SIMO",
     ):
         super().__init__(
-            measurements=data,
+            measurements=measurements,
             coordinates=coordinates,
             orientations=orientations,
             dof=dof,
@@ -32,7 +33,8 @@ class timeseries(_signal):
             domain_end=time_end,
             domain_span=time_span,
             domain_resolution=sampling_rate,
-            units=units,
+            measurements_units=measurements_units,
+            space_units=space_units,
             system_type=system_type,
         )
         self.time_start = self.domain_start
@@ -53,6 +55,7 @@ class timeseries(_signal):
 
     def to_FRF(self, excitation, type="H1"):
         assert excitation.system_type == "excitation"
+        assert self.space_units == excitation.space_units
         if self.measurements.check("[length]"):
             resp_type = "d"
             form = "receptance"
@@ -81,6 +84,8 @@ class timeseries(_signal):
             raise ValueError("Use this method only with responses.")
         elif self.system_type == "SIMO":
             assert excitation.dof == 1
+            # assert excitations coordinates-orientation pair are in
+            # self coordinates-orientations pairs list
             exc = excitation.measurements[:, 0, 0].magnitude
             frf_amp = []
             for i in range(self.dof):
@@ -98,6 +103,8 @@ class timeseries(_signal):
                 )
             frf_amp = np.array(frf_amp).reshape((-1, self.dof, 1))
         elif self.system_type == "MISO":
+            # assert self coordinates-orientation pair are in
+            # excitation coordinates-orientations pairs list
             frf_amp = []
             for i in range(self.dof):
                 exc = excitation.measurements[:, 0, i].magnitude
@@ -115,6 +122,8 @@ class timeseries(_signal):
                 )
             frf_amp = np.array(frf_amp).reshape((-1, 1, self.dof))
         elif self.system_type == "MIMO":
+            # assert excitations coordinates-orientation pairs are in
+            # self coordinates-orientations pairs list, in the same order
             outer_frf_amp = []
             for i in range(self.dof):
                 inner_frf = []
@@ -135,7 +144,7 @@ class timeseries(_signal):
                 outer_frf_amp.append(np.array(inner_frf))
             frf_amp = np.array(outer_frf_amp).reshape((-1, self.dof, self.dof))
         return frf(
-            data=frf_amp,
+            measurements=frf_amp,
             coordinates=self.coordinates,
             orientations=self.orientations,
             dof=self.dof,
@@ -143,7 +152,8 @@ class timeseries(_signal):
             freq_end=1/(2*self.sampling_rate),
             freq_span=1/(2*self.sampling_rate),
             freq_resolution=1/self.time_span,
-            units=self.units/excitation.units,
+            measurements_units=self.measurements_units/excitation.measurements_units,
+            space_units=self.space_units,
             system_type=self.system_type,
         )
 

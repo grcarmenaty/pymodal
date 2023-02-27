@@ -7,7 +7,7 @@ from pymodal import _signal
 class frf(_signal):
     def __init__(
         self,
-        data: npt.NDArray[np.complex64],
+        measurements: npt.NDArray[np.complex64],
         coordinates: npt.NDArray[np.float64] = None,
         orientations: npt.NDArray[np.float64] = None,
         dof: Optional[float] = None,
@@ -15,11 +15,12 @@ class frf(_signal):
         freq_end: Optional[float] = None,
         freq_span: Optional[float] = None,
         freq_resolution: Optional[float] = None,
-        units: Optional[str] = None,
+        measurements_units: Optional[str] = None,
+        space_units: Optional[str] = None,
         system_type: str = "SIMO",
     ):
         super(frf, self).__init__(
-            measurements=data,
+            measurements=measurements,
             coordinates=coordinates,
             orientations=orientations,
             dof=dof,
@@ -27,7 +28,8 @@ class frf(_signal):
             domain_end=freq_end,
             domain_span=freq_span,
             domain_resolution=freq_resolution,
-            units=units,
+            measurements_units=measurements_units,
+            space_units=space_units,
             system_type=system_type
         )
         self.freq_start = self.domain_start
@@ -57,5 +59,6 @@ if __name__ == "__main__":
     signal = signal.reshape((freq.shape[0], -1))
     test_object = frf(signal, freq_end=30)
     assert np.allclose(freq, test_object.freq_array)
-    test_object.change_freq_span(new_max_freq=20)
-    test_object.change_freq_resolution(new_resolution=0.2)
+    print(test_object.change_freq_span(new_max_freq=20).measurements.shape)
+    print(test_object.change_freq_resolution(new_resolution=0.2).measurements.shape)
+    print(test_object[0:2].measurements.shape)
