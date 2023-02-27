@@ -56,6 +56,7 @@ class timeseries(_signal):
     def to_FRF(self, excitation, type="H1"):
         assert excitation.system_type == "excitation"
         assert self.space_units == excitation.space_units
+        # Get response type and desired FRF form from units.
         if self.measurements.check("[length]"):
             resp_type = "d"
             form = "receptance"
@@ -68,7 +69,7 @@ class timeseries(_signal):
         elif self.measurements.check(""):
             resp_type = "e"
             form = "receptance"
-
+        # Get excitation type from excitation units.
         if excitation.measurements.check("[force]"):
             exc_type = "f"
         elif excitation.measurements.check("[length]"):
@@ -79,10 +80,11 @@ class timeseries(_signal):
             exc_type = "a"
         elif excitation.measurements.check(""):
             exc_type = "e"
-
         if self.system_type == "excitation":
             raise ValueError("Use this method only with responses.")
         elif self.system_type == "SIMO":
+            # If there's a single input and multiple outputs, then for every output,
+            # an FRF will be calculated with the provided single input excitation.
             assert excitation.dof == 1
             # assert excitations coordinates-orientation pair are in
             # self coordinates-orientations pairs list
@@ -103,6 +105,8 @@ class timeseries(_signal):
                 )
             frf_amp = np.array(frf_amp).reshape((-1, self.dof, 1))
         elif self.system_type == "MISO":
+            # If there's a single output and multiple inputs, then for every input,
+            # an FRF will be calculated with the provided single output measurement.
             # assert self coordinates-orientation pair are in
             # excitation coordinates-orientations pairs list
             frf_amp = []
@@ -122,8 +126,9 @@ class timeseries(_signal):
                 )
             frf_amp = np.array(frf_amp).reshape((-1, 1, self.dof))
         elif self.system_type == "MIMO":
+            # If 
             # assert excitations coordinates-orientation pairs are in
-            # self coordinates-orientations pairs list, in the same order
+            # self coordinates-orientations pairs list, in the same order. 
             outer_frf_amp = []
             for i in range(self.dof):
                 inner_frf = []
