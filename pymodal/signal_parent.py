@@ -4,6 +4,7 @@ from typing import Optional
 import numpy.typing as npt
 import pymodal
 from pint import UnitRegistry
+from copy import deepcopy
 
 
 ureg = UnitRegistry()
@@ -231,6 +232,7 @@ class _signal():
             return False
 
     def __getitem__(self, key: tuple[slice]):
+        self_copy = deepcopy(self)
         if type(key) is int:
             key = slice(key, key + 1)
         if type(key) is slice:
@@ -241,20 +243,20 @@ class _signal():
                 key[i] = slice(index, index + 1)
         if len(key) == 1:
             if self.system_type in ["SIMO", "MIMO"]:
-                selected_measurements = self.measurements[:, key[0], :]
-                selected_coordinates = self.coordinates[:, key[0]]
-                selected_orientations = self.orientations[:, key[0]]
+                self_copy.measurements = self.measurements[:, key[0], :]
+                self_copy.coordinates = self.coordinates[:, key[0]]
+                self_copy.orientations = self.orientations[:, key[0]]
             elif self.system_type in ["MISO", "excitation"]:
-                selected_measurements = self.measurements[:, :, key[0]]
-                selected_coordinates = self.coordinates[:, key[0]]
-                selected_orientations = self.orientations[:, key[0]]
+                self_copy.measurements = self.measurements[:, :, key[0]]
+                self_copy.coordinates = self.coordinates[:, key[0]]
+                self_copy.orientations = self.orientations[:, key[0]]
         elif len(key) == 2:
-            selected_measurements = self.measurements[:, key[0], key[1]]
-            selected_coordinates = self.coordinates[:, key[0], key[1]]
-            selected_orientations = self.orientations[:, key[0], key[1]]
+            self_copy.measurements = self.measurements[:, key[0], key[1]]
+            self_copy.coordinates = self.coordinates[:, key[0], key[1]]
+            self_copy.orientations = self.orientations[:, key[0], key[1]]
         else:
             raise ValueError("Too many keys provided.")
-        return self
+        return self_copy
 
     def change_domain_resolution(self, new_resolution):
         new_domain_array, new_measurements_array = pymodal.change_domain_resolution(
@@ -262,12 +264,13 @@ class _signal():
             measurements_array=self.measurements,
             new_resolution=new_resolution,
         )
-        self.measurements = new_measurements_array
-        self.domain_start = new_domain_array[0]
-        self.domain_end = new_domain_array[1]
-        self.domain_span = new_domain_array[1] - new_domain_array[0]
-        self.domain_resolution = new_resolution
-        return self
+        self_copy = deepcopy(self)
+        self_copy.measurements = new_measurements_array
+        self_copy.domain_start = new_domain_array[0]
+        self_copy.domain_end = new_domain_array[1]
+        self_copy.domain_span = new_domain_array[1] - new_domain_array[0]
+        self_copy.domain_resolution = new_resolution
+        return self_copy
 
     def change_domain_span(
         self,
@@ -280,13 +283,14 @@ class _signal():
             new_min_domain=new_min_domain,
             new_max_domain=new_max_domain,
         )
-        self.measurements = cut_measurements_array
-        self.domain_start = cut_domain_array[0]
-        self.domain_end = cut_domain_array[1]
-        self.domain_span = cut_domain_array[1] - cut_domain_array[0]
-        self.domain_resolution = self.domain_resolution
-        self.domain_array = cut_domain_array
+        self_copy = deepcopy(self)
+        self_copy.measurements = cut_measurements_array
+        self_copy.domain_start = cut_domain_array[0]
+        self_copy.domain_end = cut_domain_array[1]
+        self_copy.domain_span = cut_domain_array[1] - cut_domain_array[0]
+        self_copy.domain_resolution = self.domain_resolution
+        self_copy.domain_array = cut_domain_array
         assert np.allclose(
-            self.domain_resolution, np.average(np.diff(self.domain_array, axis=0))
+            self_copy.domain_resolution, np.average(np.diff(self_copy.domain_array, axis=0))
         )
-        return self
+        return self_copy

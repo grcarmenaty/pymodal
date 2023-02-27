@@ -161,11 +161,8 @@ if __name__ == "__main__":
     excitation_test = timeseries(np.sin(1*time), time_end=30, system_type="excitation")
     print(test_object.to_FRF(excitation_test).measurements.shape)
     assert np.allclose(time, test_object.time_array)
-    test_object.change_time_span(new_max_time=20)
-    print(test_object.measurements.shape)
-    test_object.change_sampling_rate(new_sampling_rate=0.2)
-    print(test_object.measurements.shape)
+    print(test_object.change_time_span(new_max_time=20).measurements.shape)
+    print(test_object.change_sampling_rate(new_sampling_rate=0.2).measurements.shape)
     print(test_object.measurements.dimensionality)
     print(test_object[0:2].measurements.shape)
     print(test_object.measurements.shape)
-    
