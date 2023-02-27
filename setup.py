@@ -23,7 +23,9 @@ setuptools.setup(
         "numpy>=1.18.1",
         "scipy>=1.4.1",
         "matplotlib>=3.1.3",
-        "pandas>=1.0.1"
+        "pandas>=1.0.1",
+        "Pint>=0.20.1",
+        "pyFRF>=0.40"
     ],
     # Should be as specific as possible
     extras_require={
