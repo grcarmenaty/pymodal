@@ -278,10 +278,32 @@ class _signal:
         )
 
     def __len__(self):
+        """This method describes what happens when len(_signal class object) is invoked.
+
+        Returns
+        -------
+        float
+            The amount of data points of the measurements.
+        """
         return self.samples
 
     def __eq__(self, other):
-        if isinstance(other, pymodal.signal):
+        """This method describes what happens when an instance of this class is compared
+        with another object to ascertain whether or not they are equal.
+
+        Parameters
+        ----------
+        other
+            An object of any type whose equality relative to a given instance of this
+            class needs to be ascertained.
+
+        Returns
+        -------
+        boolean
+            Whether or not this instance of the signal class and the object against
+            which its equality was being ascertained are, in fact, equal.
+        """
+        if isinstance(other, pymodal._signal):
             own_dict = dict(self.__dict__)
             own_arrays = []
             key_list = list(own_dict.keys())
@@ -341,7 +363,22 @@ class _signal:
             raise ValueError("Too many keys provided.")
         return self_copy
 
-    def change_domain_resolution(self, new_resolution):
+    def change_domain_resolution(self, new_resolution: float):
+        """Change the temporal resolution of an array of signals, assuming the temporal
+        dimension of said signal is the first dimension of the array.
+        
+        Parameters
+        ----------
+        new_resolution : float
+            The desired distance between any two adjacent values of the domain array.
+
+        Returns
+        -------
+        _signal class object
+            A hard copy of the class instance with the modifications pertinent to the
+            method applied: a new temporal domain resolution and the data points
+            corresponding to the new domain array.
+        """
         new_domain_array, new_measurements_array = pymodal.change_domain_resolution(
             domain_array=self.domain_array,
             measurements_array=self.measurements,
@@ -360,6 +397,24 @@ class _signal:
         new_min_domain: Optional[float] = None,
         new_max_domain: Optional[float] = None,
     ):
+        """Change the span of the temporal domain of an array of signals, assuming the
+        temporal dimension of said signal is the first dimension of the array.
+
+        Parameters
+        ----------
+        new_min_domain : float, optional
+            The desired new minimum value for the domain array, by default None.
+        new_max_domain : float, optional
+            The desired new maximum value for the domain array, by default None.
+
+        Returns
+        -------
+        _signal class object
+            A hard copy of the class instance with the modifications pertinent to the
+            method applied: the new domain array without the values that fall outside
+            the given range, and extended as necessary to comply with the given range,
+            with the corresponding measurements values.
+        """
         cut_domain_array, cut_measurements_array = pymodal.change_domain_span(
             domain_array=self.domain_array,
             measurements_array=self.measurements,
