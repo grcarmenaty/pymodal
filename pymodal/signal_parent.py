@@ -25,6 +25,48 @@ class _signal:
         space_units: Optional[str] = None,
         system_type: str = "SIMO",
     ):
+        """_summary_
+
+        Parameters
+        ----------
+        measurements : npt.NDArray[np.complex64]
+            _description_
+        coordinates : Optional[npt.NDArray[np.float64]], optional
+            _description_, by default None
+        orientations : Optional[npt.NDArray[np.float64]], optional
+            _description_, by default None
+        dof : Optional[float], optional
+            _description_, by default None
+        domain_start : Optional[float], optional
+            _description_, by default 0
+        domain_end : Optional[float], optional
+            _description_, by default None
+        domain_span : Optional[float], optional
+            _description_, by default None
+        domain_resolution : Optional[float], optional
+            _description_, by default None
+        measurements_units : Optional[str], optional
+            _description_, by default None
+        space_units : Optional[str], optional
+            _description_, by default None
+        system_type : str, optional
+            _description_, by default "SIMO"
+
+        Raises
+        ------
+        ValueError
+            _description_
+        ValueError
+            _description_
+        ValueError
+            _description_
+        ValueError
+            _description_
+        ValueError
+            _description_
+        ValueError
+            _description_
+        """
         # Measurement checks
         self.system_type = system_type
         assert self.system_type in ["MISO", "SIMO", "MIMO", "excitation"]
