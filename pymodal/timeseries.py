@@ -126,9 +126,10 @@ class timeseries(_signal):
                 )
             frf_amp = np.array(frf_amp).reshape((-1, 1, self.dof))
         elif self.system_type == "MIMO":
-            # If the system has multiple inputs and outputs, compute an FRF for each output and it's corresponding input.
+            # If the system has multiple inputs and outputs, compute an FRF for each
+            # output and it's corresponding input.
             # assert excitations coordinates-orientation pairs are in
-            # self coordinates-orientations pairs list, in the same order. 
+            # self coordinates-orientations pairs list, in the same order.
             outer_frf_amp = []
             for i in range(self.dof):
                 inner_frf = []
@@ -154,10 +155,10 @@ class timeseries(_signal):
             orientations=self.orientations,
             dof=self.dof,
             freq_start=0,
-            freq_end=1/(2*self.sampling_rate),
-            freq_span=1/(2*self.sampling_rate),
-            freq_resolution=1/self.time_span,
-            measurements_units=self.measurements_units/excitation.measurements_units,
+            freq_end=1 / (2 * self.sampling_rate),
+            freq_span=1 / (2 * self.sampling_rate),
+            freq_resolution=1 / self.time_span,
+            measurements_units=self.measurements_units / excitation.measurements_units,
             space_units=self.space_units,
             system_type=self.system_type,
         )
@@ -173,7 +174,9 @@ if __name__ == "__main__":
     signal = signal.reshape((time.shape[0], -1))
     test_object = timeseries(signal, time_end=30)
     print(test_object.measurements.shape)
-    excitation_test = timeseries(np.sin(1*time), time_end=30, system_type="excitation")
+    excitation_test = timeseries(
+        np.sin(1 * time), time_end=30, system_type="excitation"
+    )
     print(test_object.to_FRF(excitation_test).measurements.shape)
     assert np.allclose(time, test_object.time_array)
     print(test_object.change_time_span(new_max_time=20).measurements.shape)

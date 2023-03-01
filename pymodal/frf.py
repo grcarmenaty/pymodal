@@ -30,7 +30,7 @@ class frf(_signal):
             domain_resolution=freq_resolution,
             measurements_units=measurements_units,
             space_units=space_units,
-            system_type=system_type
+            system_type=system_type,
         )
         self.freq_start = self.domain_start
         self.freq_end = self.domain_end
@@ -51,11 +51,11 @@ class frf(_signal):
 
 if __name__ == "__main__":
     freq = np.arange(0, 30 + 0.05, 0.1)
-    signal = np.sin(1 * freq) + np.sin(1 * freq)*1j
-    signal = np.vstack((signal, np.sin(2 * freq) + np.sin(2 * freq)*1j))
-    signal = np.vstack((signal, np.sin(3 * freq) + np.sin(3 * freq)*1j))
-    signal = np.vstack((signal, np.sin(4 * freq) + np.sin(4 * freq)*1j))
-    signal = np.vstack((signal, np.sin(5 * freq) + np.sin(5 * freq)*1j))
+    signal = np.sin(1 * freq) + np.sin(1 * freq) * 1j
+    signal = np.vstack((signal, np.sin(2 * freq) + np.sin(2 * freq) * 1j))
+    signal = np.vstack((signal, np.sin(3 * freq) + np.sin(3 * freq) * 1j))
+    signal = np.vstack((signal, np.sin(4 * freq) + np.sin(4 * freq) * 1j))
+    signal = np.vstack((signal, np.sin(5 * freq) + np.sin(5 * freq) * 1j))
     signal = signal.reshape((freq.shape[0], -1))
     test_object = frf(signal, freq_end=30)
     assert np.allclose(freq, test_object.freq_array)

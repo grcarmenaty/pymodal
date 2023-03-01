@@ -10,7 +10,7 @@ from copy import deepcopy
 ureg = UnitRegistry()
 
 
-class _signal():
+class _signal:
     def __init__(
         self,
         measurements: npt.NDArray[np.complex64],
@@ -107,7 +107,9 @@ class _signal():
             self.coordinates = np.asarray(coordinates)
             self.orientations = np.asarray(orientations)
         # Normalize orientations
-        self.orientations = (self.orientations.T / np.linalg.norm(self.orientations, axis=1)).T
+        self.orientations = (
+            self.orientations.T / np.linalg.norm(self.orientations, axis=1)
+        ).T
         # Assign space units to coordinates.
         if space_units is None:
             space_units = ureg.parse_expression("millimeter")
@@ -262,7 +264,7 @@ class _signal():
             return False
 
     def __getitem__(self, key: tuple[slice]):
-        self_copy = deepcopy(self) # Make a deepcopy of self to work on it.
+        self_copy = deepcopy(self)  # Make a deepcopy of self to work on it.
         # Make sure key is a list of slices. If it isn't, turn it into one.
         if type(key) is int:
             key = slice(key, key + 1)
@@ -325,6 +327,7 @@ class _signal():
         self_copy.domain_resolution = self.domain_resolution
         self_copy.domain_array = cut_domain_array
         assert np.allclose(
-            self_copy.domain_resolution, np.average(np.diff(self_copy.domain_array, axis=0))
+            self_copy.domain_resolution,
+            np.average(np.diff(self_copy.domain_array, axis=0)),
         )
         return self_copy
