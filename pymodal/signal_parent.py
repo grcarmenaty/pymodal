@@ -28,7 +28,8 @@ class _signal:
         # Measurement checks
         self.system_type = system_type
         assert self.system_type in ["MISO", "SIMO", "MIMO", "excitation"]
-        # Set units to millimeter, second, Newton if not defined, else parse if a string is given or set units to
+        # Set units to millimeter, second, Newton if not defined, else parse if a string
+        # is given or set units to
         # whatever the user has setup.
         if measurements_units is None:
             if system_type == "excitation":
@@ -43,7 +44,8 @@ class _signal:
         if self.measurements.ndim < 3:
             for _ in range(3 - self.measurements.ndim):
                 self.measurements = self.measurements[..., np.newaxis]
-        # Make sure the shape of the measurements array is coherent with the type of system the user has specified:
+        # Make sure the shape of the measurements array is coherent with the type of
+        # system the user has specified:
         # - First axis is for the domain dimension.
         # - Second axis is for referencing output.
         # - Third axis is for referencing input.
@@ -117,7 +119,8 @@ class _signal:
             self.measurements_units = ureg.parse_expression(space_units)
         self.space_units = space_units
         self.coordinates = self.coordinates * self.space_units
-        # Make sure coordinates-orientations pairs are unique and both them and measurements' shapes are coherent with
+        # Make sure coordinates-orientations pairs are unique and both them and
+        # measurements' shapes are coherent with
         # the system type specified by the user.
         combination = np.hstack((np.asarray(self.coordinates), self.orientations))
         _, cnt = np.unique(combination, axis=0, return_counts=True)
@@ -142,7 +145,8 @@ class _signal:
             self.orientations = np.tile(self.orientations, (1, 1, self.dof))
             assert cnt == self.dof
         self.samples = self.measurements.shape[0]
-        # Make sure domain parameters are coherent, calculate the missing domain parameters
+        # Make sure domain parameters are coherent, calculate the missing domain
+        # parameters
         self.domain_start = float(domain_start)
         self.domain_end = float(domain_end) if domain_end is not None else domain_end
         self.domain_span = (
@@ -274,9 +278,10 @@ class _signal:
         for i, index in enumerate(key):
             if type(index) is int:
                 key[i] = slice(index, index + 1)
-        # If only one key is provided, it is assumed to refer to an output selection, unless the system type is
-        # supposed to have only one input, in which case it will be assumed to refer to an input selection. If
-        # two keys are provided, the first one is assumed to refer to an output, the second to an input.
+        # If only one key is provided, it is assumed to refer to an output selection,
+        # unless the system type is supposed to have only one input, in which case it
+        # will be assumed to refer to an input selection. If two keys are provided, the
+        # first one is assumed to refer to an output, the second to an input.
         if len(key) == 1:
             if self.system_type in ["SIMO", "MIMO"]:
                 self_copy.measurements = self.measurements[:, key[0], :]
