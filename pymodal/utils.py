@@ -160,10 +160,10 @@ def change_domain_span(
         change, be it by using domain, frequency or any other suitable quantity.
     measurements_array: numpy array of complex
         An array with the measurements of the signal recorded along the domain array.
-    new_min_domain: float, default None
-        The desired new minimum value for the domain array.
-    new_max_domain: float, default None
-        The desired new maximum value for the domain array.
+    new_min_domain: float
+        The desired new minimum value for the domain array, by default None.
+    new_max_domain: float
+        The desired new maximum value for the domain array, by default None.
 
     Returns
     -------
