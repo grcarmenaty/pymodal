@@ -22,7 +22,7 @@ class timeseries(_signal):
         sampling_rate: Optional[float] = None,
         measurements_units: Optional[str] = None,
         space_units: Optional[str] = None,
-        system_type: str = "SIMO",
+        method: str = "SIMO",
     ):
         super().__init__(
             measurements=measurements,
@@ -35,7 +35,7 @@ class timeseries(_signal):
             domain_resolution=sampling_rate,
             measurements_units=measurements_units,
             space_units=space_units,
-            system_type=system_type,
+            method=method,
         )
         self.time_start = self.domain_start
         self.time_end = self.domain_end
@@ -160,7 +160,7 @@ class timeseries(_signal):
             freq_resolution=1 / self.time_span,
             measurements_units=self.measurements_units / excitation.measurements_units,
             space_units=self.space_units,
-            system_type=self.system_type,
+            method=self.system_type,
         )
 
 
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     test_object = timeseries(signal, time_end=30)
     print(test_object.measurements.shape)
     excitation_test = timeseries(
-        np.sin(1 * time), time_end=30, system_type="excitation"
+        np.sin(1 * time), time_end=30, method="excitation"
     )
     print(test_object.to_FRF(excitation_test).measurements.shape)
     assert np.allclose(time, test_object.time_array)
