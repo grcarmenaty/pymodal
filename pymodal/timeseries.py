@@ -23,6 +23,7 @@ class timeseries(_signal):
         measurements_units: Optional[str] = None,
         space_units: Optional[str] = None,
         method: str = "SIMO",
+        label: Optional[str] = None,
     ):
         super().__init__(
             measurements=measurements,
@@ -36,6 +37,7 @@ class timeseries(_signal):
             measurements_units=measurements_units,
             space_units=space_units,
             method=method,
+            label=label
         )
         self.time_start = self.domain_start
         self.time_end = self.domain_end

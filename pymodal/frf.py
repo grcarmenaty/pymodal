@@ -18,6 +18,7 @@ class frf(_signal):
         measurements_units: Optional[str] = None,
         space_units: Optional[str] = None,
         method: str = "SIMO",
+        label: Optional[str] = None,
     ):
         super(frf, self).__init__(
             measurements=measurements,
@@ -31,6 +32,7 @@ class frf(_signal):
             measurements_units=measurements_units,
             space_units=space_units,
             method=method,
+            label=label
         )
         self.freq_start = self.domain_start
         self.freq_end = self.domain_end

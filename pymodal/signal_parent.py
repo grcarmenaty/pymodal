@@ -24,6 +24,7 @@ class _signal:
         measurements_units: Optional[str] = None,
         space_units: Optional[str] = None,
         method: str = "SIMO",
+        label: Optional[str] = None,
     ):
         """This class is intended as a parent class for any class involving the handling
         of a series of measurements relating to spatial coordinates, along a temporal
@@ -66,7 +67,11 @@ class _signal:
             Whether the method used to get the measurements is Multiple Input Single
             Output (MISO), Single Input Multiple Output (SIMO), Multiple Input Multiple
             Output (MIMO), or a recording of the excitation inputs, by default "SIMO"
+        label : string, optional
+            An identifying label for the measurements stored in this instance of the
+            signal class.
         """
+        self.label = label
         # Measurement checks
         self.system_type = method
         assert self.system_type in ["MISO", "SIMO", "MIMO", "excitation"]
