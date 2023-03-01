@@ -36,9 +36,9 @@ class _signal():
             else:
                 measurements_units = ureg.parse_expression("millimeter/second**2")
         elif measurements_units is str:
-            self.units = ureg.parse_expression(measurements_units)
-        self.units = measurements_units
-        self.measurements = np.asarray(measurements) * self.units
+            self.measurements_units = ureg.parse_expression(measurements_units)
+        self.measurements_units = measurements_units
+        self.measurements = np.asarray(measurements) * self.measurements_units
         # Make sure the measurements array is three-dimensional array.
         if self.measurements.ndim < 3:
             for _ in range(3 - self.measurements.ndim):
@@ -112,7 +112,7 @@ class _signal():
         if space_units is None:
             space_units = ureg.parse_expression("millimeter")
         elif space_units is str:
-            self.units = ureg.parse_expression(space_units)
+            self.measurements_units = ureg.parse_expression(space_units)
         self.space_units = space_units
         self.coordinates = self.coordinates * self.space_units
         # Make sure coordinates-orientations pairs are unique and both them and measurements' shapes are coherent with
@@ -120,7 +120,7 @@ class _signal():
         combination = np.hstack((np.asarray(self.coordinates), self.orientations))
         _, cnt = np.unique(combination, axis=0, return_counts=True)
         assert np.all(cnt == 1)
-        cnt = cnt[0]
+        cnt = np.sum(cnt)
         if self.system_type == "SIMO":
             assert self.measurements.shape[1] == self.dof
             assert self.measurements.shape[2] == 1
