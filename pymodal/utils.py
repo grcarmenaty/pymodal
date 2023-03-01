@@ -18,10 +18,10 @@ def __check_domain_measurements_pair(
 
     Parameters
     ----------
-    domain_array: numpy array of floats
+    domain_array : numpy array of floats
         An array containing the temporal dimension, which measures the rate of physical
         change, be it by using domain, frequency or any other suitable quantity.
-    measurements_array: numpy array of complex
+    measurements_array : numpy array of complex
         An array with the measurements of the signal recorded along the domain array.
 
     Returns
@@ -56,7 +56,7 @@ def change_domain_resolution(
 
     Parameters
     ----------
-    domain_array: numpy array of floats
+    domain_array : numpy array of floats
         An array containing the temporal dimension, which measures the rate of physical
         change, be it by using domain, frequency or any other suitable quantity.
     measurements_array: numpy array of complex
@@ -155,14 +155,14 @@ def change_domain_span(
 
     Parameters
     ----------
-    domain_array: numpy array of floats
+    domain_array : numpy array of floats
         An array containing the temporal dimension, which measures the rate of physical
         change, be it by using domain, frequency or any other suitable quantity.
-    measurements_array: numpy array of complex
+    measurements_array : numpy array of complex
         An array with the measurements of the signal recorded along the domain array.
-    new_min_domain: float
+    new_min_domain : float
         The desired new minimum value for the domain array, by default None.
-    new_max_domain: float
+    new_max_domain : float
         The desired new maximum value for the domain array, by default None.
 
     Returns
