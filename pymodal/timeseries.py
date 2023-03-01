@@ -25,6 +25,49 @@ class timeseries(_signal):
         method: str = "SIMO",
         label: Optional[str] = None,
     ):
+        """_summary_
+
+        Parameters
+        ----------
+        measurements : numpy array of floats
+            A numpy array of up to three dimensions where the first one contains the
+            measurements as they change along the temporal domain, and the rest are
+            related to the system's degrees of freedom and the obtention method.
+        coordinates : numpy array of floats, optional
+            A two-dimensional array containing the spatial coordinates of the degrees of
+            freedom of the measurements contained within the instance of this class,
+            repeating as needed if measurements were taken for more than one orientation
+            on the same spatial coordinates, by default None.
+        orientations : numpy array of floats, optional
+            A two dimensional array containing a unit vector representing the direction
+            in which the measurement taken at a given coordinate was recorded, by
+            default None.
+        dof : float, optional
+            How many degrees of freedom have been measured and are stored within the
+            instance of this class, by default None.
+        time_start : float, optional
+            Starting value of the temporal domain, by default 0.
+        time_end : float, optional
+            Maximum value of the temporal domain, by default None.
+        time_span : float, optional
+            Total duration of the temporal domain, by default None.
+        sampling_rate : float, optional
+            Temporal domain quantity between two consecutive measurement points, by
+            default None.
+        measurements_units : string, optional
+            Units used for the measurements stored within the instance of this class,
+            they are assumed to be Newtons, millimeters and seconds by default None.
+        space_units : string, optional
+            Units used for the spatial coordinates of the degrees of freedom, they are
+            assumed to be millimeters by default None
+        method : string, optional
+            Whether the method used to get the measurements is Multiple Input Single
+            Output (MISO), Single Input Multiple Output (SIMO), Multiple Input Multiple
+            Output (MIMO), or a recording of the excitation inputs, by default "SIMO"
+        label : string, optional
+            An identifying label for the measurements stored in this instance of the
+            signal class.
+        """
         super().__init__(
             measurements=measurements,
             coordinates=coordinates,
@@ -109,8 +152,8 @@ class timeseries(_signal):
         elif self.system_type == "MISO":
             # If there's a single output and multiple inputs, then for every input,
             # an FRF will be calculated with the provided single output measurement.
-            # assert self coordinates-orientation pair are in
-            # excitation coordinates-orientations pairs list
+            # assert self coordinates-orientation pair are in excitation
+            # coordinates-orientations pairs list
             frf_amp = []
             for i in range(self.dof):
                 exc = excitation.measurements[:, 0, i].magnitude
