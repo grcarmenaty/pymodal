@@ -126,7 +126,7 @@ class timeseries(_signal):
                 )
             frf_amp = np.array(frf_amp).reshape((-1, 1, self.dof))
         elif self.system_type == "MIMO":
-            # If 
+            # If the system has multiple inputs and outputs, compute an FRF for each output and it's corresponding input.
             # assert excitations coordinates-orientation pairs are in
             # self coordinates-orientations pairs list, in the same order. 
             outer_frf_amp = []
