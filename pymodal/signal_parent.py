@@ -22,7 +22,7 @@ class _signal:
         domain_span: Optional[float] = None,
         domain_resolution: Optional[float] = None,
         measurements_units: Optional[str] = None,
-        space_units: Optional[str] = None,
+        space_units: Optional[str] = "millimeter",
         method: str = "SIMO",
         label: Optional[str] = None,
     ):
@@ -59,10 +59,12 @@ class _signal:
             default None.
         measurements_units : string, optional
             Units used for the measurements stored within the instance of this class,
-            they are assumed to be Newtons, millimeters and seconds by default None.
+            they are assumed to be Newtons, millimeters and seconds; taking "Newton" as
+            the default for an excitation and "millimiter / second ** 2" as default for
+            any output measurement, by default None.
         space_units : string, optional
-            Units used for the spatial coordinates of the degrees of freedom, they are
-            assumed to be millimeters by default None
+            Units used for the spatial coordinates of the degrees of freedom, by default
+            "millimeter"
         method : string, optional
             Whether the method used to get the measurements is Multiple Input Single
             Output (MISO), Single Input Multiple Output (SIMO), Multiple Input Multiple
@@ -160,9 +162,7 @@ class _signal:
             self.orientations.T / np.linalg.norm(self.orientations, axis=1)
         ).T
         # Assign space units to coordinates.
-        if space_units is None:
-            space_units = ureg.parse_expression("millimeter")
-        elif space_units is str:
+        if space_units is str:
             self.measurements_units = ureg.parse_expression(space_units)
         self.space_units = space_units
         self.coordinates = self.coordinates * self.space_units
