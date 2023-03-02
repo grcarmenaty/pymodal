@@ -84,7 +84,7 @@ class timeseries(_signal):
             measurements_units=measurements_units,
             space_units=space_units,
             method=method,
-            label=label
+            label=label,
         )
         self.time_start = self.domain_start
         self.time_end = self.domain_end
@@ -138,25 +138,29 @@ class timeseries(_signal):
         """
         return super().change_domain_resolution(new_resolution=new_sampling_rate)
 
-    def to_FRF(self, excitation: timeseries, type: str="H1"):
-        """_summary_
+    def to_FRF(
+        self,
+        excitation: timeseries,
+        type: str = "H1",
+        weighting: str = "Exponential",
+        resp_delay: int = 0,
+    ):
+        """Computes the FRF from the measured data and an excitation, which must be
+        provided as a timeseries object also.
 
         Parameters
         ----------
         excitation : timeseries
-            _description_
+            A timeseries time object containing the excitation data for the output
+            stored within this instance of the timeseries class.
         type : str, optional
-            _description_, by default "H1"
+            The FRF estimator to be used, possible values are: "H1", "H2", "Hv",
+            "vector", "ODS", by default "H1"
 
         Returns
         -------
-        _type_
-            _description_
-
-        Raises
-        ------
-        ValueError
-            _description_
+        frf class object
+            The FRF resulting from the given inputs and outputs.
         """
         assert excitation.system_type == "excitation"
         assert self.space_units == excitation.space_units
@@ -205,6 +209,9 @@ class timeseries(_signal):
                         resp_type=resp_type,
                         exc_window="None",
                         resp_window="None",
+                        resp_delay=resp_delay,
+                        weighting=weighting,
+                        noverlap=0,
                     ).get_FRF(type=type, form=form)
                 )
             frf_amp = np.array(frf_amp).reshape((-1, self.dof, 1))
@@ -278,9 +285,7 @@ if __name__ == "__main__":
     signal = signal.reshape((time.shape[0], -1))
     test_object = timeseries(signal, time_end=30)
     print(test_object.measurements.shape)
-    excitation_test = timeseries(
-        np.sin(1 * time), time_end=30, method="excitation"
-    )
+    excitation_test = timeseries(np.sin(1 * time), time_end=30, method="excitation")
     print(test_object.to_FRF(excitation_test).measurements.shape)
     assert np.allclose(time, test_object.time_array)
     print(test_object.change_time_span(new_max_time=20).measurements.shape)
