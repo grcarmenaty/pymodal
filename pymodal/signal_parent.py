@@ -85,8 +85,8 @@ class _signal:
                 measurements_units = ureg.parse_expression("newton")
             else:
                 measurements_units = ureg.parse_expression("millimeter/second**2")
-        elif measurements_units is str:
-            self.measurements_units = ureg.parse_expression(measurements_units)
+        elif type(measurements_units) is str:
+            measurements_units = ureg.parse_expression(measurements_units)
         self.measurements_units = measurements_units
         self.measurements = np.asarray(measurements) * self.measurements_units
         # Make sure the measurements array is three-dimensional array.
@@ -162,8 +162,8 @@ class _signal:
             self.orientations.T / np.linalg.norm(self.orientations, axis=1)
         ).T
         # Assign space units to coordinates.
-        if space_units is str:
-            self.measurements_units = ureg.parse_expression(space_units)
+        if type(space_units) is str:
+            space_units = ureg.parse_expression(space_units)
         self.space_units = space_units
         self.coordinates = self.coordinates * self.space_units
         # Make sure coordinates-orientations pairs are unique and both them and
