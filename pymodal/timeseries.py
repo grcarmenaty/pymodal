@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Optional
 import numpy.typing as npt
-from pymodal import _signal, frf
+from pymodal import _signal, frf, timeseries
 from pyFRF import FRF
 from pint import UnitRegistry
 
@@ -21,17 +21,19 @@ class timeseries(_signal):
         time_span: Optional[float] = None,
         sampling_rate: Optional[float] = None,
         measurements_units: Optional[str] = None,
-        space_units: Optional[str] = None,
+        space_units: Optional[str] = "millimeter",
         method: str = "SIMO",
         label: Optional[str] = None,
     ):
-        """_summary_
+        """Class designed to store all vibrational temporal information measured from
+        a three-dimensional body, be it inputs or outputs, along with the spatial
+        information related to each of the aforementioned measurements.
 
         Parameters
         ----------
         measurements : numpy array of floats
             A numpy array of up to three dimensions where the first one contains the
-            measurements as they change along the temporal domain, and the rest are
+            measurements as they evolve through time, and the rest are
             related to the system's degrees of freedom and the obtention method.
         coordinates : numpy array of floats, optional
             A two-dimensional array containing the spatial coordinates of the degrees of
@@ -46,20 +48,22 @@ class timeseries(_signal):
             How many degrees of freedom have been measured and are stored within the
             instance of this class, by default None.
         time_start : float, optional
-            Starting value of the temporal domain, by default 0.
+            Starting time value, by default 0.
         time_end : float, optional
-            Maximum value of the temporal domain, by default None.
+            Maximum time value, by default None.
         time_span : float, optional
-            Total duration of the temporal domain, by default None.
+            Total time duration, by default None.
         sampling_rate : float, optional
-            Temporal domain quantity between two consecutive measurement points, by
-            default None.
+            How many time passes between the event of recording a data point and the
+            recording of the next one, by default None.
         measurements_units : string, optional
             Units used for the measurements stored within the instance of this class,
-            they are assumed to be Newtons, millimeters and seconds by default None.
+            they are assumed to be Newtons, millimeters and seconds; taking "Newton" as
+            the default for an excitation and "millimiter / second ** 2" as default for
+            any output measurement, by default None.
         space_units : string, optional
-            Units used for the spatial coordinates of the degrees of freedom, they are
-            assumed to be millimeters by default None
+            Units used for the spatial coordinates of the degrees of freedom, by
+            default "millimeter".
         method : string, optional
             Whether the method used to get the measurements is Multiple Input Single
             Output (MISO), Single Input Multiple Output (SIMO), Multiple Input Multiple
@@ -91,14 +95,69 @@ class timeseries(_signal):
     def change_time_span(
         self, new_min_time: Optional[float] = None, new_max_time: Optional[float] = None
     ):
+        """Either extend or cut the measured data according to new maximum and minimum
+        time values.
+
+        Parameters
+        ----------
+        new_min_time : float, optional
+            The new desired minimum time. If negative, time will be added before the
+            initial time with all measurements set to 0, and the new time origin will be
+            set as the new 0, by default None.
+        new_max_time : float, optional
+            The new desired maximum time. If greater than the previous max time, time
+            will be added after the previous max time with all measurements set to 0,
+            by default None.
+
+        Returns
+        -------
+        timeseries class object
+            A hard copy of the class instance with the modifications pertinent to the
+            method applied: the new time array without the values that fall outside
+            the given range, and extended as necessary to comply with the given range,
+            with the corresponding measurements values.
+        """
         return super().change_domain_span(
             new_min_domain=new_min_time, new_max_domain=new_max_time
         )
 
-    def change_sampling_rate(self, new_sampling_rate):
+    def change_sampling_rate(self, new_sampling_rate: float):
+        """Change the sampling rate and interpolate as needed to return an object with
+        values coherent with the desired sampling rate.
+
+        Parameters
+        ----------
+        new_sampling_rate : float
+            The desired sampling rate.
+
+        Returns
+        -------
+        timeseries class object
+            A hard copy of the class instance with the modifications pertinent to the
+            method applied: all values coherent with the desired new sampling rate.
+        """
         return super().change_domain_resolution(new_resolution=new_sampling_rate)
 
-    def to_FRF(self, excitation, type="H1"):
+    def to_FRF(self, excitation: timeseries, type: str="H1"):
+        """_summary_
+
+        Parameters
+        ----------
+        excitation : timeseries
+            _description_
+        type : str, optional
+            _description_, by default "H1"
+
+        Returns
+        -------
+        _type_
+            _description_
+
+        Raises
+        ------
+        ValueError
+            _description_
+        """
         assert excitation.system_type == "excitation"
         assert self.space_units == excitation.space_units
         # Get response type and desired FRF form from units.
