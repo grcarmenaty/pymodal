@@ -28,7 +28,7 @@ class _signal:
     ):
         """This class is intended as a parent class for any class involving the handling
         of a series of measurements relating to spatial coordinates, along a temporal
-        domain measuring the rate of change of the measured quantity.
+        domain quantifying the rate of change of the measured quantity.
 
         Parameters
         ----------
