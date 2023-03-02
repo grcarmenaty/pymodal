@@ -16,7 +16,7 @@ class frf(_signal):
         freq_span: Optional[float] = None,
         freq_resolution: Optional[float] = None,
         measurements_units: Optional[str] = None,
-        space_units: Optional[str] = None,
+        space_units: Optional[str] = "millimeter",
         method: str = "SIMO",
         label: Optional[str] = None,
     ):
