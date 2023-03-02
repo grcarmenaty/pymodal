@@ -1,5 +1,5 @@
 import numpy as np
-from warnings import warn
+from warnings import warn, catch_warnings, filterwarnings
 from typing import Optional
 import numpy.typing as npt
 import pymodal
@@ -155,7 +155,16 @@ class _signal:
                 (np.arange(self.dof).T, np.zeros((self.dof, 2)).T).T
             )
         else:
-            self.coordinates = np.asarray(coordinates)
+            if isinstance(coordinates, type(self.measurements)):
+                with catch_warnings():
+                    filterwarnings(
+                        "ignore",
+                        message="The unit of the quantity is stripped when downcasting"
+                        " to ndarray.",
+                    )
+                    self.coordinates = np.asarray(coordinates)
+            else:
+                self.coordinates = np.asarray(coordinates)
             self.orientations = np.asarray(orientations)
         # Normalize orientations
         self.orientations = (
@@ -169,7 +178,13 @@ class _signal:
         # Make sure coordinates-orientations pairs are unique and both them and
         # measurements' shapes are coherent with
         # the system type specified by the user.
-        combination = np.hstack((np.asarray(self.coordinates), self.orientations))
+        with catch_warnings():
+            filterwarnings(
+                "ignore",
+                message="The unit of the quantity is stripped when downcasting to"
+                " ndarray.",
+            )
+            combination = np.hstack((np.asarray(self.coordinates), self.orientations))
         _, cnt = np.unique(combination, axis=0, return_counts=True)
         assert np.all(cnt == 1)
         cnt = np.sum(cnt)
@@ -371,7 +386,7 @@ class _signal:
     def change_domain_resolution(self, new_resolution: float):
         """Change the temporal resolution of an array of signals, assuming the temporal
         dimension of said signal is the first dimension of the array.
-        
+
         Parameters
         ----------
         new_resolution : float
