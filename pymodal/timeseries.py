@@ -142,7 +142,6 @@ class timeseries(_signal):
         self,
         excitation: timeseries,
         type: str = "H1",
-        weighting: str = "Exponential",
         resp_delay: int = 0,
     ):
         """Computes the FRF from the measured data and an excitation, which must be
@@ -155,14 +154,17 @@ class timeseries(_signal):
             stored within this instance of the timeseries class.
         type : str, optional
             The FRF estimator to be used, possible values are: "H1", "H2", "Hv",
-            "vector", "ODS", by default "H1"
+            "vector", "ODS", by default "H1".
+        resp_delay: int, optional
+            Response time delay with respect to the excitation, in seconds, by default
+            0.
 
         Returns
         -------
         frf class object
             The FRF resulting from the given inputs and outputs.
         """
-        assert excitation.system_type == "excitation"
+        assert excitation.method == "excitation"
         assert self.space_units == excitation.space_units
         # Get response type and desired FRF form from units.
         if self.measurements.check("[length]"):
@@ -188,9 +190,9 @@ class timeseries(_signal):
             exc_type = "a"
         elif excitation.measurements.check(""):
             exc_type = "e"
-        if self.system_type == "excitation":
+        if self.method == "excitation":
             raise ValueError("Use this method only with responses.")
-        elif self.system_type == "SIMO":
+        elif self.method == "SIMO":
             # If there's a single input and multiple outputs, then for every output,
             # an FRF will be calculated with the provided single input excitation.
             assert excitation.dof == 1
@@ -215,7 +217,7 @@ class timeseries(_signal):
                     ).get_FRF(type=type, form=form)
                 )
             frf_amp = np.array(frf_amp).reshape((-1, self.dof, 1))
-        elif self.system_type == "MISO":
+        elif self.method == "MISO":
             # If there's a single output and multiple inputs, then for every input,
             # an FRF will be calculated with the provided single output measurement.
             # assert self coordinates-orientation pair are in excitation
@@ -236,7 +238,7 @@ class timeseries(_signal):
                     ).get_FRF(type=type, form=form)
                 )
             frf_amp = np.array(frf_amp).reshape((-1, 1, self.dof))
-        elif self.system_type == "MIMO":
+        elif self.method == "MIMO":
             # If the system has multiple inputs and outputs, compute an FRF for each
             # output and it's corresponding input.
             # assert excitations coordinates-orientation pairs are in
@@ -271,7 +273,7 @@ class timeseries(_signal):
             freq_resolution=1 / self.time_span,
             measurements_units=self.measurements_units / excitation.measurements_units,
             space_units=self.space_units,
-            method=self.system_type,
+            method=self.method,
         )
 
 

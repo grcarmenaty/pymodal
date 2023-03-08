@@ -75,8 +75,8 @@ class _signal:
         """
         self.label = label
         # Measurement checks
-        self.system_type = method
-        assert self.system_type in ["MISO", "SIMO", "MIMO", "excitation"]
+        self.method = method
+        assert self.method in ["MISO", "SIMO", "MIMO", "excitation"]
         # Set units to millimeter, second, Newton if not defined, else parse if a string
         # is given or set units to
         # whatever the user has setup.
@@ -98,20 +98,20 @@ class _signal:
         # - First axis is for the domain dimension.
         # - Second axis is for referencing output.
         # - Third axis is for referencing input.
-        if self.system_type == "SIMO":
+        if self.method == "SIMO":
             self.measurements = self.measurements.reshape(
                 (self.measurements.shape[0], -1, 1)
             )
-        elif self.system_type == "MISO":
+        elif self.method == "MISO":
             self.measurements = self.measurements.reshape(
                 (self.measurements.shape[0], 1, 1)
             )
-        elif self.system_type == "excitation":
+        elif self.method == "excitation":
             self.measurements = self.measurements.reshape(
                 (self.measurements.shape[0], 1, -1)
             )
         else:
-            assert self.system_type == "MIMO"
+            assert self.method == "MIMO"
             assert self.measurements.shape[1] == self.measurements.shape[2]
         if dof is None:
             self.dof = max(self.measurements.shape[1], self.measurements.shape[2])
@@ -188,19 +188,19 @@ class _signal:
         _, cnt = np.unique(combination, axis=0, return_counts=True)
         assert np.all(cnt == 1)
         cnt = np.sum(cnt)
-        if self.system_type == "SIMO":
+        if self.method == "SIMO":
             assert self.measurements.shape[1] == self.dof
             assert self.measurements.shape[2] == 1
             assert cnt == self.dof
-        elif self.system_type == "MISO":
+        elif self.method == "MISO":
             assert self.measurements.shape[1] == 1
             assert self.measurements.shape[2] == 1
             assert cnt == 1
-        elif self.system_type == "excitation":
+        elif self.method == "excitation":
             assert self.measurements.shape[1] == 1
             assert self.measurements.shape[2] == self.dof
             assert cnt == self.dof
-        elif self.system_type == "MIMO":
+        elif self.method == "MIMO":
             assert self.measurements.shape[1] == self.dof
             assert self.measurements.shape[2] == self.dof
             self.coordinates = np.tile(self.coordinates, (1, 1, self.dof))
@@ -367,11 +367,11 @@ class _signal:
         # will be assumed to refer to an input selection. If two keys are provided, the
         # first one is assumed to refer to an output, the second to an input.
         if len(key) == 1:
-            if self.system_type in ["SIMO", "MIMO"]:
+            if self.method in ["SIMO", "MIMO"]:
                 self_copy.measurements = self.measurements[:, key[0], :]
                 self_copy.coordinates = self.coordinates[:, key[0]]
                 self_copy.orientations = self.orientations[:, key[0]]
-            elif self.system_type in ["MISO", "excitation"]:
+            elif self.method in ["MISO", "excitation"]:
                 self_copy.measurements = self.measurements[:, :, key[0]]
                 self_copy.coordinates = self.coordinates[:, key[0]]
                 self_copy.orientations = self.orientations[:, key[0]]
