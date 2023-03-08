@@ -60,7 +60,7 @@ class _signal:
         measurements_units : string, optional
             Units used for the measurements stored within the instance of this class,
             they are assumed to be Newtons, millimeters and seconds; taking "Newton" as
-            the default for an excitation and "millimiter / second ** 2" as default for
+            the default for an excitation and "millimeter / second ** 2" as default for
             any output measurement, by default None.
         space_units : string, optional
             Units used for the spatial coordinates of the degrees of freedom, by default

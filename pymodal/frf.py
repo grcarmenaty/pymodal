@@ -15,11 +15,55 @@ class frf(_signal):
         freq_end: Optional[float] = None,
         freq_span: Optional[float] = None,
         freq_resolution: Optional[float] = None,
-        measurements_units: Optional[str] = None,
+        measurements_units: Optional[str] = "millimeter / (newton * second ** 2)",
         space_units: Optional[str] = "millimeter",
         method: str = "SIMO",
         label: Optional[str] = None,
     ):
+        """Class designed to store all vibrational frequency response function (FRF)
+        information measured from a three-dimensional body, along with the spatial information related to each of the aforementioned FRFs.
+
+        Parameters
+        ----------
+        measurements : numpy array of complexes
+            A numpy array of up to three dimensions where the first one contains the
+            measurements as they change along the frequential domain, and the rest are
+            related to the system's degrees of freedom and the obtention method.
+        coordinates : numpy array of floats, optional
+            A two-dimensional array containing the spatial coordinates of the degrees of
+            freedom of the measurements contained within the instance of this class,
+            repeating as needed if measurements were taken for more than one orientation
+            on the same spatial coordinates, by default None.
+        orientations : numpy array of floats, optional
+            A two dimensional array containing a unit vector representing the direction
+            in which the measurement taken at a given coordinate was recorded, by
+            default None.
+        dof : float, optional
+            How many degrees of freedom have been measured and are stored within the
+            instance of this class, by default None.
+        freq_start : float, optional
+            Starting frequency value, by default 0
+        freq_end : float, optional
+            Maximum frequency value, by default None
+        freq_span : float, optional
+            Difference between the maximum and minimum values of frequency, by
+            default None
+        freq_resolution : float, optional
+            Frequential resolution, by default None
+        measurements_units : Optional[str], optional
+            Units used for the measurements stored within the instance of this class,
+            they are assumed to be Newtons, millimeters and seconds, by default
+            "millimeter / (newton * second ** 2)"
+        space_units : Optional[str], optional
+            Units used for the spatial coordinates of the degrees of freedom, by default "millimeter"
+        method : str, optional
+            Whether the method used to get the measurements is Multiple Input Single
+            Output (MISO), Single Input Multiple Output (SIMO) or Multiple Input
+            Multiple Output (MIMO), by default "SIMO"
+        label : Optional[str], optional
+            An identifying label for the measurements stored in this instance, by default None
+        """
+        assert method in ["MISO", "SIMO", "MIMO"]
         super(frf, self).__init__(
             measurements=measurements,
             coordinates=coordinates,
