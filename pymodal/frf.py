@@ -3,7 +3,6 @@ from typing import Optional
 import numpy.typing as npt
 from pymodal import _signal
 
-#frf 
 
 class frf(_signal):
     def __init__(
@@ -33,7 +32,7 @@ class frf(_signal):
             measurements_units=measurements_units,
             space_units=space_units,
             method=method,
-            label=label
+            label=label,
         )
         self.freq_start = self.domain_start
         self.freq_end = self.domain_end
