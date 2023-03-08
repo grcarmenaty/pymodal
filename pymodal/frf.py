@@ -3,6 +3,7 @@ from typing import Optional
 import numpy.typing as npt
 from pymodal import _signal
 
+#frf 
 
 class frf(_signal):
     def __init__(
