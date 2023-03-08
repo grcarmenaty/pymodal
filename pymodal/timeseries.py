@@ -212,7 +212,6 @@ class timeseries(_signal):
                         exc_window="None",
                         resp_window="None",
                         resp_delay=resp_delay,
-                        weighting=weighting,
                         noverlap=0,
                     ).get_FRF(type=type, form=form)
                 )
