@@ -424,8 +424,8 @@ if __name__ == "__main__":
         new_resolution=np.pi / 10,
     )
     # You should be able to see the difference in the peaks.
-    plt.plot(domain_array, measurements_array)
-    plt.plot(new_domain_array, new_measurements_array)
+    img, ax = lineplot(x=domain_array, y=measurements_array)
+    lineplot(x=new_domain_array, y=new_measurements_array, color="red", ax=ax)
     plt.show()
 
     # Use the previously created sinusoidal signal and domain and change_domain_span
@@ -444,7 +444,11 @@ if __name__ == "__main__":
         new_max_domain=3 * np.pi / 2,
     )
     # You should be able to see two overlapping signals and a displaced one
-    plt.plot(domain_array, measurements_array)
-    plt.plot(extended_domain_array, extended_measurements_array)
-    plt.plot(cut_domain_array, cut_measurements_array)
+    img, ax = lineplot(x=domain_array, y=measurements_array)
+    img, ax = lineplot(
+        x=cut_domain_array, y=cut_measurements_array, color="green", ax=ax
+    )
+    img, ax = lineplot(
+        x=extended_domain_array, y=extended_measurements_array, color="red", ax=ax
+    )
     plt.show()
