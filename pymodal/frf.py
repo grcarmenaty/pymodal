@@ -1,8 +1,12 @@
 import numpy as np
 from typing import Optional
 import numpy.typing as npt
-from pymodal import _signal
+from pymodal import _signal, lineplot
+from matplotlib import pyplot as plt
+from pint import UnitRegistry
 
+
+ureg = UnitRegistry()
 
 class frf(_signal):
     def __init__(
@@ -15,7 +19,7 @@ class frf(_signal):
         freq_end: Optional[float] = None,
         freq_span: Optional[float] = None,
         freq_resolution: Optional[float] = None,
-        measurements_units: Optional[str] = "millimeter / (newton * second ** 2)",
+        measurements_units: Optional[str] = "millimeter / second ** 2 / newton",
         space_units: Optional[str] = "millimeter",
         method: str = "SIMO",
         label: Optional[str] = None,
@@ -54,7 +58,7 @@ class frf(_signal):
         measurements_units : Optional[str], optional
             Units used for the measurements stored within the instance of this class,
             they are assumed to be Newtons, millimeters and seconds, by default
-            "millimeter / (newton * second ** 2)".
+            "millimeter / second ** 2 / newton".
         space_units : Optional[str], optional
             Units used for the spatial coordinates of the degrees of freedom, by
             default "millimeter".
@@ -134,21 +138,80 @@ class frf(_signal):
         """
         return super().change_domain_resolution(new_resolution=new_resolution)
 
+    def plot(
+        self,
+        ax: plt.Axes = None,
+        fontname: str = "serif",
+        fontsize: float = 12,
+        title: str = None,
+        title_size: float = 12,
+        major_y_locator: int = 4,
+        minor_y_locator: int = 4,
+        major_x_locator: int = 4,
+        minor_x_locator: int = 4,
+        color: str = "blue",
+        linestyle: str = "-",
+        ylabel: str = None,
+        xlabel: str = None,
+        decimals_y: int = 0,
+        decimals_x: int = 0,
+        bottom_ylim: float = None,
+        top_ylim: float = None,
+        grid: bool = True,
+    ):
+        y = np.abs(
+            np.reshape(self.measurements, (len(self), -1, 1))[..., 0]
+        )
+        title = self.label if title is None else title
+        ylabel = f"Amplitude ({self.measurements_units.u:~P})" if ylabel is None else ylabel
+        xlabel = f"Frequency ({ureg.hertz:~P})" if xlabel is None else xlabel
+        if ax is None:
+            fig, ax = plt.subplots()
+        ax.yaxis.set_units(self.measurements_units)
+        ax.xaxis.set_units(ureg.hertz)
+        ax, img = lineplot(
+            y=y,
+            x=self.domain_array,
+            ax=ax,
+            fontname=fontname,
+            fontsize=fontsize,
+            title=title,
+            title_size=title_size,
+            major_y_locator=major_y_locator,
+            minor_y_locator=minor_y_locator,
+            major_x_locator=major_x_locator,
+            minor_x_locator=minor_x_locator,
+            color=color,
+            linestyle=linestyle,
+            ylabel=ylabel,
+            xlabel=xlabel,
+            decimals_y=decimals_y,
+            decimals_x=decimals_x,
+            bottom_ylim=bottom_ylim,
+            top_ylim=top_ylim,
+            grid=grid,
+        )
+        return ax, img
 
 if __name__ == "__main__":
     from matplotlib import pyplot as plt
+    from pymodal import timeseries
     
-    freq = np.arange(0, 30 + 0.05, 0.1)
-    signal = np.sin(1 * freq) + np.sin(1 * freq) * 1j
-    signal = np.vstack((signal, np.sin(2 * freq) + np.sin(2 * freq) * 1j))
-    signal = np.vstack((signal, np.sin(3 * freq) + np.sin(3 * freq) * 1j))
-    signal = np.vstack((signal, np.sin(4 * freq) + np.sin(4 * freq) * 1j))
-    signal = np.vstack((signal, np.sin(5 * freq) + np.sin(5 * freq) * 1j))
-    signal = signal.reshape((freq.shape[0], -1))
-    test_object = frf(signal, freq_end=30)
-    assert np.allclose(freq, test_object.freq_array)
-    print(test_object.change_freq_span(new_max_freq=20).measurements.shape)
-    print(test_object.change_freq_resolution(new_resolution=0.2).measurements.shape)
-    print(test_object[0:2].measurements.shape)
+    time = np.arange(0, 30 + 0.05, 0.1)
+    signal = np.sin(1 * time)
+    signal = np.vstack((signal, np.sin(2 * time)))
+    signal = np.vstack((signal, np.sin(3 * time)))
+    signal = np.vstack((signal, np.sin(4 * time)))
+    signal = np.vstack((signal, np.sin(5 * time)))
+    signal = signal.reshape((time.shape[0], -1))
+    signal = np.fft.fft(signal, axis=0)
+    test_object = frf(signal, freq_end=5)
     test_object.plot()
     plt.show()
+    print(test_object.change_freq_span(new_max_freq=10).measurements.shape)
+    test_object.change_freq_span(new_max_freq=10).plot()
+    plt.show()
+    print(test_object.change_freq_resolution(new_resolution=0.2).measurements.shape)
+    test_object.change_freq_resolution(new_resolution=0.2).plot()
+    plt.show()
+    print(test_object[0:2].measurements.shape)

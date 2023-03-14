@@ -3,12 +3,17 @@ import numpy.typing as npt
 from warnings import warn
 from decimal import Decimal
 from typing import Optional
+from pint import UnitRegistry, Quantity
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 # If a function will only be used internally in the utils, use __ before its name, if
 # it is intended for use in other modules but not by an end user, use _ before its name
 # instead. Don't use preceding _ in any combination except in those cases.
+
+
+ureg = UnitRegistry()
+ureg.setup_matplotlib(True)
 
 
 def __check_domain_measurements_pair(
@@ -214,7 +219,7 @@ def change_domain_span(
         measurements_extension = np.zeros(
             tuple(measurements_extension_shape), dtype=measurements_array.dtype
         )
-        new_measurements_array = np.hstack(
+        new_measurements_array = np.concatenate(
             (new_measurements_array, measurements_extension)
         )
     else:
@@ -253,7 +258,7 @@ def change_domain_span(
         measurements_extension = np.zeros(
             tuple(measurements_extension_shape), dtype=measurements_array.dtype
         )
-        new_measurements_array = np.hstack(
+        new_measurements_array = np.concatenate(
             (measurements_extension, new_measurements_array)
         )
     else:
@@ -346,19 +351,22 @@ def lineplot(
     mpl.rcParams["mathtext.rm"] = fontname
     mpl.rcParams["mathtext.it"] = fontname + ":italic"
     mpl.rcParams["mathtext.bf"] = fontname + ":bold"
+    if not isinstance(y, Quantity):
+        y = y * ureg("")
     if x is None:
         x = np.arange(y.shape[0])
+    if not isinstance(x, Quantity):
+        x = x * ureg("")
     if ax is None:  # If this is not a subplot of a greater figure:
         fig, ax = plt.subplots()
     # Set limits for x axis between the minimum and maximum frequency.
     ax.set_xlim(left=x[0], right=x[-1])
-    if bottom_ylim is None:  # If no bottom limit is defined
-        # Define the bottom limit as four powers of ten lower than average.
-        bottom_ylim = np.amin(y) - 0.25 * np.abs(np.amin(y))
-    if top_ylim is None:  # If no bottom limit is defined
-        # Define the bottom limit as four powers of ten lower than average.
-        top_ylim = np.amax(y) + 0.25 * np.abs(np.amax(y))
-    # Set axis limits as previously defined
+    if bottom_ylim is None or top_ylim is None:
+        top = np.nanmax(y)
+        bottom = np.nanmin(y)
+        span = np.abs(top - bottom)
+        bottom_ylim = bottom - 0.125 * span if bottom_ylim is None else bottom_ylim
+        top_ylim = top + 0.125 * span if top_ylim is None else top_ylim
     ax.set_ylim(top=top_ylim, bottom=bottom_ylim)
     x_span = x[-1] - x[0]
     y_span = top_ylim - bottom_ylim
@@ -377,14 +385,16 @@ def lineplot(
     x_minor_ticks = np.arange(x[0], x[-1] + x_minor_step / 2, x_minor_step)
     ax.set_xticks([tick for tick in x_minor_ticks], minor=True)
     y_step = y_span / major_y_locator
-    y_ticks_labels = np.arange(bottom_ylim, top_ylim + y_step / 2, y_step)
+    y_ticks_labels = np.arange(bottom_ylim.m, (top_ylim + y_step / 2).m, y_step.m)
     ax.set_yticks([tick for tick in y_ticks_labels])
     ax.set_yticklabels([f"{label:.{decimals_y}f}" for label in y_ticks_labels])
     for label in ax.get_yticklabels():
         label.set_fontname(fontname)
         label.set_fontsize(fontsize)
     y_minor_step = y_span / (major_y_locator * minor_y_locator)
-    y_minor_ticks = np.arange(bottom_ylim, top_ylim + y_minor_step / 2, y_minor_step)
+    y_minor_ticks = np.arange(
+        bottom_ylim.m, (top_ylim + y_minor_step / 2).m, y_minor_step.m
+    )
     ax.set_yticks([tick for tick in y_minor_ticks], minor=True)
     if title is not None:  # If there is a title text (by default there is)
         ax.set_title(title, pad=15, fontname=fontname, fontsize=title_size)
@@ -448,7 +458,5 @@ if __name__ == "__main__":
     img, ax = lineplot(
         x=cut_domain_array, y=cut_measurements_array, color="green", ax=ax
     )
-    img, ax = lineplot(
-        x=extended_domain_array, y=extended_measurements_array, color="red", ax=ax
-    )
+    lineplot(x=extended_domain_array, y=extended_measurements_array, color="red", ax=ax)
     plt.show()

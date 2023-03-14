@@ -59,7 +59,7 @@ class timeseries(_signal):
         measurements_units : string, optional
             Units used for the measurements stored within the instance of this class,
             they are assumed to be Newtons, millimeters and seconds; taking "Newton" as
-            the default for an excitation and "millimiter / second ** 2" as default for
+            the default for an excitation and "millimeter / second ** 2" as default for
             any output measurement, by default None.
         space_units : string, optional
             Units used for the spatial coordinates of the degrees of freedom, by
@@ -277,6 +277,8 @@ class timeseries(_signal):
 
 
 if __name__ == "__main__":
+    from matplotlib import pyplot as plt
+    
     time = np.arange(0, 30 + 0.05, 0.1)
     signal = np.sin(1 * time)
     signal = np.vstack((signal, np.sin(2 * time)))
@@ -287,7 +289,10 @@ if __name__ == "__main__":
     test_object = timeseries(signal, time_end=30)
     print(test_object.measurements.shape)
     excitation_test = timeseries(np.sin(1 * time), time_end=30, method="excitation")
-    print(test_object.to_FRF(excitation_test).measurements.shape)
+    frf_test = test_object.to_FRF(excitation_test)
+    frf_test.plot()
+    plt.show()
+    print(frf_test.measurements.shape)
     assert np.allclose(time, test_object.time_array)
     print(test_object.change_time_span(new_max_time=20).measurements.shape)
     print(test_object.change_sampling_rate(new_sampling_rate=0.2).measurements.shape)

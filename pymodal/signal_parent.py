@@ -5,10 +5,14 @@ import numpy.typing as npt
 import pymodal
 from pint import UnitRegistry
 from copy import deepcopy
-from matplotlib import pyplot as plt
 
 
 ureg = UnitRegistry()
+ureg.setup_matplotlib(True)
+
+
+# IT IS VERY IMPORTANT THAT ANY CHILD CLASS TAKES EXACTLY THE SAME ARGUMENTS IN THE SAME
+# ORDER. ANY ADDITIONAL ARGUMENTS SHOULD COME AFTER THIS CLASS' ARGUMENTS.
 
 
 class _signal:
@@ -74,7 +78,7 @@ class _signal:
             An identifying label for the measurements stored in this instance of the
             signal class.
         """
-        self.label = label
+        self.label = "Vibrational data" if label is None else label
         # Measurement checks
         self.method = method
         assert self.method in ["MISO", "SIMO", "MIMO", "excitation"]
@@ -406,11 +410,20 @@ class _signal:
             new_resolution=new_resolution,
         )
         self_copy = deepcopy(self)
-        self_copy.measurements = new_measurements_array
-        self_copy.domain_start = new_domain_array[0]
-        self_copy.domain_end = new_domain_array[1]
-        self_copy.domain_span = new_domain_array[1] - new_domain_array[0]
-        self_copy.domain_resolution = new_resolution
+        self_copy.__init__(
+            new_measurements_array,
+            self.coordinates,
+            self.orientations,
+            self.dof,
+            new_domain_array[0],
+            new_domain_array[-1],
+            new_domain_array[-1] - new_domain_array[0],
+            new_resolution,
+            self.measurements_units,
+            self.space_units,
+            self.method,
+            self.label,
+        )
         return self_copy
 
     def change_domain_span(
@@ -443,58 +456,22 @@ class _signal:
             new_max_domain=new_max_domain,
         )
         self_copy = deepcopy(self)
-        self_copy.measurements = cut_measurements_array
-        self_copy.domain_start = cut_domain_array[0]
-        self_copy.domain_end = cut_domain_array[1]
-        self_copy.domain_span = cut_domain_array[1] - cut_domain_array[0]
-        self_copy.domain_resolution = self.domain_resolution
-        self_copy.domain_array = cut_domain_array
+        self_copy.__init__(
+            cut_measurements_array,
+            self.coordinates,
+            self.orientations,
+            self.dof,
+            cut_domain_array[0],
+            cut_domain_array[-1],
+            cut_domain_array[-1] - cut_domain_array[0],
+            self.domain_resolution,
+            self.measurements_units,
+            self.space_units,
+            self.method,
+            self.label,
+        )
         assert np.allclose(
             self_copy.domain_resolution,
             np.average(np.diff(self_copy.domain_array, axis=0)),
         )
         return self_copy
-
-    def plot(
-        self,
-        ax: plt.Axes = None,
-        fontname: str = "serif",
-        fontsize: float = 12,
-        title: str = None,
-        title_size: float = 12,
-        major_y_locator: int = 4,
-        minor_y_locator: int = 4,
-        major_x_locator: int = 4,
-        minor_x_locator: int = 4,
-        color: str = "blue",
-        linestyle: str = "-",
-        ylabel: str = None,
-        xlabel: str = None,
-        decimals_y: int = 0,
-        decimals_x: int = 0,
-        bottom_ylim: float = None,
-        top_ylim: float = None,
-        grid: bool = True,
-    ):
-        return pymodal.lineplot(
-            y=np.reshape(np.asarray(self.measurements), (len(self), -1, 1))[..., 0],
-            x=self.domain_array,
-            ax=ax,
-            fontname=fontname,
-            fontsize=fontsize,
-            title=title,
-            title_size=title_size,
-            major_y_locator=major_y_locator,
-            minor_y_locator=minor_y_locator,
-            major_x_locator=major_x_locator,
-            minor_x_locator=minor_x_locator,
-            color=color,
-            linestyle=linestyle,
-            ylabel=ylabel,
-            xlabel=xlabel,
-            decimals_y=decimals_y,
-            decimals_x=decimals_x,
-            bottom_ylim=bottom_ylim,
-            top_ylim=top_ylim,
-            grid=grid,
-        )
