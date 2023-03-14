@@ -268,50 +268,6 @@ def change_domain_span(
     return new_domain_array, new_measurements_array
 
 
-if __name__ == "__main__":
-    from matplotlib import pyplot as plt
-
-    # Create a sinusoidal signal from a domain array
-    domain_array = np.arange(0, 2 * np.pi + np.pi / 200, np.pi / 100)
-    measurements_array = np.sin(domain_array)
-    # Change the resolution to half the original resolution to test
-    # change_domain_resolution
-    new_domain_array, new_measurements_array = change_domain_resolution(
-        domain_array=domain_array,
-        measurements_array=measurements_array,
-        new_resolution=np.pi / 10,
-    )
-    # You should be able to see the difference in the peaks.
-    plt.plot(domain_array, measurements_array)
-    plt.plot(new_domain_array, new_measurements_array)
-    plt.show()
-
-    # Use the previously created sinusoidal signal and domain and change_domain_span
-    # first to extend it by a period after and before
-    extended_domain_array, extended_measurements_array = change_domain_span(
-        domain_array=domain_array,
-        measurements_array=measurements_array,
-        new_min_domain=-2 * np.pi,
-        new_max_domain=4 * np.pi,
-    )
-    # then to cut it to the middle half of the period
-    cut_domain_array, cut_measurements_array = change_domain_span(
-        domain_array=domain_array,
-        measurements_array=measurements_array,
-        new_min_domain=np.pi / 2,
-        new_max_domain=3 * np.pi / 2,
-    )
-    # You should be able to see two overlapping signals and a displaced one
-    plt.plot(domain_array, measurements_array)
-    plt.plot(extended_domain_array, extended_measurements_array)
-    plt.plot(cut_domain_array, cut_measurements_array)
-    plt.show()
-
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import numpy as np
-
-
 def lineplot(
     y: np.ndarray,
     x: np.ndarray = None,
@@ -453,3 +409,42 @@ def lineplot(
     img = ax.plot(x, y, color=color, linewidth=0.5, linestyle=linestyle)
     plt.tight_layout()
     return img, ax
+
+
+if __name__ == "__main__":
+
+    # Create a sinusoidal signal from a domain array
+    domain_array = np.arange(0, 2 * np.pi + np.pi / 200, np.pi / 100)
+    measurements_array = np.sin(domain_array)
+    # Change the resolution to half the original resolution to test
+    # change_domain_resolution
+    new_domain_array, new_measurements_array = change_domain_resolution(
+        domain_array=domain_array,
+        measurements_array=measurements_array,
+        new_resolution=np.pi / 10,
+    )
+    # You should be able to see the difference in the peaks.
+    plt.plot(domain_array, measurements_array)
+    plt.plot(new_domain_array, new_measurements_array)
+    plt.show()
+
+    # Use the previously created sinusoidal signal and domain and change_domain_span
+    # first to extend it by a period after and before
+    extended_domain_array, extended_measurements_array = change_domain_span(
+        domain_array=domain_array,
+        measurements_array=measurements_array,
+        new_min_domain=-2 * np.pi,
+        new_max_domain=4 * np.pi,
+    )
+    # then to cut it to the middle half of the period
+    cut_domain_array, cut_measurements_array = change_domain_span(
+        domain_array=domain_array,
+        measurements_array=measurements_array,
+        new_min_domain=np.pi / 2,
+        new_max_domain=3 * np.pi / 2,
+    )
+    # You should be able to see two overlapping signals and a displaced one
+    plt.plot(domain_array, measurements_array)
+    plt.plot(extended_domain_array, extended_measurements_array)
+    plt.plot(cut_domain_array, cut_measurements_array)
+    plt.show()

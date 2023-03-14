@@ -63,7 +63,7 @@ class frf(_signal):
             Output (MISO), Single Input Multiple Output (SIMO) or Multiple Input
             Multiple Output (MIMO), by default "SIMO".
         label : Optional[str], optional
-            An identifying label for the measurements stored in this instance, by 
+            An identifying label for the measurements stored in this instance, by
             default None.
         """
         assert method in ["MISO", "SIMO", "MIMO"]
