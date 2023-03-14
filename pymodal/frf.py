@@ -136,6 +136,8 @@ class frf(_signal):
 
 
 if __name__ == "__main__":
+    from matplotlib import pyplot as plt
+    
     freq = np.arange(0, 30 + 0.05, 0.1)
     signal = np.sin(1 * freq) + np.sin(1 * freq) * 1j
     signal = np.vstack((signal, np.sin(2 * freq) + np.sin(2 * freq) * 1j))
@@ -148,3 +150,5 @@ if __name__ == "__main__":
     print(test_object.change_freq_span(new_max_freq=20).measurements.shape)
     print(test_object.change_freq_resolution(new_resolution=0.2).measurements.shape)
     print(test_object[0:2].measurements.shape)
+    test_object.plot()
+    plt.show()
