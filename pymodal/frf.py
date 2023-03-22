@@ -90,6 +90,7 @@ class frf(_signal):
         self.freq_span = self.domain_span
         self.freq_resolution = self.domain_resolution
         self.freq_array = self.domain_array
+        self.freq_array = self.freq_array * ureg.hertz
 
     def change_freq_span(
         self, new_min_freq: Optional[float] = None, new_max_freq: Optional[float] = None
@@ -171,7 +172,7 @@ class frf(_signal):
         ax.xaxis.set_units(ureg.hertz)
         ax, img = lineplot(
             y=y,
-            x=self.domain_array,
+            x=self.freq_array,
             ax=ax,
             fontname=fontname,
             fontsize=fontsize,

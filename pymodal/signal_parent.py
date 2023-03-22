@@ -3,7 +3,7 @@ from warnings import warn, catch_warnings, filterwarnings
 from typing import Optional
 import numpy.typing as npt
 import pymodal
-from pint import UnitRegistry
+from pint import UnitRegistry, Quantity
 from copy import deepcopy
 
 
@@ -93,7 +93,9 @@ class _signal:
         elif type(measurements_units) is str:
             measurements_units = ureg.parse_expression(measurements_units)
         self.measurements_units = measurements_units
-        self.measurements = np.asarray(measurements) * self.measurements_units
+        if not isinstance(measurements, Quantity):
+            measurements = measurements * ureg("")
+        self.measurements = measurements.m * self.measurements_units
         # Make sure the measurements array is three-dimensional array.
         if self.measurements.ndim < 3:
             for _ in range(3 - self.measurements.ndim):
