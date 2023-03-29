@@ -4,6 +4,7 @@ import numpy.typing as npt
 from pymodal import _signal, lineplot
 from matplotlib import pyplot as plt
 from pint import UnitRegistry
+from copy import deepcopy
 
 
 ureg = UnitRegistry()
@@ -141,6 +142,7 @@ class frf(_signal):
 
     def plot(
         self,
+        format: str = "mod-phase",
         ax: plt.Axes = None,
         fontname: str = "serif",
         fontsize: float = 12,
@@ -160,20 +162,13 @@ class frf(_signal):
         top_ylim: float = None,
         grid: bool = True,
     ):
-        y = np.abs(
-            np.reshape(self.measurements, (len(self), -1, 1))[..., 0]
-        )
-        title = self.label if title is None else title
-        ylabel = f"Amplitude ({self.measurements_units.u:~P})" if ylabel is None else ylabel
         xlabel = f"Frequency ({ureg.hertz:~P})" if xlabel is None else xlabel
         if ax is None:
             fig, ax = plt.subplots()
-        ax.yaxis.set_units(self.measurements_units)
         ax.xaxis.set_units(ureg.hertz)
-        img, ax = lineplot(
-            y=y,
-            x=self.freq_array,
-            ax=ax,
+        measurements_backup = deepcopy(self.measurements)
+        self.measurements = abs(measurements_backup)
+        img, ax = super().plot(ax=ax,
             fontname=fontname,
             fontsize=fontsize,
             title=title,
@@ -193,7 +188,9 @@ class frf(_signal):
             grid=grid,
             log=True,
         )
-        return ax, img
+        self.measurements = measurements_backup
+        del measurements_backup
+        return img, ax
 
 if __name__ == "__main__":
     from matplotlib import pyplot as plt

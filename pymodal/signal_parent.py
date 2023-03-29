@@ -5,6 +5,8 @@ import numpy.typing as npt
 import pymodal
 from pint import UnitRegistry, Quantity
 from copy import deepcopy
+from matplotlib import pyplot as plt
+from pymodal import lineplot
 
 
 ureg = UnitRegistry()
@@ -477,3 +479,53 @@ class _signal:
             np.average(np.diff(self_copy.domain_array, axis=0)),
         )
         return self_copy
+    
+    def plot(
+        self,
+        ax: plt.Axes = None,
+        fontname: str = "serif",
+        fontsize: float = 12,
+        title: str = None,
+        title_size: float = 12,
+        major_y_locator: int = 4,
+        minor_y_locator: int = 4,
+        major_x_locator: int = 4,
+        minor_x_locator: int = 4,
+        color: str = "blue",
+        linestyle: str = "-",
+        ylabel: str = None,
+        xlabel: str = None,
+        decimals_y: int = 0,
+        decimals_x: int = 2,
+        bottom_ylim: float = None,
+        top_ylim: float = None,
+        grid: bool = True,
+        log: bool = False,
+    ):
+        title = self.label if title is None else title
+        ylabel = f"Amplitude ({self.measurements_units.u:~P})" if ylabel is None else ylabel
+        ax.yaxis.set_units(self.measurements_units)
+        img, ax = lineplot(
+            y=np.reshape(self.measurements, (len(self), -1)),
+            x=self.domain_array,
+            ax=ax,
+            fontname=fontname,
+            fontsize=fontsize,
+            title=title,
+            title_size=title_size,
+            major_y_locator=major_y_locator,
+            minor_y_locator=minor_y_locator,
+            major_x_locator=major_x_locator,
+            minor_x_locator=minor_x_locator,
+            color=color,
+            linestyle=linestyle,
+            ylabel=ylabel,
+            xlabel=xlabel,
+            decimals_y=decimals_y,
+            decimals_x=decimals_x,
+            bottom_ylim=bottom_ylim,
+            top_ylim=top_ylim,
+            grid=grid,
+            log=log,
+        )
+        return img, ax
