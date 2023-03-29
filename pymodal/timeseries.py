@@ -4,6 +4,7 @@ import numpy.typing as npt
 from pymodal import _signal, frf, timeseries
 from pyFRF import FRF
 from pint import UnitRegistry
+from matplotlib import pyplot as plt
 
 
 ureg = UnitRegistry()
@@ -138,6 +139,54 @@ class timeseries(_signal):
         """
         return super().change_domain_resolution(new_resolution=new_sampling_rate)
 
+    def plot(
+        self,
+        ax: plt.Axes = None,
+        fontname: str = "DejaVu Serif",
+        fontsize: float = 12,
+        title: str = None,
+        title_size: float = 12,
+        major_y_locator: int = 4,
+        minor_y_locator: int = 4,
+        major_x_locator: int = 4,
+        minor_x_locator: int = 4,
+        color: str = "blue",
+        linestyle: str = "-",
+        ylabel: str = None,
+        xlabel: str = None,
+        decimals_y: int = 0,
+        decimals_x: int = 2,
+        bottom_ylim: float = None,
+        top_ylim: float = None,
+        grid: bool = True,
+    ):
+        xlabel = f"Time ({ureg.second:~P})" if xlabel is None else xlabel
+        if ax is None:
+            fig, ax = plt.subplots()
+        ax.xaxis.set_units(ureg.hertz)
+        img, ax = super().plot(
+            ax=ax,
+            fontname=fontname,
+            fontsize=fontsize,
+            title=title,
+            title_size=title_size,
+            major_y_locator=major_y_locator,
+            minor_y_locator=minor_y_locator,
+            major_x_locator=major_x_locator,
+            minor_x_locator=minor_x_locator,
+            color=color,
+            linestyle=linestyle,
+            ylabel=ylabel,
+            xlabel=xlabel,
+            decimals_y=decimals_y,
+            decimals_x=decimals_x,
+            bottom_ylim=bottom_ylim,
+            top_ylim=top_ylim,
+            grid=grid,
+            log=False,
+        )
+        return ax, img
+
     def to_FRF(
         self,
         excitation: timeseries,
@@ -155,7 +204,7 @@ class timeseries(_signal):
         type : str, optional
             The FRF estimator to be used, possible values are: "H1", "H2", "Hv",
             "vector", "ODS", by default "H1".
-        resp_delay: int, optional
+        resp_delay : int, optional
             Response time delay with respect to the excitation, in seconds, by default
             0.
 
@@ -277,8 +326,7 @@ class timeseries(_signal):
 
 
 if __name__ == "__main__":
-    from matplotlib import pyplot as plt
-    
+
     time = np.arange(0, 30 + 0.05, 0.1)
     signal = np.sin(1 * time)
     signal = np.vstack((signal, np.sin(2 * time)))
@@ -287,6 +335,8 @@ if __name__ == "__main__":
     signal = np.vstack((signal, np.sin(5 * time)))
     signal = signal.reshape((time.shape[0], -1))
     test_object = timeseries(signal, time_end=30)
+    test_object.plot()
+    plt.show()
     print(test_object.measurements.shape)
     excitation_test = timeseries(np.sin(1 * time), time_end=30, method="excitation")
     frf_test = test_object.to_FRF(excitation_test)
