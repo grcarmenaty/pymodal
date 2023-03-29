@@ -155,7 +155,7 @@ class frf(_signal):
         ylabel: str = None,
         xlabel: str = None,
         decimals_y: int = 0,
-        decimals_x: int = 0,
+        decimals_x: int = 2,
         bottom_ylim: float = None,
         top_ylim: float = None,
         grid: bool = True,
@@ -170,7 +170,7 @@ class frf(_signal):
             fig, ax = plt.subplots()
         ax.yaxis.set_units(self.measurements_units)
         ax.xaxis.set_units(ureg.hertz)
-        ax, img = lineplot(
+        img, ax = lineplot(
             y=y,
             x=self.freq_array,
             ax=ax,
@@ -191,6 +191,7 @@ class frf(_signal):
             bottom_ylim=bottom_ylim,
             top_ylim=top_ylim,
             grid=grid,
+            log=True,
         )
         return ax, img
 

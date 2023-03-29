@@ -290,6 +290,7 @@ def lineplot(
     bottom_ylim: float = None,
     top_ylim: float = None,
     grid: bool = True,
+    log: bool = False,
 ):
 
     """
@@ -359,21 +360,9 @@ def lineplot(
         x = x * ureg("")
     if ax is None:  # If this is not a subplot of a greater figure:
         fig, ax = plt.subplots()
-    # Set limits for x axis between the minimum and maximum frequency.
+    # Set limits for x axis between the minimum and maximum domain array values.
     ax.set_xlim(left=x.m[0], right=x.m[-1])
-    if bottom_ylim is None or top_ylim is None:
-        top = np.nanmax(y.m)
-        bottom = np.nanmin(y.m)
-        span = np.abs(top - bottom)
-        bottom_ylim = bottom - 0.125 * span if bottom_ylim is None else bottom_ylim
-        top_ylim = top + 0.125 * span if top_ylim is None else top_ylim
-    ax.set_ylim(top=top_ylim, bottom=bottom_ylim)
     x_span = x.m[-1] - x.m[0]
-    y_span = top_ylim - bottom_ylim
-    if xlabel is not None:
-        ax.set_xlabel(xlabel, fontname=fontname, fontsize=fontsize)
-    if ylabel is not None:
-        ax.set_ylabel(ylabel, fontname=fontname, fontsize=fontsize)
     x_step = x_span / major_x_locator
     x_ticks_labels = np.arange(x.m[0], x.m[-1] + x_step / 2, x_step)
     ax.set_xticks([tick for tick in x_ticks_labels])
@@ -384,18 +373,30 @@ def lineplot(
     x_minor_step = x_span / (major_x_locator * minor_x_locator)
     x_minor_ticks = np.arange(x.m[0], x.m[-1] + x_minor_step / 2, x_minor_step)
     ax.set_xticks([tick for tick in x_minor_ticks], minor=True)
-    y_step = y_span / major_y_locator
-    y_ticks_labels = np.arange(bottom_ylim, top_ylim + y_step / 2, y_step)
-    ax.set_yticks([tick for tick in y_ticks_labels])
-    ax.set_yticklabels([f"{label:.{decimals_y}f}" for label in y_ticks_labels])
-    for label in ax.get_yticklabels():
-        label.set_fontname(fontname)
-        label.set_fontsize(fontsize)
-    y_minor_step = y_span / (major_y_locator * minor_y_locator)
-    y_minor_ticks = np.arange(
-        bottom_ylim, top_ylim + y_minor_step / 2, y_minor_step
-    )
-    ax.set_yticks([tick for tick in y_minor_ticks], minor=True)
+    if log:
+        ax.set_yscale('log')
+    else:
+        if bottom_ylim is None or top_ylim is None:
+            top = np.nanmax(y.m)
+            bottom = np.nanmin(y.m)
+            span = np.abs(top - bottom)
+            bottom_ylim = bottom - 0.125 * span if bottom_ylim is None else bottom_ylim
+            top_ylim = top + 0.125 * span if top_ylim is None else top_ylim
+        ax.set_ylim(top=top_ylim, bottom=bottom_ylim)
+        y_span = top_ylim - bottom_ylim
+        y_step = y_span / major_y_locator
+        y_ticks_labels = np.arange(bottom_ylim, top_ylim + y_step / 2, y_step)
+        ax.set_yticks([tick for tick in y_ticks_labels])
+        ax.set_yticklabels([f"{label:.{decimals_y}f}" for label in y_ticks_labels])
+        y_minor_step = y_span / (major_y_locator * minor_y_locator)
+        y_minor_ticks = np.arange(
+            bottom_ylim, top_ylim + y_minor_step / 2, y_minor_step
+        )
+        ax.set_yticks([tick for tick in y_minor_ticks], minor=True)
+    if xlabel is not None:
+        ax.set_xlabel(xlabel, fontname=fontname, fontsize=fontsize)
+    if ylabel is not None:
+        ax.set_ylabel(ylabel, fontname=fontname, fontsize=fontsize)
     if title is not None:  # If there is a title text (by default there is)
         ax.set_title(title, pad=15, fontname=fontname, fontsize=title_size)
     # Add ticks with labels on both sides of both axes but only on the down and
@@ -417,6 +418,9 @@ def lineplot(
     if grid:
         ax.grid(color="grey", linestyle=":", linewidth=1)
     img = ax.plot(x.m, y.m, color=color, linewidth=0.5, linestyle=linestyle)
+    for label in ax.get_yticklabels():
+        label.set_fontname(fontname)
+        label.set_fontsize(fontsize)
     plt.tight_layout()
     return img, ax
 
