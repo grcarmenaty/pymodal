@@ -273,7 +273,7 @@ def lineplot(
     y: np.ndarray,
     x: np.ndarray = None,
     ax: plt.Axes = None,
-    fontname: str = "serif",
+    fontname: str = "DejaVu Serif",
     fontsize: float = 12,
     title: str = None,
     title_size: float = 12,

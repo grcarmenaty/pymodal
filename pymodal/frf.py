@@ -9,6 +9,7 @@ from copy import deepcopy
 
 ureg = UnitRegistry()
 
+
 class frf(_signal):
     def __init__(
         self,
@@ -142,9 +143,9 @@ class frf(_signal):
 
     def plot(
         self,
-        format: str = "mod-phase",
+        format: str = "mod",
         ax: plt.Axes = None,
-        fontname: str = "serif",
+        fontname: str = "DejaVu Serif",
         fontsize: float = 12,
         title: str = None,
         title_size: float = 12,
@@ -162,40 +163,241 @@ class frf(_signal):
         top_ylim: float = None,
         grid: bool = True,
     ):
+        assert format in ["mod-phase", "mod", "phase", "real", "imag", "real-imag"]
         xlabel = f"Frequency ({ureg.hertz:~P})" if xlabel is None else xlabel
-        if ax is None:
-            fig, ax = plt.subplots()
-        ax.xaxis.set_units(ureg.hertz)
         measurements_backup = deepcopy(self.measurements)
-        self.measurements = abs(measurements_backup)
-        img, ax = super().plot(ax=ax,
-            fontname=fontname,
-            fontsize=fontsize,
-            title=title,
-            title_size=title_size,
-            major_y_locator=major_y_locator,
-            minor_y_locator=minor_y_locator,
-            major_x_locator=major_x_locator,
-            minor_x_locator=minor_x_locator,
-            color=color,
-            linestyle=linestyle,
-            ylabel=ylabel,
-            xlabel=xlabel,
-            decimals_y=decimals_y,
-            decimals_x=decimals_x,
-            bottom_ylim=bottom_ylim,
-            top_ylim=top_ylim,
-            grid=grid,
-            log=True,
-        )
+        if format in ["mod", "real", "imag"]:
+            if ax is None:
+                fig, ax = plt.subplots()
+            ax.xaxis.set_units(ureg.hertz)
+            if format == "mod":
+                self.measurements = abs(measurements_backup)
+            elif format == "real":
+                self.measurements = measurements_backup.real
+                ylabel = (
+                    f"Real part of\namplitude ({self.measurements_units.u:~P})"
+                    if ylabel is None
+                    else ylabel
+                )
+            elif format == "imag":
+                self.measurements = measurements_backup.imag
+                ylabel = (
+                    f"Imaginary part of\namplitude ({self.measurements_units.u:~P})"
+                    if ylabel is None
+                    else ylabel
+                )
+            img, ax = super().plot(
+                ax=ax,
+                fontname=fontname,
+                fontsize=fontsize,
+                title=title,
+                title_size=title_size,
+                major_y_locator=major_y_locator,
+                minor_y_locator=minor_y_locator,
+                major_x_locator=major_x_locator,
+                minor_x_locator=minor_x_locator,
+                color=color,
+                linestyle=linestyle,
+                ylabel=ylabel,
+                xlabel=xlabel,
+                decimals_y=decimals_y,
+                decimals_x=decimals_x,
+                bottom_ylim=bottom_ylim,
+                top_ylim=top_ylim,
+                grid=grid,
+                log=format == "mod",
+            )
+        if format == "phase":
+            self.measurements = np.angle(measurements_backup.m)
+            if ax is None:
+                fig, ax = plt.subplots()
+            img, ax = super().plot(
+                ax=ax,
+                fontname=fontname,
+                fontsize=fontsize,
+                title=title,
+                title_size=title_size,
+                major_y_locator=major_y_locator,
+                minor_y_locator=minor_y_locator,
+                major_x_locator=major_x_locator,
+                minor_x_locator=minor_x_locator,
+                color=color,
+                linestyle=linestyle,
+                ylabel=ylabel,
+                xlabel=xlabel,
+                decimals_y=decimals_y,
+                decimals_x=decimals_x,
+                bottom_ylim=bottom_ylim,
+                top_ylim=top_ylim,
+                grid=grid,
+                log=False,
+            )
+            # y=np.reshape(self.measurements, (len(self), -1))
+            if bottom_ylim is None or top_ylim is None:
+                # top = np.nanmax(y.m)
+                # bottom = np.nanmin(y.m)
+                # span = np.abs(top - bottom)
+                # bottom_ylim = np.pi * np.ceil(abs(bottom)/np.pi)
+                # top_ylim = top + 0.125 * span if top_ylim is None else top_ylim
+                bottom_ylim = -np.pi - np.pi / 8
+                top_ylim = np.pi + np.pi / 8
+            ax.set_ylim(top=top_ylim, bottom=bottom_ylim)
+            y_ticks = [-np.pi, -np.pi / 2, 0, np.pi / 2, np.pi]
+            ax.set_yticks([tick for tick in y_ticks])
+            y_ticks_labels = [
+                r"$\mathregular{-\pi}$",
+                r"$\mathregular{-\dfrac{\pi}{2}}$",
+                r"$\mathregular{0}$",
+                r"$\mathregular{\dfrac{\pi}{2}}$",
+                r"$\mathregular{\pi}$",
+            ]
+            ax.set_yticklabels([label for label in y_ticks_labels])
+            y_span = top_ylim - bottom_ylim
+            y_minor_step = y_span / (major_y_locator * minor_y_locator + 2)
+            y_minor_ticks = np.arange(
+                bottom_ylim, top_ylim + y_minor_step / 2, y_minor_step
+            )
+            ax.set_yticks([tick for tick in y_minor_ticks], minor=True)
+            ylabel = f"Phase ({ureg.radian:~P})" if ylabel is None else ylabel
+            ax.set_ylabel(ylabel, fontname=fontname, fontsize=fontsize)
+        if format == "mod-phase":
+            self.measurements = abs(measurements_backup)
+            if ax is None:
+                fig, ax = plt.subplots(2, 1)
+            else:
+                assert len(ax) == 2
+            img, ax1 = super().plot(
+                ax=ax[0],
+                fontname=fontname,
+                fontsize=fontsize,
+                title=title,
+                title_size=title_size,
+                major_y_locator=major_y_locator,
+                minor_y_locator=minor_y_locator,
+                major_x_locator=major_x_locator,
+                minor_x_locator=minor_x_locator,
+                color=color,
+                linestyle=linestyle,
+                ylabel=ylabel,
+                xlabel="",
+                decimals_y=decimals_y,
+                decimals_x=decimals_x,
+                bottom_ylim=bottom_ylim,
+                top_ylim=top_ylim,
+                grid=grid,
+                log=True,
+            )
+            ax1.set_xticklabels([])
+            self.measurements = np.angle(measurements_backup.m)
+            img, ax2 = super().plot(
+                ax=ax[1],
+                fontname=fontname,
+                fontsize=fontsize,
+                title="",
+                title_size=title_size,
+                major_y_locator=major_y_locator,
+                minor_y_locator=minor_y_locator,
+                major_x_locator=major_x_locator,
+                minor_x_locator=minor_x_locator,
+                color=color,
+                linestyle=linestyle,
+                ylabel=ylabel,
+                xlabel=xlabel,
+                decimals_y=decimals_y,
+                decimals_x=decimals_x,
+                bottom_ylim=bottom_ylim,
+                top_ylim=top_ylim,
+                grid=grid,
+                log=False,
+            )
+            # y=np.reshape(self.measurements, (len(self), -1))
+            if bottom_ylim is None or top_ylim is None:
+                # top = np.nanmax(y.m)
+                # bottom = np.nanmin(y.m)
+                # span = np.abs(top - bottom)
+                # bottom_ylim = np.pi * np.ceil(abs(bottom)/np.pi)
+                # top_ylim = top + 0.125 * span if top_ylim is None else top_ylim
+                bottom_ylim = -np.pi - np.pi / 8
+                top_ylim = np.pi + np.pi / 8
+            ax2.set_ylim(top=top_ylim, bottom=bottom_ylim)
+            y_ticks = [-np.pi, -np.pi / 2, 0, np.pi / 2, np.pi]
+            ax2.set_yticks([tick for tick in y_ticks])
+            y_ticks_labels = [
+                r"$\mathregular{-\pi}$",
+                r"$\mathregular{-\dfrac{\pi}{2}}$",
+                r"$\mathregular{0}$",
+                r"$\mathregular{\dfrac{\pi}{2}}$",
+                r"$\mathregular{\pi}$",
+            ]
+            ax2.set_yticklabels([label for label in y_ticks_labels])
+            y_span = top_ylim - bottom_ylim
+            y_minor_step = y_span / (major_y_locator * minor_y_locator + 2)
+            y_minor_ticks = np.arange(
+                bottom_ylim, top_ylim + y_minor_step / 2, y_minor_step
+            )
+            ax2.set_yticks([tick for tick in y_minor_ticks], minor=True)
+            ylabel = f"Phase ({ureg.radian:~P})" if ylabel is None else ylabel
+            ax2.set_ylabel(ylabel, fontname=fontname, fontsize=fontsize)
+            ax = [ax1, ax2]
+        if format == "real-imag":
+            self.measurements = measurements_backup.real
+            if ax is None:
+                fig, ax = plt.subplots(2, 1)
+            else:
+                assert len(ax) == 2
+            img, ax1 = super().plot(
+                ax=ax[0],
+                fontname=fontname,
+                fontsize=fontsize,
+                title=title,
+                title_size=title_size,
+                major_y_locator=major_y_locator,
+                minor_y_locator=minor_y_locator,
+                major_x_locator=major_x_locator,
+                minor_x_locator=minor_x_locator,
+                color=color,
+                linestyle=linestyle,
+                ylabel=f"Real part of\namplitude ({self.measurements_units.u:~P})",
+                xlabel="",
+                decimals_y=decimals_y,
+                decimals_x=decimals_x,
+                bottom_ylim=bottom_ylim,
+                top_ylim=top_ylim,
+                grid=grid,
+                log=False,
+            )
+            ax1.set_xticklabels([])
+            self.measurements = measurements_backup.imag
+            img, ax2 = super().plot(
+                ax=ax[1],
+                fontname=fontname,
+                fontsize=fontsize,
+                title="",
+                title_size=title_size,
+                major_y_locator=major_y_locator,
+                minor_y_locator=minor_y_locator,
+                major_x_locator=major_x_locator,
+                minor_x_locator=minor_x_locator,
+                color=color,
+                linestyle=linestyle,
+                ylabel=f"Imaginary part of\namplitude ({self.measurements_units.u:~P})",
+                xlabel=xlabel,
+                decimals_y=decimals_y,
+                decimals_x=decimals_x,
+                bottom_ylim=bottom_ylim,
+                top_ylim=top_ylim,
+                grid=grid,
+                log=False,
+            )
+            ax = [ax1, ax2]
         self.measurements = measurements_backup
         del measurements_backup
         return img, ax
 
+
 if __name__ == "__main__":
     from matplotlib import pyplot as plt
-    from pymodal import timeseries
-    
+
     time = np.arange(0, 30 + 0.05, 0.1)
     signal = np.sin(1 * time)
     signal = np.vstack((signal, np.sin(2 * time)))
@@ -205,12 +407,18 @@ if __name__ == "__main__":
     signal = signal.reshape((time.shape[0], -1))
     signal = np.fft.fft(signal, axis=0)
     test_object = frf(signal, freq_end=5)
-    test_object.plot()
+    test_object.plot("mod-phase")
+    plt.show()
+    test_object.plot("real")
+    plt.show()
+    test_object.plot("imag")
+    plt.show()
+    test_object.plot("phase")
     plt.show()
     print(test_object.change_freq_span(new_max_freq=10).measurements.shape)
     test_object.change_freq_span(new_max_freq=10).plot()
     plt.show()
     print(test_object.change_freq_resolution(new_resolution=0.2).measurements.shape)
-    test_object.change_freq_resolution(new_resolution=0.2).plot()
+    test_object.change_freq_resolution(new_resolution=0.2).plot("real-imag")
     plt.show()
     print(test_object[0:2].measurements.shape)
