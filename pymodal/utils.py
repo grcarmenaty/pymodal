@@ -348,10 +348,10 @@ def lineplot(
     mpl.rcParams["mathtext.rm"] = fontname
     mpl.rcParams["mathtext.it"] = fontname + ":italic"
     mpl.rcParams["mathtext.bf"] = fontname + ":bold"
-    
+
     ureg = UnitRegistry()
     ureg.setup_matplotlib(True)
-    
+
     if not isinstance(y, Quantity):
         y = y * ureg("")
     if x is None:
@@ -374,11 +374,15 @@ def lineplot(
     x_minor_ticks = np.arange(x.m[0], x.m[-1] + x_minor_step / 2, x_minor_step)
     ax.set_xticks([tick for tick in x_minor_ticks], minor=True)
     if log:
-        ax.set_yscale('log')
+        ax.set_yscale("log")
         top = np.nanmax(y.m)
         bottom = np.nanmin(y.m)
         top_ylim = 10 ** np.ceil(np.log10(top))
-        bottom_ylim = 10 ** np.floor(np.log10(bottom)) if np.floor(np.log10(bottom)) > -np.ceil(np.log10(top)) else 10 ** -np.ceil(np.log10(top))
+        bottom_ylim = (
+            10 ** np.floor(np.log10(bottom))
+            if np.floor(np.log10(bottom)) > -np.ceil(np.log10(top))
+            else 10 ** -np.ceil(np.log10(top))
+        )
         ax.set_ylim(top=top_ylim, bottom=bottom_ylim)
     else:
         if bottom_ylim is None or top_ylim is None:

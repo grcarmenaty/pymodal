@@ -505,7 +505,7 @@ class _signal:
         title = self.label if title is None else title
         ylabel = f"Amplitude ({self.measurements_units.u:~P})" if ylabel is None else ylabel
         if ax is None:
-            fig, ax = plt.subplots()
+            img, ax = plt.subplots()
         ax.yaxis.set_units(self.measurements_units)
         img, ax = lineplot(
             y=np.reshape(self.measurements, (len(self), -1)),
