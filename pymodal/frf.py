@@ -157,7 +157,7 @@ class frf(_signal):
         linestyle: str = "-",
         ylabel: str = None,
         xlabel: str = None,
-        decimals_y: int = 0,
+        decimals_y: int = 2,
         decimals_x: int = 2,
         bottom_ylim: float = None,
         top_ylim: float = None,

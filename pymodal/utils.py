@@ -285,8 +285,8 @@ def lineplot(
     linestyle: str = "-",
     ylabel: str = None,
     xlabel: str = None,
-    decimals_y: int = 0,
-    decimals_x: int = 0,
+    decimals_y: int = 2,
+    decimals_x: int = 2,
     bottom_ylim: float = None,
     top_ylim: float = None,
     grid: bool = True,
@@ -375,6 +375,11 @@ def lineplot(
     ax.set_xticks([tick for tick in x_minor_ticks], minor=True)
     if log:
         ax.set_yscale('log')
+        top = np.nanmax(y.m)
+        bottom = np.nanmin(y.m)
+        top_ylim = 10 ** np.ceil(np.log10(top))
+        bottom_ylim = 10 ** np.floor(np.log10(bottom)) if np.floor(np.log10(bottom)) > -np.ceil(np.log10(top)) else 10 ** -np.ceil(np.log10(top))
+        ax.set_ylim(top=top_ylim, bottom=bottom_ylim)
     else:
         if bottom_ylim is None or top_ylim is None:
             top = np.nanmax(y.m)
