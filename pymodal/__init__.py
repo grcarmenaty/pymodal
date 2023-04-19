@@ -16,6 +16,7 @@ from .utils import (  # noqa F401
     ODS_diff,
     r2_imag,
     # compress,
+    plot_control_chart,
     SCI,
     DRQ,
     AIGAC,
