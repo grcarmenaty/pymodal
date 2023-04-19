@@ -462,3 +462,48 @@ def modal_superposition(min_freq, max_freq, resolution, modal_frequencies,
     frf = [np.stack(frf, axis=1)]
     frf = np.dstack(frf)
     return pymodal.FRF(frf, resolution = 0.5)
+
+def plot_control_chart(di_array: np.ndarray,
+                                    di_train: np.ndarray,
+                                    threshold: int,
+                                    colors: list,
+                                    method_name: str,
+                                    n_pcs: int):
+
+    """
+    This function plots a Control Chart of the measurements.
+    Dividing between training and test, and classifying among:
+    Undamaged, False Alarm, Unnoticed Damage and Damaged conditions.
+    """
+
+    plt.figure("Control Chart: "+str(method_name)+" Number of PCs: "+str(n_pcs))
+    ax = plt.gca()
+    ax.scatter(range(len(di_array)),di_array,c=colors,s=5)
+    ax.set_yscale("log")
+    ax.set_xlabel("Measurements")
+    ax.set_ylabel("Mahalanobis Distance")
+    ax.set_ylim(0, np.max(di_array)*1.2)
+
+    #Plot Threshold Line
+    ax.plot(range(len(di_array)),np.ones((len(di_array),))*threshold,linewidth=1,color='black')
+
+    #Plot Division Line between Training and Test data
+    ax.plot(np.ones((2,))*len(di_train),[0,np.max(di_array)*1000], 
+                linewidth = 1,
+                linestyle = '--',
+                color = 'black')
+
+    #Custom legend
+    legend_elements = [mpl.lines.Line2D([0], [0], color='black', lw=1, label='Threshold'),
+                                    mpl.lines.Line2D([0],[0], color='black',linestyle='--',  lw=1, label='Training-Test Split'),
+                                    mpl.lines.Line2D([0],[0],color='w',markerfacecolor='green',marker='o', label='Undamaged'),
+                                    mpl.lines.Line2D([0],[0],color='w', markerfacecolor='orange',marker='o', label='False Alarm'),
+                                    mpl.lines.Line2D([0],[0],color='w', markerfacecolor='blue', marker='o', label='Unnoticed Damage'),
+                                    mpl.lines.Line2D([0],[0],color='w', markerfacecolor='red',marker='o', label='Damaged')]
+
+    box = ax.get_position()
+    ax.legend(handles=legend_elements,bbox_to_anchor=(0.5,1.2), loc='upper center',ncol=6,fancybox=True)
+
+    plt.figure("Data Visualization")
+
+    plt.show()
