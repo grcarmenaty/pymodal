@@ -1,49 +1,103 @@
 import numpy as np
 from pymodal import _signal
-from itertools import h5py
+import h5py
 from pathlib import Path
+from multiprocessing import Pool, cpu_count
+import pint
 
+def save_array(array_info):
+    array, dataset_name, file_name = array_info
+    with h5py.File(file_name, "a") as hf:
+        hf.create_dataset(dataset_name, data=array)
+
+def process_strings(args):
+    strings, start_index, end_index = args
+    counter = {}
+    result = []
+
+    for i in range(start_index, end_index):
+        string = strings[i]
+        if string in counter:
+            count = counter[string]
+            new_string = f"{string}_{count}"
+            counter[string] += 1
+            result.append(new_string)
+        else:
+            counter[string] = 1
+            result.append(string)
+
+    return result
+
+num_processes = cpu_count()
+attributes_to_match = ["measurements_units", "method", "dof", "orientations", "coordinates", "space_units", "domain_start", "domain_end", "domain_span", "domain_resolution", "domain_array", "samples"]
+
+# Check if specified attributes match
+def attributes_match(instance1, instance2, attributes_to_match):
+    for attribute in attributes_to_match:
+        value1 = getattr(instance1, attribute)
+        value2 = getattr(instance2, attribute)
+
+        if isinstance(value1, np.ndarray) and isinstance(value2, np.ndarray):
+            if not np.array_equal(value1, value2):
+                return False
+        elif isinstance(value1, pint.Quantity) and isinstance(value2, pint.Quantity):
+            if not np.array_equal(value1.magnitude, value2.magnitude):
+                return False
+        elif value1 != value2:
+            return False
+
+    return True
+
+def worker(pair):
+    instance1, instance2 = pair
+    return attributes_match(instance1, instance2, attributes_to_match)
+
+def parallel_attributes_match(instances):
+    first_instance = instances[0]
+    remaining_instances = instances[1:]
+
+    with Pool(num_processes) as pool:
+        results = pool.map(worker, [(first_instance, instance) for instance in remaining_instances])
+
+    if np.all(results):
+        return True
+    return False
 
 class _collection():
-    def __init__(self, exp_list: list[_signal], path: Path):
+    def __init__(self, exp_list: list[_signal], path: Path = Path("temp.h5")):
 
-        def __all_equal(iterator):
-            iterator = iter(iterator)
-            try:
-                first = next(iterator)
-            except StopIteration:
-                return True
-            return np.all(first == x for x in iterator)
+        self.path = Path(path)
+        if self.path.exists():
+            self.path.unlink()
 
         self.label = list([exp.label for exp in exp_list])
-        assert __all_equal([exp.measurements_units for exp in exp_list])
-        self.measurements_units = exp_list[0].measurements_units
-        assert __all_equal([exp.method for exp in exp_list])
-        self.method = exp_list[0].method
-        assert __all_equal([exp.dof for exp in exp_list])
-        self.dof = exp_list[0].dof
-        assert __all_equal([exp.orientations for exp in exp_list])
-        self.orientations = exp_list[0].orientations
-        assert __all_equal([exp.coordinates for exp in exp_list])
-        self.coordinates = exp_list[0].coordinates
-        assert __all_equal([exp.space_units for exp in exp_list])
-        self.space_units = exp_list[0].space_units
-        assert __all_equal([exp.domain_start for exp in exp_list])
-        self.domain_start = exp_list[0].domain_start
-        assert __all_equal([exp.domain_end for exp in exp_list])
-        self.domain_end = exp_list[0].domain_end
-        assert __all_equal([exp.domain_span for exp in exp_list])
-        self.domain_span = exp_list[0].domain_span
-        assert __all_equal([exp.domain_resolution for exp in exp_list])
-        self.domain_resolution = exp_list[0].domain_resolution
-        assert __all_equal([exp.domain_array for exp in exp_list])
-        self.domain_array = exp_list[0].domain_array
-        assert __all_equal([exp.samples for exp in exp_list])
-        self.samples = exp_list[0].samples
 
-        self.measurements = h5py.File(path, "w")
-        self.measurements = np.array([exp.measurements.m for exp in exp_list]) * self.measurements_units
+        string_count = len(self.label)
+        chunk_size = string_count // num_processes
+        start_indices = [i * chunk_size for i in range(num_processes)]
+        end_indices = start_indices[1:] + [string_count]
+
+        pool = Pool(processes=num_processes)
+        args = [(self.label, start, end) for start, end in zip(start_indices, end_indices)]
+        results = pool.map(process_strings, args)
+        pool.close()
+        pool.join()
+
+        self.label = list([string for sublist in results for string in sublist])
         
+        assert parallel_attributes_match(exp_list)
+        
+        array_info = [(array, f"{self.label[i]}", self.path) for i, array in enumerate([exp.measurements for exp in exp_list])]
+        with Pool(num_processes) as pool:
+            pool.map(save_array, array_info)
+        pool.close()
+        pool.join()
+        self.file = h5py.File(self.path, "r")
+        self.measurements = list([self.file[f"{label}"] for label in self.label])
+
+    def close(self):
+        self.file.close()
+        self.path.unlink()
 
 if __name__ == "__main__":
     from pymodal import frf
@@ -62,4 +116,5 @@ if __name__ == "__main__":
     test_object_1 = frf(signal_1, freq_end=5)
     test_object_2 = frf(signal_2, freq_end=5)
     test_collection = _collection([test_object_0, test_object_1, test_object_2])
-    print(test_collection.samples)
+    print(test_collection.measurements[0])
+    test_collection.close()
