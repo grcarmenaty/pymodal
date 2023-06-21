@@ -6,6 +6,7 @@ from multiprocessing import Pool, cpu_count
 import pint
 import os
 import inspect
+from copy import deepcopy
 
 os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 
@@ -33,16 +34,12 @@ def add_suffix(strings):
     return result
 
 
-def get_attributes(obj, exclude_list=None):
-    if exclude_list is None:
-        exclude_list = []
-
+def get_attributes(obj):
     attributes = []
     for name, value in inspect.getmembers(obj):
         if (
             not name.startswith("__")
             and not inspect.ismethod(value)
-            and name not in exclude_list
         ):
             attributes.append(name)
     return attributes
@@ -100,7 +97,10 @@ class _collection:
 
         self.label = add_suffix(list([exp.label for exp in exp_list]))
 
-        attributes_to_match = get_attributes(exp_list[0], ["measurements", "label"])
+        self.attributes = get_attributes(exp_list[0])
+        attributes_to_match = deepcopy(self.attributes)
+        attributes_to_match.remove("measurements")
+        attributes_to_match.remove("label")
         assert parallel_attributes_match(exp_list, attributes_to_match)
         for attribute in attributes_to_match:
             setattr(self, attribute, getattr(exp_list[0], attribute))
@@ -110,11 +110,12 @@ class _collection:
         ]
         with Pool(num_processes) as pool:
             pool.map(save_array, array_info)
-        del exp_list
         self.file = h5py.File(self.path, "r")
-        print("Keys: %s" % self.file.keys())
         self.measurements = list([self.file[f"{label}"] for label in self.label])
-
+        self.collection_class = exp_list[0]
+        for attribute in self.attributes:
+            setattr(self.collection_class, attribute, None)
+        
     def close(self, keep: bool = False):
         self.file.close()
         if not keep:
@@ -138,5 +139,5 @@ if __name__ == "__main__":
     test_object_1 = _signal(signal_1, domain_end=5)
     test_object_2 = _signal(signal_2, domain_end=5)
     test_collection = _collection([test_object_0, test_object_1, test_object_2])
-    print(test_collection.measurements[0])
+    print(test_collection.collection_class.dof)
     test_collection.close()
