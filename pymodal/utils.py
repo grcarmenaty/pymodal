@@ -150,8 +150,8 @@ def change_domain_resolution(
 def change_domain_span(
     domain_array: npt.NDArray[np.float64],
     measurements_array: npt.NDArray[np.complex64],
-    new_min_domain: Optional[float] = None,
-    new_max_domain: Optional[float] = None,
+    new_min_domain: Optional[Quantity] = None,
+    new_max_domain: Optional[Quantity] = None,
 ):
     """Change the span of the temporal domain of an array of signals, assuming the
     temporal dimension of said signal is the first dimension of the array.

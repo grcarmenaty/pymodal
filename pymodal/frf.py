@@ -22,6 +22,7 @@ class frf(_signal):
         freq_span: Optional[float] = None,
         freq_resolution: Optional[float] = None,
         measurements_units: Optional[str] = "millimeter / second ** 2 / newton",
+        freq_units: Optional[str] = "hertz",
         space_units: Optional[str] = "millimeter",
         method: str = "SIMO",
         label: Optional[str] = None,
@@ -83,6 +84,7 @@ class frf(_signal):
             domain_span=freq_span,
             domain_resolution=freq_resolution,
             measurements_units=measurements_units,
+            domain_units=freq_units,
             space_units=space_units,
             method=method,
             label=label,
@@ -92,7 +94,7 @@ class frf(_signal):
         self.freq_span = self.domain_span
         self.freq_resolution = self.domain_resolution
         self.freq_array = self.domain_array
-        self.freq_array = self.freq_array * ureg.hertz
+        self.freq_units = self.domain_units
 
     def change_freq_span(
         self, new_min_freq: Optional[float] = None, new_max_freq: Optional[float] = None

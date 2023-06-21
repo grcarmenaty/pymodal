@@ -5,7 +5,7 @@ from pymodal import _signal, frf, timeseries
 from pyFRF import FRF
 from pint import UnitRegistry
 from matplotlib import pyplot as plt
-
+from warnings import warn, catch_warnings, filterwarnings
 
 ureg = UnitRegistry()
 
@@ -22,7 +22,8 @@ class timeseries(_signal):
         time_span: Optional[float] = None,
         sampling_rate: Optional[float] = None,
         measurements_units: Optional[str] = None,
-        space_units: Optional[str] = "millimeter",
+        time_units: Optional[str] = None,
+        space_units: Optional[str] = None,
         method: str = "SIMO",
         label: Optional[str] = None,
     ):
@@ -83,6 +84,7 @@ class timeseries(_signal):
             domain_span=time_span,
             domain_resolution=sampling_rate,
             measurements_units=measurements_units,
+            domain_units=time_units,
             space_units=space_units,
             method=method,
             label=label,
@@ -91,6 +93,7 @@ class timeseries(_signal):
         self.time_end = self.domain_end
         self.time_span = self.domain_span
         self.sampling_rate = self.domain_resolution
+        self.time_units = self.domain_units
         self.time_array = self.domain_array
 
     def change_time_span(
@@ -239,65 +242,48 @@ class timeseries(_signal):
             exc_type = "a"
         elif excitation.measurements.check(""):
             exc_type = "e"
-        if self.method == "excitation":
-            raise ValueError("Use this method only with responses.")
-        elif self.method == "SIMO":
-            # If there's a single input and multiple outputs, then for every output,
-            # an FRF will be calculated with the provided single input excitation.
-            assert excitation.dof == 1
-            # assert excitations coordinates-orientation pair are in
-            # self coordinates-orientations pairs list
-            exc = excitation.measurements[:, 0, 0].magnitude
-            frf_amp = []
-            for i in range(self.dof):
-                resp = self.measurements[:, i, 0].magnitude
-                frf_amp.append(
-                    FRF(
-                        sampling_freq=self.sampling_rate,
-                        exc=exc,
-                        resp=resp,
-                        exc_type=exc_type,
-                        resp_type=resp_type,
-                        exc_window="None",
-                        resp_window="None",
-                        resp_delay=resp_delay,
-                        noverlap=0,
-                    ).get_FRF(type=type, form=form)
-                )
-            frf_amp = np.array(frf_amp).reshape((-1, self.dof, 1))
-        elif self.method == "MISO":
-            # If there's a single output and multiple inputs, then for every input,
-            # an FRF will be calculated with the provided single output measurement.
-            # assert self coordinates-orientation pair are in excitation
-            # coordinates-orientations pairs list
-            frf_amp = []
-            for i in range(self.dof):
-                exc = excitation.measurements[:, 0, i].magnitude
-                resp = self.measurements[:, 0, i].magnitude
-                frf_amp.append(
-                    FRF(
-                        sampling_freq=self.sampling_rate,
-                        exc=exc,
-                        resp=resp,
-                        exc_type=exc_type,
-                        resp_type=resp_type,
-                        exc_window="None",
-                        resp_window="None",
-                    ).get_FRF(type=type, form=form)
-                )
-            frf_amp = np.array(frf_amp).reshape((-1, 1, self.dof))
-        elif self.method == "MIMO":
-            # If the system has multiple inputs and outputs, compute an FRF for each
-            # output and it's corresponding input.
-            # assert excitations coordinates-orientation pairs are in
-            # self coordinates-orientations pairs list, in the same order.
-            outer_frf_amp = []
-            for i in range(self.dof):
-                inner_frf = []
-                for j in range(self.dof):
+        with catch_warnings():
+            filterwarnings(
+                "ignore",
+                message="The unit of the quantity is stripped when downcasting"
+                " to ndarray.",
+            )
+            if self.method == "excitation":
+                raise ValueError("Use this method only with responses.")
+            elif self.method == "SIMO":
+                # If there's a single input and multiple outputs, then for every output,
+                # an FRF will be calculated with the provided single input excitation.
+                assert excitation.dof == 1
+                # assert excitations coordinates-orientation pair are in
+                # self coordinates-orientations pairs list
+                exc = excitation.measurements[:, 0, 0].magnitude
+                frf_amp = []
+                for i in range(self.dof):
+                    resp = self.measurements[:, i, 0].magnitude
+                    frf_amp.append(
+                        FRF(
+                            sampling_freq=self.sampling_rate,
+                            exc=exc,
+                            resp=resp,
+                            exc_type=exc_type,
+                            resp_type=resp_type,
+                            exc_window="None",
+                            resp_window="None",
+                            resp_delay=resp_delay,
+                            noverlap=0,
+                        ).get_FRF(type=type, form=form)
+                    )
+                frf_amp = np.array(frf_amp).reshape((-1, self.dof, 1))
+            elif self.method == "MISO":
+                # If there's a single output and multiple inputs, then for every input,
+                # an FRF will be calculated with the provided single output measurement.
+                # assert self coordinates-orientation pair are in excitation
+                # coordinates-orientations pairs list
+                frf_amp = []
+                for i in range(self.dof):
                     exc = excitation.measurements[:, 0, i].magnitude
-                    resp = self.measurements[:, i, j].magnitude
-                    inner_frf.append(
+                    resp = self.measurements[:, 0, i].magnitude
+                    frf_amp.append(
                         FRF(
                             sampling_freq=self.sampling_rate,
                             exc=exc,
@@ -308,8 +294,31 @@ class timeseries(_signal):
                             resp_window="None",
                         ).get_FRF(type=type, form=form)
                     )
-                outer_frf_amp.append(np.array(inner_frf))
-            frf_amp = np.array(outer_frf_amp).reshape((-1, self.dof, self.dof))
+                frf_amp = np.array(frf_amp).reshape((-1, 1, self.dof))
+            elif self.method == "MIMO":
+                # If the system has multiple inputs and outputs, compute an FRF for each
+                # output and it's corresponding input.
+                # assert excitations coordinates-orientation pairs are in
+                # self coordinates-orientations pairs list, in the same order.
+                outer_frf_amp = []
+                for i in range(self.dof):
+                    inner_frf = []
+                    for j in range(self.dof):
+                        exc = excitation.measurements[:, 0, i].magnitude
+                        resp = self.measurements[:, i, j].magnitude
+                        inner_frf.append(
+                            FRF(
+                                sampling_freq=self.sampling_rate,
+                                exc=exc,
+                                resp=resp,
+                                exc_type=exc_type,
+                                resp_type=resp_type,
+                                exc_window="None",
+                                resp_window="None",
+                            ).get_FRF(type=type, form=form)
+                        )
+                    outer_frf_amp.append(np.array(inner_frf))
+                frf_amp = np.array(outer_frf_amp).reshape((-1, self.dof, self.dof))
         return frf(
             measurements=frf_amp,
             coordinates=self.coordinates,
@@ -343,7 +352,7 @@ if __name__ == "__main__":
     frf_test.plot()
     plt.show()
     print(frf_test.measurements.shape)
-    assert np.allclose(time, test_object.time_array)
+    assert np.allclose(time, test_object.time_array.magnitude)
     print(test_object.change_time_span(new_max_time=20).measurements.shape)
     print(test_object.change_sampling_rate(new_sampling_rate=0.2).measurements.shape)
     print(test_object.measurements.dimensionality)

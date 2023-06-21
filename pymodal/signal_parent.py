@@ -29,7 +29,8 @@ class _signal:
         domain_span: Optional[float] = None,
         domain_resolution: Optional[float] = None,
         measurements_units: Optional[str] = None,
-        space_units: Optional[str] = "millimeter",
+        domain_units: Optional[str] = None,
+        space_units: Optional[str] = None,
         method: str = "SIMO",
         label: Optional[str] = None,
     ):
@@ -180,7 +181,9 @@ class _signal:
             self.orientations.T / np.linalg.norm(self.orientations, axis=1)
         ).T
         # Assign space units to coordinates.
-        if type(space_units) is str:
+        if space_units is None:
+                space_units = ureg.parse_expression("millimeter")
+        elif type(space_units) is str:
             space_units = ureg.parse_expression(space_units)
         self.space_units = space_units
         self.coordinates = self.coordinates * self.space_units
@@ -218,16 +221,10 @@ class _signal:
         self.samples = self.measurements.shape[0]
         # Make sure domain parameters are coherent, calculate the missing domain
         # parameters
-        self.domain_start = float(domain_start)
-        self.domain_end = float(domain_end) if domain_end is not None else domain_end
-        self.domain_span = (
-            float(domain_span) if domain_span is not None else domain_span
-        )
-        self.domain_resolution = (
-            float(domain_resolution)
-            if domain_resolution is not None
-            else domain_resolution
-        )
+        self.domain_start = domain_start.magnitude if type(domain_start) == type(measurements) else domain_start
+        self.domain_end = domain_end.magnitude if type(domain_end) == type(measurements) else domain_end
+        self.domain_span = domain_span.magnitude if type(domain_span) == type(measurements) else domain_span
+        self.domain_resolution = domain_resolution.magnitude if type(domain_resolution) == type(measurements) else domain_resolution
         if self.domain_span is None:
             if self.domain_end is None:  # max, span are None, rate is defined
                 if self.domain_resolution is None:
@@ -305,6 +302,16 @@ class _signal:
         assert np.allclose(
             self.domain_resolution, np.average(np.diff(self.domain_array, axis=0))
         )
+        if domain_units is None:
+                domain_units = ureg.parse_expression("seconds")
+        elif type(domain_units) is str:
+            domain_units = ureg.parse_expression(domain_units)
+        self.domain_units = domain_units
+        self.domain_array = self.domain_array * self.domain_units
+        self.domain_end = self.domain_end * self.domain_units
+        self.domain_start = self.domain_start * self.domain_units
+        self.domain_span = self.domain_span * self.domain_units
+        self.domain_resolution = self.domain_resolution * self.domain_units
 
     def __len__(self):
         """This method describes what happens when len(_signal class object) is invoked.
@@ -392,7 +399,7 @@ class _signal:
             raise ValueError("Too many keys provided.")
         return self_copy
 
-    def change_domain_resolution(self, new_resolution: float):
+    def change_domain_resolution(self, new_resolution: Quantity):
         """Change the temporal resolution of an array of signals, assuming the temporal
         dimension of said signal is the first dimension of the array.
 
@@ -409,10 +416,12 @@ class _signal:
             corresponding to the new domain array.
         """
         new_domain_array, new_measurements_array = pymodal.change_domain_resolution(
-            domain_array=self.domain_array,
-            measurements_array=self.measurements,
+            domain_array=self.domain_array.magnitude,
+            measurements_array=self.measurements.magnitude,
             new_resolution=new_resolution,
         )
+        new_domain_array = new_domain_array * self.domain_units
+        new_measurements_array = new_measurements_array * self.measurements_units
         self_copy = deepcopy(self)
         self_copy.__init__(
             new_measurements_array,
@@ -425,6 +434,7 @@ class _signal:
             new_resolution,
             self.measurements_units,
             self.space_units,
+            self.domain_units,
             self.method,
             self.label,
         )
@@ -432,8 +442,8 @@ class _signal:
 
     def change_domain_span(
         self,
-        new_min_domain: Optional[float] = None,
-        new_max_domain: Optional[float] = None,
+        new_min_domain: Optional[Quantity] = None,
+        new_max_domain: Optional[Quantity] = None,
     ):
         """Change the span of the temporal domain of an array of signals, assuming the
         temporal dimension of said signal is the first dimension of the array.
@@ -454,11 +464,13 @@ class _signal:
             with the corresponding measurements values.
         """
         cut_domain_array, cut_measurements_array = pymodal.change_domain_span(
-            domain_array=self.domain_array,
-            measurements_array=self.measurements,
+            domain_array=self.domain_array.magnitude,
+            measurements_array=self.measurements.magnitude,
             new_min_domain=new_min_domain,
             new_max_domain=new_max_domain,
         )
+        cut_domain_array = cut_domain_array * self.domain_units
+        cut_measurements_array = cut_measurements_array * self.measurements_units
         self_copy = deepcopy(self)
         self_copy.__init__(
             cut_measurements_array,
@@ -470,6 +482,7 @@ class _signal:
             cut_domain_array[-1] - cut_domain_array[0],
             self.domain_resolution,
             self.measurements_units,
+            self.domain_units,
             self.space_units,
             self.method,
             self.label,
