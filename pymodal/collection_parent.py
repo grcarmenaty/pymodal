@@ -110,13 +110,14 @@ class _collection:
         ]
         with Pool(num_processes) as pool:
             pool.map(save_array, array_info)
-        self.file = h5py.File(self.path, "r")
+        self.file = h5py.File(self.path, "r+")
         self.measurements = list([self.file[f"{label}"] for label in self.label])
         self.collection_class = exp_list[0]
         for attribute in self.attributes:
             setattr(self.collection_class, attribute, None)
         
     def close(self, keep: bool = False):
+
         self.file.close()
         if not keep:
             self.path.unlink()
