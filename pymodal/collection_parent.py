@@ -105,17 +105,56 @@ class _collection:
         for attribute in attributes_to_match:
             setattr(self, attribute, getattr(exp_list[0], attribute))
         array_info = [
-            (array.magnitude, f"{self.label[i]}", self.path)
+            (array.magnitude, f"measurements/{self.label[i]}", self.path)
             for i, array in enumerate([exp.measurements for exp in exp_list])
         ]
         with Pool(num_processes) as pool:
             pool.map(save_array, array_info)
-        self.file = h5py.File(self.path, "r")
-        self.measurements = list([self.file[f"{label}"] for label in self.label])
-        self.collection_class = exp_list[0]
+        exp_list = exp_list[0]
+        self.file = h5py.File(self.path, "a")
+        self.measurements = list([self.file[f"measurements/{label}"] for label in self.label])
+        self.collection_class = exp_list
         for attribute in self.attributes:
+            self.file["measurements"].attrs[attribute] = getattr(exp_list, attribute)
             setattr(self.collection_class, attribute, None)
+        del exp_list
         
+    # def __getitem__(self, key: tuple[slice]):
+    #     self.file.close()
+    #     self_copy = deepcopy(self)  # Make a deepcopy of self to work on it.
+    #     # Make sure key is a list of slices. If it isn't, turn it into one.
+    #     self.label = 
+    #     self.file = h5py.File(self.path, "r")
+    #     self.measurements = list([self.file[f"measurements/{label}"] for label in self.label])
+    #     if type(key) is int:
+    #         key = slice(key, key + 1)
+    #     if type(key) is slice:
+    #         key = [key]
+    #     key = list(key)
+    #     for i, index in enumerate(key):
+    #         if type(index) is int:
+    #             key[i] = slice(index, index + 1)
+    #     # If only one key is provided, it is assumed to refer to an output selection,
+    #     # unless the system type is supposed to have only one input, in which case it
+    #     # will be assumed to refer to an input selection. If two keys are provided, the
+    #     # first one is assumed to refer to an output, the second to an input.
+    #     if len(key) == 1:
+    #         if self.method in ["SIMO", "MIMO"]:
+    #             self_copy.measurements = self.measurements[:, key[0], :]
+    #             self_copy.coordinates = self.coordinates[:, key[0]]
+    #             self_copy.orientations = self.orientations[:, key[0]]
+    #         elif self.method in ["MISO", "excitation"]:
+    #             self_copy.measurements = self.measurements[:, :, key[0]]
+    #             self_copy.coordinates = self.coordinates[:, key[0]]
+    #             self_copy.orientations = self.orientations[:, key[0]]
+    #     elif len(key) == 2:
+    #         self_copy.measurements = self.measurements[:, key[0], key[1]]
+    #         self_copy.coordinates = self.coordinates[:, key[0], key[1]]
+    #         self_copy.orientations = self.orientations[:, key[0], key[1]]
+    #     else:
+    #         raise ValueError("Too many keys provided.")
+    #     return self_copy
+    
     def close(self, keep: bool = False):
 
         self.file.close()
@@ -141,4 +180,5 @@ if __name__ == "__main__":
     test_object_2 = _signal(signal_2, domain_end=5)
     test_collection = _collection([test_object_0, test_object_1, test_object_2])
     print(test_collection.measurements)
+    print(list(test_collection.file["measurements"].attrs.items()))
     test_collection.close()

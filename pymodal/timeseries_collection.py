@@ -92,7 +92,7 @@ class timeseries_collection(_collection):
         for attribute in attributes_to_match:
             setattr(self, attribute, getattr(working_instance, attribute))
         self.file = h5py.File(self.path, "r")
-        self.measurements = list([self.file[f"{label}"] for label in self.label])
+        self.measurements = list([self.file[f"measurements/{label}"] for label in self.label])
 
     def change_sampling_rate(self, new_sampling_rate):
         vars = []
@@ -110,7 +110,7 @@ class timeseries_collection(_collection):
         for attribute in attributes_to_match:
             setattr(self, attribute, getattr(working_instance, attribute))
         self.file = h5py.File(self.path, "r")
-        self.measurements = list([self.file[f"{label}"] for label in self.label])
+        self.measurements = list([self.file[f"measurements/{label}"] for label in self.label])
 
 
 if __name__ == "__main__":
