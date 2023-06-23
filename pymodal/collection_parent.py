@@ -110,7 +110,7 @@ class _collection:
         ]
         with Pool(num_processes) as pool:
             pool.map(save_array, array_info)
-        self.file = h5py.File(self.path, "r+")
+        self.file = h5py.File(self.path, "r")
         self.measurements = list([self.file[f"{label}"] for label in self.label])
         self.collection_class = exp_list[0]
         for attribute in self.attributes:
@@ -140,5 +140,5 @@ if __name__ == "__main__":
     test_object_1 = _signal(signal_1, domain_end=5)
     test_object_2 = _signal(signal_2, domain_end=5)
     test_collection = _collection([test_object_0, test_object_1, test_object_2])
-    print(test_collection.collection_class.dof)
+    print(test_collection.measurements)
     test_collection.close()
