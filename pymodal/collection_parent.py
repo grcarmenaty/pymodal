@@ -120,41 +120,42 @@ class _collection:
             setattr(self.collection_class, attribute, None)
         del exp_list
         
-    # def __getitem__(self, key: tuple[slice]):
-    #     self.file.close()
-    #     self_copy = deepcopy(self)  # Make a deepcopy of self to work on it.
-    #     # Make sure key is a list of slices. If it isn't, turn it into one.
-    #     self.label = 
-    #     self.file = h5py.File(self.path, "r")
-    #     self.measurements = list([self.file[f"measurements/{label}"] for label in self.label])
-    #     if type(key) is int:
-    #         key = slice(key, key + 1)
-    #     if type(key) is slice:
-    #         key = [key]
-    #     key = list(key)
-    #     for i, index in enumerate(key):
-    #         if type(index) is int:
-    #             key[i] = slice(index, index + 1)
-    #     # If only one key is provided, it is assumed to refer to an output selection,
-    #     # unless the system type is supposed to have only one input, in which case it
-    #     # will be assumed to refer to an input selection. If two keys are provided, the
-    #     # first one is assumed to refer to an output, the second to an input.
-    #     if len(key) == 1:
-    #         if self.method in ["SIMO", "MIMO"]:
-    #             self_copy.measurements = self.measurements[:, key[0], :]
-    #             self_copy.coordinates = self.coordinates[:, key[0]]
-    #             self_copy.orientations = self.orientations[:, key[0]]
-    #         elif self.method in ["MISO", "excitation"]:
-    #             self_copy.measurements = self.measurements[:, :, key[0]]
-    #             self_copy.coordinates = self.coordinates[:, key[0]]
-    #             self_copy.orientations = self.orientations[:, key[0]]
-    #     elif len(key) == 2:
-    #         self_copy.measurements = self.measurements[:, key[0], key[1]]
-    #         self_copy.coordinates = self.coordinates[:, key[0], key[1]]
-    #         self_copy.orientations = self.orientations[:, key[0], key[1]]
-    #     else:
-    #         raise ValueError("Too many keys provided.")
-    #     return self_copy
+    def __getitem__(self, key: tuple[slice]):
+        # Make sure key is a list of slices. If it isn't, turn it into one.
+        self.label = self.file["measurements"].keys()
+        self.measurements = list([self.file[f"measurements/{label}"] for label in self.label])
+        if type(key) is str or type(key) is list[str]:
+            
+        if type(key) is int:
+            key = slice(key, key + 1)
+        if type(key) is slice:
+            key = [key]
+        key = list(key)
+        for i, index in enumerate(key):
+            if type(index) is int:
+                key[i] = slice(index, index + 1)
+        # If only one key is provided, it is assumed to refer to an output selection,
+        # unless the system type is supposed to have only one input, in which case it
+        # will be assumed to refer to an input selection. If two keys are provided, the
+        # first one is assumed to refer to an output, the second to an input.
+        if len(key) == 1:
+            if self.method in ["SIMO", "MIMO"]:
+                for i, measurement in enumerate(self.measurements):
+                    self.measurements[i] = measurement[:, key[0], :]
+                self.coordinates = self.coordinates[:, key[0]]
+                self.orientations = self.orientations[:, key[0]]
+            elif self.method in ["MISO", "excitation"]:
+                for i, measurement in enumerate(self.measurements):
+                    self.measurements[i] = measurement[:, :, key[0]]
+                self.coordinates = self.coordinates[:, key[0]]
+                self.orientations = self.orientations[:, key[0]]
+        elif len(key) == 2:
+            for i, measurement in enumerate(self.measurements):
+                self.measurements[i] = measurement[:, key[0], key[1]]
+            self.coordinates = self.coordinates[:, key[0], key[1]]
+            self.orientations = self.orientations[:, key[0], key[1]]
+        else:
+            raise ValueError("Too many keys provided.")
     
     def close(self, keep: bool = False):
 
