@@ -115,7 +115,8 @@ class _collection:
         self.measurements = list([self.file[f"measurements/{label}"] for label in self.label])
         self.collection_class = exp_list
         for attribute in self.attributes:
-            self.file["measurements"].attrs[attribute] = getattr(exp_list, attribute)
+            if attribute not in ["measurements", "label"]:
+                self.file["measurements"].attrs[attribute] = getattr(exp_list, attribute)
             setattr(self.collection_class, attribute, None)
         del exp_list
         

@@ -20,12 +20,12 @@ def change_time_span(var):
                 setattr(
                     working_instance,
                     attribute,
-                    f[collection.label[i]][()] * collection.measurements_units,
+                    f[f"measurements/{collection.label[i]}"][()] * collection.measurements_units,
                 )
         else:
             setattr(working_instance, attribute, getattr(collection, attribute))
     with h5py.File(collection.path, "a") as f:
-        del f[collection.label[i]]
+        del f[f"measurements/{collection.label[i]}"]
         with catch_warnings():
             filterwarnings(
                 "ignore",
@@ -35,7 +35,7 @@ def change_time_span(var):
             working_instance = working_instance.change_time_span(
                 new_min_time, new_max_time
             )
-            f[collection.label[i]] = working_instance.measurements
+            f[f"measurements/{collection.label[i]}"] = working_instance.measurements
     del working_instance.measurements
     return working_instance
 
@@ -51,12 +51,12 @@ def change_sampling_rate(var):
                 setattr(
                     working_instance,
                     attribute,
-                    f[collection.label[i]][()] * collection.measurements_units,
+                    f[f"measurements/{collection.label[i]}"][()] * collection.measurements_units,
                 )
         else:
             setattr(working_instance, attribute, getattr(collection, attribute))
     with h5py.File(collection.path, "a") as f:
-        del f[collection.label[i]]
+        del f[f"measurements/{collection.label[i]}"]
         with catch_warnings():
             filterwarnings(
                 "ignore",
@@ -64,7 +64,7 @@ def change_sampling_rate(var):
                 " to ndarray.",
             )
             working_instance = working_instance.change_sampling_rate(new_sampling_rate)
-            f[collection.label[i]] = working_instance.measurements
+            f[f"measurements/{collection.label[i]}"] = working_instance.measurements
     del working_instance.measurements
     return working_instance
 
@@ -89,10 +89,12 @@ class timeseries_collection(_collection):
         attributes_to_match = deepcopy(self.attributes)
         attributes_to_match.remove("measurements")
         attributes_to_match.remove("label")
-        for attribute in attributes_to_match:
-            setattr(self, attribute, getattr(working_instance, attribute))
-        self.file = h5py.File(self.path, "r")
+        self.file = h5py.File(self.path, "a")
         self.measurements = list([self.file[f"measurements/{label}"] for label in self.label])
+        for attribute in attributes_to_match:
+            self.file["measurements"].attrs[attribute] = getattr(working_instance, attribute)
+            setattr(self, attribute, getattr(working_instance, attribute))
+        del working_instance
 
     def change_sampling_rate(self, new_sampling_rate):
         vars = []
@@ -107,10 +109,12 @@ class timeseries_collection(_collection):
         attributes_to_match = deepcopy(self.attributes)
         attributes_to_match.remove("measurements")
         attributes_to_match.remove("label")
-        for attribute in attributes_to_match:
-            setattr(self, attribute, getattr(working_instance, attribute))
-        self.file = h5py.File(self.path, "r")
+        self.file = h5py.File(self.path, "a")
         self.measurements = list([self.file[f"measurements/{label}"] for label in self.label])
+        for attribute in attributes_to_match:
+            self.file["measurements"].attrs[attribute] = getattr(working_instance, attribute)
+            setattr(self, attribute, getattr(working_instance, attribute))
+        del working_instance
 
 
 if __name__ == "__main__":
