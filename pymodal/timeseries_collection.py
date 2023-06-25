@@ -20,7 +20,8 @@ def change_time_span(var):
                 setattr(
                     working_instance,
                     attribute,
-                    f[f"measurements/{collection.label[i]}"][()] * collection.measurements_units,
+                    f[f"measurements/{collection.label[i]}"][()]
+                    * collection.measurements_units,
                 )
         else:
             setattr(working_instance, attribute, getattr(collection, attribute))
@@ -51,7 +52,8 @@ def change_sampling_rate(var):
                 setattr(
                     working_instance,
                     attribute,
-                    f[f"measurements/{collection.label[i]}"][()] * collection.measurements_units,
+                    f[f"measurements/{collection.label[i]}"][()]
+                    * collection.measurements_units,
                 )
         else:
             setattr(working_instance, attribute, getattr(collection, attribute))
@@ -90,11 +92,16 @@ class timeseries_collection(_collection):
         attributes_to_match.remove("measurements")
         attributes_to_match.remove("label")
         self.file = h5py.File(self.path, "a")
-        self.measurements = list([self.file[f"measurements/{label}"] for label in self.label])
+        self.measurements = list(
+            [self.file[f"measurements/{label}"] for label in self.label]
+        )
         for attribute in attributes_to_match:
-            self.file["measurements"].attrs[attribute] = getattr(working_instance, attribute)
+            self.file["measurements"].attrs[attribute] = getattr(
+                working_instance, attribute
+            )
             setattr(self, attribute, getattr(working_instance, attribute))
         del working_instance
+        return self
 
     def change_sampling_rate(self, new_sampling_rate):
         vars = []
@@ -110,11 +117,16 @@ class timeseries_collection(_collection):
         attributes_to_match.remove("measurements")
         attributes_to_match.remove("label")
         self.file = h5py.File(self.path, "a")
-        self.measurements = list([self.file[f"measurements/{label}"] for label in self.label])
+        self.measurements = list(
+            [self.file[f"measurements/{label}"] for label in self.label]
+        )
         for attribute in attributes_to_match:
-            self.file["measurements"].attrs[attribute] = getattr(working_instance, attribute)
+            self.file["measurements"].attrs[attribute] = getattr(
+                working_instance, attribute
+            )
             setattr(self, attribute, getattr(working_instance, attribute))
         del working_instance
+        return self
 
 
 if __name__ == "__main__":
@@ -133,8 +145,9 @@ if __name__ == "__main__":
     test_object_2 = timeseries(signal_2, time_end=30)
     test_collection = timeseries_collection([test_object, test_object_1, test_object_2])
     print(test_collection.measurements)
-    test_collection.change_time_span(new_max_time=20)
-    print(test_collection.measurements)
-    test_collection.change_sampling_rate(new_sampling_rate=0.2)
-    print(test_collection.measurements)
+    print(test_collection.change_time_span(new_max_time=20).measurements)
+    print(test_collection.change_sampling_rate(new_sampling_rate=0.2).measurements)
+    print(test_collection[["Vibrational data", "Vibrational data_2"]].measurements)
+    print(test_collection[1:-1].measurements)
+    print(test_collection["Vibrational data"].measurements)
     test_collection.close()

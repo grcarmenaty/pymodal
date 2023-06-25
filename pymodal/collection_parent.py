@@ -37,10 +37,7 @@ def add_suffix(strings):
 def get_attributes(obj):
     attributes = []
     for name, value in inspect.getmembers(obj):
-        if (
-            not name.startswith("__")
-            and not inspect.ismethod(value)
-        ):
+        if not name.startswith("__") and not inspect.ismethod(value):
             attributes.append(name)
     return attributes
 
@@ -108,55 +105,92 @@ class _collection:
             (array.magnitude, f"measurements/{self.label[i]}", self.path)
             for i, array in enumerate([exp.measurements for exp in exp_list])
         ]
+        save_array(array_info[0])
         with Pool(num_processes) as pool:
-            pool.map(save_array, array_info)
+            pool.map(save_array, array_info[1:])
         exp_list = exp_list[0]
         self.file = h5py.File(self.path, "a")
-        self.measurements = list([self.file[f"measurements/{label}"] for label in self.label])
+        self.measurements = list(
+            [self.file[f"measurements/{label}"] for label in self.label]
+        )
         self.collection_class = exp_list
         for attribute in self.attributes:
             if attribute not in ["measurements", "label"]:
-                self.file["measurements"].attrs[attribute] = getattr(exp_list, attribute)
+                self.file["measurements"].attrs[attribute] = getattr(
+                    exp_list, attribute
+                )
             setattr(self.collection_class, attribute, None)
         del exp_list
-        
+
     def __getitem__(self, key: tuple[slice]):
-        # Make sure key is a list of slices. If it isn't, turn it into one.
-        self.label = self.file["measurements"].keys()
-        self.measurements = list([self.file[f"measurements/{label}"] for label in self.label])
-        if type(key) is str or type(key) is list[str]:
-            
-        if type(key) is int:
-            key = slice(key, key + 1)
-        if type(key) is slice:
+        if type(key) is str:
             key = [key]
-        key = list(key)
-        for i, index in enumerate(key):
-            if type(index) is int:
-                key[i] = slice(index, index + 1)
-        # If only one key is provided, it is assumed to refer to an output selection,
-        # unless the system type is supposed to have only one input, in which case it
-        # will be assumed to refer to an input selection. If two keys are provided, the
-        # first one is assumed to refer to an output, the second to an input.
-        if len(key) == 1:
-            if self.method in ["SIMO", "MIMO"]:
-                for i, measurement in enumerate(self.measurements):
-                    self.measurements[i] = measurement[:, key[0], :]
-                self.coordinates = self.coordinates[:, key[0]]
-                self.orientations = self.orientations[:, key[0]]
-            elif self.method in ["MISO", "excitation"]:
-                for i, measurement in enumerate(self.measurements):
-                    self.measurements[i] = measurement[:, :, key[0]]
-                self.coordinates = self.coordinates[:, key[0]]
-                self.orientations = self.orientations[:, key[0]]
-        elif len(key) == 2:
-            for i, measurement in enumerate(self.measurements):
-                self.measurements[i] = measurement[:, key[0], key[1]]
-            self.coordinates = self.coordinates[:, key[0], key[1]]
-            self.orientations = self.orientations[:, key[0], key[1]]
+        if type(key) is set or type(key) is list:
+            for label in self.label:
+                if label not in key:
+                    del self.file[f"measurements/{label}"]
+            self.label = list(key)
+            self.measurements = list(
+                [self.file[f"measurements/{label}"] for label in self.label]
+            )
         else:
-            raise ValueError("Too many keys provided.")
-    
+            if type(key) is int:
+                key = slice(key, key + 1)
+            if type(key) is slice:
+                key = [key]
+            key = list(key)
+            for i, index in enumerate(key):
+                if type(index) is int:
+                    key[i] = slice(index, index + 1)
+            # If only one key is provided, it is assumed to refer to an output selection,
+            # unless the system type is supposed to have only one input, in which case it
+            # will be assumed to refer to an input selection. If two keys are provided, the
+            # first one is assumed to refer to an output, the second to an input.
+            if len(key) == 1:
+                if self.method in ["SIMO"]:
+                    for i, measurement in enumerate(self.measurements):
+                        del self.file[f"measurements/{self.label[i]}"]
+                        self.file[f"measurements/{self.label[i]}"] = measurement[
+                            :, key[0], :
+                        ]
+                    self.coordinates = self.coordinates[:, key[0]]
+                    self.orientations = self.orientations[:, key[0]]
+                elif self.method in ["MIMO"]:
+                    for i, measurement in enumerate(self.measurements):
+                        del self.file[f"measurements/{self.label[i]}"]
+                        self.file[f"measurements/{self.label[i]}"] = measurement[
+                            :, key[0], :
+                        ]
+                    self.coordinates = self.coordinates[:, key[0], :]
+                    self.orientations = self.orientations[:, key[0], :]
+                elif self.method in ["MISO", "excitation"]:
+                    for i, measurement in enumerate(self.measurements):
+                        del self.file[f"measurements/{self.label[i]}"]
+                        self.file[f"measurements/{self.label[i]}"] = measurement[
+                            :, :, key[0]
+                        ]
+                    self.coordinates = self.coordinates[:, key[0]]
+                    self.orientations = self.orientations[:, key[0]]
+                self.measurements = list(
+                    [self.file[f"measurements/{label}"] for label in self.label]
+                )
+            elif len(key) == 2:
+                for i, measurement in enumerate(self.measurements):
+                    del self.file[f"measurements/{self.label[i]}"]
+                    self.file[f"measurements/{self.label[i]}"] = measurement[
+                        :, key[0], key[1]
+                    ]
+                self.coordinates = self.coordinates[:, key[0], key[1]]
+                self.orientations = self.orientations[:, key[0], key[1]]
+                self.measurements = list(
+                    [self.file[f"measurements/{label}"] for label in self.label]
+                )
+            else:
+                raise ValueError("Too many keys provided.")
+            self.file["measurements"].attrs["coordinates"] = self.coordinates
+            self.file["measurements"].attrs["orientations"] = self.orientations
+        return self
+
     def close(self, keep: bool = False):
 
         self.file.close()
@@ -183,4 +217,7 @@ if __name__ == "__main__":
     test_collection = _collection([test_object_0, test_object_1, test_object_2])
     print(test_collection.measurements)
     print(list(test_collection.file["measurements"].attrs.items()))
+    print(test_collection[["Vibrational data", "Vibrational data_2"]].measurements)
+    print(test_collection[1:-1].measurements)
+    print(test_collection["Vibrational data"].measurements)
     test_collection.close()
