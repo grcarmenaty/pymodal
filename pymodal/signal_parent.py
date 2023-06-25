@@ -182,7 +182,7 @@ class _signal:
         ).T
         # Assign space units to coordinates.
         if space_units is None:
-                space_units = ureg.parse_expression("millimeter")
+            space_units = ureg.parse_expression("millimeter")
         elif type(space_units) is str:
             space_units = ureg.parse_expression(space_units)
         self.space_units = space_units
@@ -221,10 +221,26 @@ class _signal:
         self.samples = self.measurements.shape[0]
         # Make sure domain parameters are coherent, calculate the missing domain
         # parameters
-        self.domain_start = domain_start.magnitude if type(domain_start) == type(measurements) else domain_start
-        self.domain_end = domain_end.magnitude if type(domain_end) == type(measurements) else domain_end
-        self.domain_span = domain_span.magnitude if type(domain_span) == type(measurements) else domain_span
-        self.domain_resolution = domain_resolution.magnitude if type(domain_resolution) == type(measurements) else domain_resolution
+        self.domain_start = (
+            domain_start.magnitude
+            if type(domain_start) == type(measurements)
+            else domain_start
+        )
+        self.domain_end = (
+            domain_end.magnitude
+            if type(domain_end) == type(measurements)
+            else domain_end
+        )
+        self.domain_span = (
+            domain_span.magnitude
+            if type(domain_span) == type(measurements)
+            else domain_span
+        )
+        self.domain_resolution = (
+            domain_resolution.magnitude
+            if type(domain_resolution) == type(measurements)
+            else domain_resolution
+        )
         if self.domain_span is None:
             if self.domain_end is None:  # max, span are None, rate is defined
                 if self.domain_resolution is None:
@@ -303,7 +319,7 @@ class _signal:
             self.domain_resolution, np.average(np.diff(self.domain_array, axis=0))
         )
         if domain_units is None:
-                domain_units = ureg.parse_expression("seconds")
+            domain_units = ureg.parse_expression("seconds")
         elif type(domain_units) is str:
             domain_units = ureg.parse_expression(domain_units)
         self.domain_units = domain_units
@@ -383,10 +399,14 @@ class _signal:
         # will be assumed to refer to an input selection. If two keys are provided, the
         # first one is assumed to refer to an output, the second to an input.
         if len(key) == 1:
-            if self.method in ["SIMO", "MIMO"]:
+            if self.method in ["SIMO"]:
                 self_copy.measurements = self.measurements[:, key[0], :]
                 self_copy.coordinates = self.coordinates[:, key[0]]
                 self_copy.orientations = self.orientations[:, key[0]]
+            elif self.method in ["MIMO"]:
+                self_copy.measurements = self.measurements[:, key[0], :]
+                self_copy.coordinates = self.coordinates[:, key[0], :]
+                self_copy.orientations = self.orientations[:, key[0], :]
             elif self.method in ["MISO", "excitation"]:
                 self_copy.measurements = self.measurements[:, :, key[0]]
                 self_copy.coordinates = self.coordinates[:, key[0]]
@@ -492,7 +512,7 @@ class _signal:
             np.average(np.diff(self_copy.domain_array, axis=0)),
         )
         return self_copy
-    
+
     def plot(
         self,
         ax: plt.Axes = None,
@@ -516,7 +536,9 @@ class _signal:
         log: bool = False,
     ):
         title = self.label if title is None else title
-        ylabel = f"Amplitude ({self.measurements_units.u:~P})" if ylabel is None else ylabel
+        ylabel = (
+            f"Amplitude ({self.measurements_units.u:~P})" if ylabel is None else ylabel
+        )
         if ax is None:
             img, ax = plt.subplots()
         ax.yaxis.set_units(self.measurements_units)
