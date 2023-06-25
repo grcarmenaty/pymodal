@@ -145,7 +145,13 @@ class _signal:
                 (np.zeros((self.dof, 2)).T, np.ones(self.dof).T)
             ).T
         elif coordinates is None:
-            self.orientations = np.asarray(orientations)
+            with catch_warnings():
+                filterwarnings(
+                    "ignore",
+                    message="The unit of the quantity is stripped when downcasting"
+                    " to ndarray.",
+                )
+                self.orientations = np.asarray(orientations)
             warn(
                 "Coordinates will be assumed to be points spaced one distance unit"
                 " along the x axis.",
@@ -155,7 +161,13 @@ class _signal:
                 (np.arange(self.dof).T, np.zeros((self.dof, 2))).T
             ).T
         elif orientations is None:
-            self.coordinates = np.asarray(coordinates)
+            with catch_warnings():
+                filterwarnings(
+                    "ignore",
+                    message="The unit of the quantity is stripped when downcasting"
+                    " to ndarray.",
+                )
+                self.coordinates = np.asarray(coordinates)
             warn(
                 "Coordinates will be assumed to be points spaced one distance unit"
                 " along the x axis.",
@@ -165,17 +177,20 @@ class _signal:
                 (np.arange(self.dof).T, np.zeros((self.dof, 2)).T).T
             )
         else:
-            if isinstance(coordinates, type(self.measurements)):
-                with catch_warnings():
-                    filterwarnings(
-                        "ignore",
-                        message="The unit of the quantity is stripped when downcasting"
-                        " to ndarray.",
-                    )
-                    self.coordinates = np.asarray(coordinates)
-            else:
+            with catch_warnings():
+                filterwarnings(
+                    "ignore",
+                    message="The unit of the quantity is stripped when downcasting"
+                    " to ndarray.",
+                )
                 self.coordinates = np.asarray(coordinates)
-            self.orientations = np.asarray(orientations)
+            with catch_warnings():
+                filterwarnings(
+                    "ignore",
+                    message="The unit of the quantity is stripped when downcasting"
+                    " to ndarray.",
+                )
+                self.orientations = np.asarray(orientations)
         # Normalize orientations
         self.orientations = (
             self.orientations.T / np.linalg.norm(self.orientations, axis=1)
@@ -305,6 +320,15 @@ class _signal:
                                     "The temporal domain parameters introduced are"
                                     " inconsistent."
                                 )
+        for attribute in [
+            "domain_end",
+            "domain_start",
+            "domain_span",
+            "domain_resolution",
+        ]:
+            current_value = getattr(self, attribute)
+            if str(type(current_value)) == "<class 'pint.util.Quantity'>":
+                setattr(self, attribute, current_value.magnitude)
         # Build the domain array and make sure it is coherent with the measurements.
         self.domain_array = np.arange(
             self.domain_start,
@@ -323,11 +347,11 @@ class _signal:
         elif type(domain_units) is str:
             domain_units = ureg.parse_expression(domain_units)
         self.domain_units = domain_units
-        self.domain_array = self.domain_array * self.domain_units
         self.domain_end = self.domain_end * self.domain_units
         self.domain_start = self.domain_start * self.domain_units
         self.domain_span = self.domain_span * self.domain_units
         self.domain_resolution = self.domain_resolution * self.domain_units
+        self.domain_array = self.domain_array * self.domain_units
 
     def __len__(self):
         """This method describes what happens when len(_signal class object) is invoked.
@@ -401,12 +425,12 @@ class _signal:
         if len(key) == 1:
             if self.method in ["SIMO"]:
                 self_copy.measurements = self.measurements[:, key[0], :]
-                self_copy.coordinates = self.coordinates[:, key[0]]
-                self_copy.orientations = self.orientations[:, key[0]]
+                self_copy.coordinates = self.coordinates[key[0], :]
+                self_copy.orientations = self.orientations[key[0], :]
             elif self.method in ["MIMO"]:
                 self_copy.measurements = self.measurements[:, key[0], :]
-                self_copy.coordinates = self.coordinates[:, key[0], :]
-                self_copy.orientations = self.orientations[:, key[0], :]
+                self_copy.coordinates = self.coordinates[key[0], :, :]
+                self_copy.orientations = self.orientations[key[0], :, :]
             elif self.method in ["MISO", "excitation"]:
                 self_copy.measurements = self.measurements[:, :, key[0]]
                 self_copy.coordinates = self.coordinates[:, key[0]]
@@ -417,6 +441,7 @@ class _signal:
             self_copy.orientations = self.orientations[:, key[0], key[1]]
         else:
             raise ValueError("Too many keys provided.")
+        self.dof = max(self.measurements.shape[1], self.measurements.shape[2])
         return self_copy
 
     def change_domain_resolution(self, new_resolution: Quantity):
@@ -453,8 +478,8 @@ class _signal:
             new_domain_array[-1] - new_domain_array[0],
             new_resolution,
             self.measurements_units,
-            self.space_units,
             self.domain_units,
+            self.space_units,
             self.method,
             self.label,
         )

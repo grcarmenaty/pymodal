@@ -3,7 +3,7 @@ from typing import Optional
 import numpy.typing as npt
 from pymodal import _signal, frf, timeseries
 from pyFRF import FRF
-from pint import UnitRegistry
+from pint import UnitRegistry, set_application_registry
 from matplotlib import pyplot as plt
 from warnings import warn, catch_warnings, filterwarnings
 
@@ -193,7 +193,7 @@ class timeseries(_signal):
     def to_FRF(
         self,
         excitation: timeseries,
-        type: str = "H1",
+        FRF_type: str = "H1",
         resp_delay: int = 0,
     ):
         """Computes the FRF from the measured data and an excitation, which must be
@@ -204,7 +204,7 @@ class timeseries(_signal):
         excitation : timeseries
             A timeseries time object containing the excitation data for the output
             stored within this instance of the timeseries class.
-        type : str, optional
+        FRF_type : str, optional
             The FRF estimator to be used, possible values are: "H1", "H2", "Hv",
             "vector", "ODS", by default "H1".
         resp_delay : int, optional
@@ -271,7 +271,7 @@ class timeseries(_signal):
                             resp_window="None",
                             resp_delay=resp_delay,
                             noverlap=0,
-                        ).get_FRF(type=type, form=form)
+                        ).get_FRF(type=FRF_type, form=form)
                     )
                 frf_amp = np.array(frf_amp).reshape((-1, self.dof, 1))
             elif self.method == "MISO":
@@ -292,7 +292,7 @@ class timeseries(_signal):
                             resp_type=resp_type,
                             exc_window="None",
                             resp_window="None",
-                        ).get_FRF(type=type, form=form)
+                        ).get_FRF(type=FRF_type, form=form)
                     )
                 frf_amp = np.array(frf_amp).reshape((-1, 1, self.dof))
             elif self.method == "MIMO":
@@ -315,10 +315,14 @@ class timeseries(_signal):
                                 resp_type=resp_type,
                                 exc_window="None",
                                 resp_window="None",
-                            ).get_FRF(type=type, form=form)
+                            ).get_FRF(type=FRF_type, form=form)
                         )
                     outer_frf_amp.append(np.array(inner_frf))
                 frf_amp = np.array(outer_frf_amp).reshape((-1, self.dof, self.dof))
+        excitation_units = ureg.parse_expression(str(excitation.measurements_units))
+        measurements_units = ureg.parse_expression(str(self.measurements_units))
+        from pymodal import frf
+
         return frf(
             measurements=frf_amp,
             coordinates=self.coordinates,
@@ -328,7 +332,7 @@ class timeseries(_signal):
             freq_end=1 / (2 * self.sampling_rate),
             freq_span=1 / (2 * self.sampling_rate),
             freq_resolution=1 / self.time_span,
-            measurements_units=self.measurements_units / excitation.measurements_units,
+            measurements_units=measurements_units / excitation_units,
             space_units=self.space_units,
             method=self.method,
         )

@@ -84,11 +84,11 @@ class frf_collection(_collection):
         self.file.close()
         del self.file
         del self.measurements
-        # for var in vars:
-        #     change_freq_span(var)
-        with Pool(num_processes) as pool:
-            working_instance = pool.map(change_freq_span, vars)
-        working_instance = working_instance[0]
+        for var in vars:
+            working_instance = change_freq_span(var)
+        # with Pool(num_processes) as pool:
+        #     working_instance = pool.map(change_freq_span, vars)
+        # working_instance = working_instance[0]
         attributes_to_match = deepcopy(self.attributes)
         attributes_to_match.remove("measurements")
         attributes_to_match.remove("label")
@@ -111,9 +111,11 @@ class frf_collection(_collection):
         self.file.close()
         del self.file
         del self.measurements
-        with Pool(num_processes) as pool:
-            working_instance = pool.map(change_freq_resolution, vars)
-        working_instance = working_instance[0]
+        for var in vars:
+            working_instance = change_freq_resolution(var)
+        # with Pool(num_processes) as pool:
+        #     working_instance = pool.map(change_freq_resolution, vars)
+        # working_instance = working_instance[0]
         attributes_to_match = deepcopy(self.attributes)
         attributes_to_match.remove("measurements")
         attributes_to_match.remove("label")
@@ -130,26 +132,27 @@ class frf_collection(_collection):
         return self
 
     def plot(
-            self,
-            ax: plt.Axes = None,
-            fontname: str = "DejaVu Serif",
-            fontsize: float = 12,
-            title: str = None,
-            title_size: float = 12,
-            major_y_locator: int = 4,
-            minor_y_locator: int = 4,
-            major_x_locator: int = 4,
-            minor_x_locator: int = 4,
-            color=plt.cm.rainbow,
-            linestyle: str = "-",
-            ylabel: str = None,
-            xlabel: str = None,
-            decimals_y: int = 2,
-            decimals_x: int = 2,
-            bottom_ylim: float = None,
-            top_ylim: float = None,
-            grid: bool = True,
-        ):
+        self,
+        format: str = "mod",
+        ax: plt.Axes = None,
+        fontname: str = "DejaVu Serif",
+        fontsize: float = 12,
+        title: str = None,
+        title_size: float = 12,
+        major_y_locator: int = 4,
+        minor_y_locator: int = 4,
+        major_x_locator: int = 4,
+        minor_x_locator: int = 4,
+        color=plt.cm.rainbow,
+        linestyle: str = "-",
+        ylabel: str = None,
+        xlabel: str = None,
+        decimals_y: int = 2,
+        decimals_x: int = 2,
+        bottom_ylim: float = None,
+        top_ylim: float = None,
+        grid: bool = True,
+    ):
         color = iter(color(np.linspace(0, 1, len(self))))
         working_instance = deepcopy(self.collection_class)
         for attribute in self.attributes:
@@ -249,8 +252,8 @@ if __name__ == "__main__":
     signal = np.vstack((signal, np.sin(4 * time)))
     signal = np.vstack((signal, np.sin(5 * time)))
     signal = signal.reshape((time.shape[0], -1))
-    signal_1 = signal*2
-    signal_2 = signal*4
+    signal_1 = signal * 2
+    signal_2 = signal * 4
     signal = signal.reshape((time.shape[0], -1))
     signal = np.fft.fft(signal, axis=0)
     test_object = frf(signal, freq_end=5)
