@@ -7,6 +7,8 @@ import pint
 import os
 import inspect
 from copy import deepcopy
+from warnings import warn, catch_warnings, filterwarnings
+
 
 os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 
@@ -14,7 +16,9 @@ os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 def save_array(array_info):
     array, dataset_name, file_name = array_info
     with h5py.File(file_name, "a") as hf:
-        hf.create_dataset(dataset_name, data=array)
+        if dataset_name in hf:
+            del hf[dataset_name]
+        hf[dataset_name] = array
 
 
 def add_suffix(strings):
@@ -22,10 +26,15 @@ def add_suffix(strings):
     result = []
 
     for string in strings:
-        if string in counter:
-            count = counter[string]
-            new_string = f"{string}_{count}"
-            counter[string] += 1
+        flag = string in counter
+        if flag:
+            while flag:
+                count = counter[string]
+                new_string = f"{string}_{count}"
+                counter[string] += 1
+                flag = new_string in counter
+                if flag:
+                    counter[string] += 1
             result.append(new_string)
         else:
             counter[string] = 1
@@ -70,15 +79,17 @@ def worker(pair):
 def parallel_attributes_match(instances, attributes_to_match):
     first_instance = instances[0]
     remaining_instances = instances[1:]
-
-    with Pool(num_processes) as pool:
-        results = pool.map(
-            worker,
-            [
-                (first_instance, instance, attributes_to_match)
-                for instance in remaining_instances
-            ],
-        )
+    results = []
+    for instance in remaining_instances:
+        results.append(worker((first_instance, instance, attributes_to_match)))
+    # with Pool(num_processes) as pool:
+    #     results = pool.map(
+    #         worker,
+    #         [
+    #             (first_instance, instance, attributes_to_match)
+    #             for instance in remaining_instances
+    #         ],
+    #     )
 
     if np.all(results):
         return True
@@ -116,17 +127,23 @@ class _collection:
             [self.file[f"measurements/{label}"] for label in self.label]
         )
         self.collection_class = exp_list
-        for attribute in self.attributes:
-            if attribute not in ["measurements", "label"]:
-                self.file["measurements"].attrs[attribute] = getattr(
-                    exp_list, attribute
-                )
-            setattr(self.collection_class, attribute, None)
+        with catch_warnings():
+            filterwarnings(
+                "ignore",
+                message="The unit of the quantity is stripped when downcasting"
+                " to ndarray.",
+            )
+            for attribute in self.attributes:
+                if attribute not in ["measurements", "label"]:
+                    self.file["measurements"].attrs[attribute] = getattr(
+                        exp_list, attribute
+                    )
+                setattr(self.collection_class, attribute, None)
         del exp_list
 
     def __len__(self):
         return len(self.label)
-    
+
     def __getitem__(self, key: tuple[slice]):
         if type(key) is str:
             key = [key]
@@ -158,16 +175,16 @@ class _collection:
                         self.file[f"measurements/{self.label[i]}"] = measurement[
                             :, key[0], :
                         ]
-                    self.coordinates = self.coordinates[:, key[0]]
-                    self.orientations = self.orientations[:, key[0]]
+                    self.coordinates = self.coordinates[key[0], :]
+                    self.orientations = self.orientations[key[0], :]
                 elif self.method in ["MIMO"]:
                     for i, measurement in enumerate(self.measurements):
                         del self.file[f"measurements/{self.label[i]}"]
                         self.file[f"measurements/{self.label[i]}"] = measurement[
                             :, key[0], :
                         ]
-                    self.coordinates = self.coordinates[:, key[0], :]
-                    self.orientations = self.orientations[:, key[0], :]
+                    self.coordinates = self.coordinates[key[0], :, :]
+                    self.orientations = self.orientations[key[0], :, :]
                 elif self.method in ["MISO", "excitation"]:
                     for i, measurement in enumerate(self.measurements):
                         del self.file[f"measurements/{self.label[i]}"]
@@ -192,6 +209,8 @@ class _collection:
                 )
             else:
                 raise ValueError("Too many keys provided.")
+            self.dof = max(self.measurements[0].shape[1], self.measurements[0].shape[2])
+            self.file["measurements"].attrs["dof"] = self.dof
             self.file["measurements"].attrs["coordinates"] = self.coordinates
             self.file["measurements"].attrs["orientations"] = self.orientations
         return self
@@ -201,6 +220,17 @@ class _collection:
         self.file.close()
         if not keep:
             self.path.unlink()
+
+    def append(self, signal: _signal):
+        attributes_to_match = deepcopy(self.attributes)
+        attributes_to_match.remove("measurements")
+        attributes_to_match.remove("label")
+        assert attributes_match(self, signal, attributes_to_match)
+        self.label.append(signal.label)
+        self.label = add_suffix(self.label)
+        self.file[f"measurements/{self.label[-1]}"] = signal.measurements
+        self.measurements.append(self.file[f"measurements/{self.label[-1]}"])
+        return self
 
 
 if __name__ == "__main__":
@@ -214,15 +244,18 @@ if __name__ == "__main__":
     signal = np.vstack((signal, np.sin(5 * time)))
     signal = signal.reshape((time.shape[0], -1))
     signal = np.fft.fft(signal, axis=0)
-    signal_1 = signal + 1
-    signal_2 = signal + 2
+    signal_1 = signal * 2
+    signal_2 = signal * 4
+    signal_3 = signal * 6
     test_object_0 = _signal(signal, domain_end=5)
     test_object_1 = _signal(signal_1, domain_end=5)
     test_object_2 = _signal(signal_2, domain_end=5)
+    test_object_3 = _signal(signal_2, domain_end=5)
     test_collection = _collection([test_object_0, test_object_1, test_object_2])
     print(test_collection.measurements)
+    print(test_collection.append(test_object_3).measurements)
     print(list(test_collection.file["measurements"].attrs.items()))
-    print(test_collection[["Vibrational data", "Vibrational data_2"]].measurements)
+    print(test_collection[["Vibrational data", "Vibrational data_3"]].measurements)
     print(test_collection[1:-1].measurements)
     print(test_collection["Vibrational data"].measurements)
     test_collection.close()
