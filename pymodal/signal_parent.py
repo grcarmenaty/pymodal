@@ -540,9 +540,9 @@ class _signal:
             f"Amplitude ({self.measurements_units.u:~P})" if ylabel is None else ylabel
         )
         if ax is None:
-            img, ax = plt.subplots()
+            ax, img = plt.subplots()
         ax.yaxis.set_units(self.measurements_units)
-        img, ax = lineplot(
+        ax, img = lineplot(
             y=np.reshape(self.measurements, (len(self), -1)),
             x=self.domain_array,
             ax=ax,
@@ -565,4 +565,4 @@ class _signal:
             grid=grid,
             log=log,
         )
-        return img, ax
+        return ax, img

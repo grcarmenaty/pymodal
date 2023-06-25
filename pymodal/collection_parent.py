@@ -105,9 +105,11 @@ class _collection:
             (array.magnitude, f"measurements/{self.label[i]}", self.path)
             for i, array in enumerate([exp.measurements for exp in exp_list])
         ]
-        save_array(array_info[0])
-        with Pool(num_processes) as pool:
-            pool.map(save_array, array_info[1:])
+        # save_array(array_info[0])
+        # with Pool(num_processes) as pool:
+        #     pool.map(save_array, array_info[1:])
+        for array in array_info:
+            save_array(array)
         exp_list = exp_list[0]
         self.file = h5py.File(self.path, "a")
         self.measurements = list(

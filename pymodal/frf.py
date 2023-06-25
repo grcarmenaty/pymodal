@@ -188,7 +188,7 @@ class frf(_signal):
                     if ylabel is None
                     else ylabel
                 )
-            img, ax = super().plot(
+            ax, img = super().plot(
                 ax=ax,
                 fontname=fontname,
                 fontsize=fontsize,
@@ -213,7 +213,7 @@ class frf(_signal):
             self.measurements = np.angle(measurements_backup.m)
             if ax is None:
                 fig, ax = plt.subplots()
-            img, ax = super().plot(
+            ax, img = super().plot(
                 ax=ax,
                 fontname=fontname,
                 fontsize=fontsize,
@@ -268,7 +268,7 @@ class frf(_signal):
                 fig, ax = plt.subplots(2, 1)
             else:
                 assert len(ax) == 2
-            img, ax1 = super().plot(
+            ax1, img = super().plot(
                 ax=ax[0],
                 fontname=fontname,
                 fontsize=fontsize,
@@ -291,7 +291,7 @@ class frf(_signal):
             )
             ax1.set_xticklabels([])
             self.measurements = np.angle(measurements_backup.m)
-            img, ax2 = super().plot(
+            ax2, img = super().plot(
                 ax=ax[1],
                 fontname=fontname,
                 fontsize=fontsize,
@@ -347,7 +347,7 @@ class frf(_signal):
                 fig, ax = plt.subplots(2, 1)
             else:
                 assert len(ax) == 2
-            img, ax1 = super().plot(
+            ax1, img = super().plot(
                 ax=ax[0],
                 fontname=fontname,
                 fontsize=fontsize,
@@ -370,7 +370,7 @@ class frf(_signal):
             )
             ax1.set_xticklabels([])
             self.measurements = measurements_backup.imag
-            img, ax2 = super().plot(
+            ax2, img = super().plot(
                 ax=ax[1],
                 fontname=fontname,
                 fontsize=fontsize,
@@ -394,7 +394,7 @@ class frf(_signal):
             ax = [ax1, ax2]
         self.measurements = measurements_backup
         del measurements_backup
-        return img, ax
+        return ax, img
 
 
 if __name__ == "__main__":
