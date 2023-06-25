@@ -124,6 +124,9 @@ class _collection:
             setattr(self.collection_class, attribute, None)
         del exp_list
 
+    def __len__(self):
+        return len(self.label)
+    
     def __getitem__(self, key: tuple[slice]):
         if type(key) is str:
             key = [key]

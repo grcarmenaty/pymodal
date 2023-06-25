@@ -79,7 +79,7 @@ class timeseries_collection(_collection):
 
     def change_time_span(self, new_min_time=None, new_max_time=None):
         vars = []
-        for i in range(len(self.measurements)):
+        for i in range(len(self)):
             vars.append((self, i, new_min_time, new_max_time))
         self.file.close()
         del self.file
@@ -106,7 +106,7 @@ class timeseries_collection(_collection):
 
     def change_sampling_rate(self, new_sampling_rate):
         vars = []
-        for i in range(len(self.measurements)):
+        for i in range(len(self)):
             vars.append((self, i, new_sampling_rate))
         self.file.close()
         del self.file
@@ -150,7 +150,7 @@ class timeseries_collection(_collection):
             top_ylim: float = None,
             grid: bool = True,
         ):
-        color = iter(color(np.linspace(0, 1, len(self.label))))
+        color = iter(color(np.linspace(0, 1, len(self))))
         working_instance = deepcopy(self.collection_class)
         for attribute in self.attributes:
             if attribute == "label":
