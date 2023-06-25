@@ -1,4 +1,4 @@
-from pymodal import _collection, timeseries
+from pymodal import _collection, timeseries, frf_collection, timeseries_collection
 from pathlib import Path
 import numpy as np
 from copy import deepcopy
@@ -6,6 +6,7 @@ from multiprocessing import Pool, cpu_count
 import h5py
 from warnings import warn, catch_warnings, filterwarnings
 import matplotlib.pyplot as plt
+from typing import Optional
 
 num_processes = cpu_count()
 
@@ -84,11 +85,11 @@ class timeseries_collection(_collection):
         self.file.close()
         del self.file
         del self.measurements
-        # for var in vars:
-        #     change_time_span(var)
-        with Pool(num_processes) as pool:
-            working_instance = pool.map(change_time_span, vars)
-        working_instance = working_instance[0]
+        for var in vars:
+            working_instance = change_time_span(var)
+        # with Pool(num_processes) as pool:
+        #     working_instance = pool.map(change_time_span, vars)
+        # working_instance = working_instance[0]
         attributes_to_match = deepcopy(self.attributes)
         attributes_to_match.remove("measurements")
         attributes_to_match.remove("label")
@@ -111,9 +112,11 @@ class timeseries_collection(_collection):
         self.file.close()
         del self.file
         del self.measurements
-        with Pool(num_processes) as pool:
-            working_instance = pool.map(change_sampling_rate, vars)
-        working_instance = working_instance[0]
+        for var in vars:
+            working_instance = change_sampling_rate(var)
+        # with Pool(num_processes) as pool:
+        #     working_instance = pool.map(change_sampling_rate, vars)
+        # working_instance = working_instance[0]
         attributes_to_match = deepcopy(self.attributes)
         attributes_to_match.remove("measurements")
         attributes_to_match.remove("label")
@@ -130,26 +133,26 @@ class timeseries_collection(_collection):
         return self
 
     def plot(
-            self,
-            ax: plt.Axes = None,
-            fontname: str = "DejaVu Serif",
-            fontsize: float = 12,
-            title: str = None,
-            title_size: float = 12,
-            major_y_locator: int = 4,
-            minor_y_locator: int = 4,
-            major_x_locator: int = 4,
-            minor_x_locator: int = 4,
-            color=plt.cm.rainbow,
-            linestyle: str = "-",
-            ylabel: str = None,
-            xlabel: str = None,
-            decimals_y: int = 2,
-            decimals_x: int = 2,
-            bottom_ylim: float = None,
-            top_ylim: float = None,
-            grid: bool = True,
-        ):
+        self,
+        ax: plt.Axes = None,
+        fontname: str = "DejaVu Serif",
+        fontsize: float = 12,
+        title: str = None,
+        title_size: float = 12,
+        major_y_locator: int = 4,
+        minor_y_locator: int = 4,
+        major_x_locator: int = 4,
+        minor_x_locator: int = 4,
+        color=plt.cm.rainbow,
+        linestyle: str = "-",
+        ylabel: str = None,
+        xlabel: str = None,
+        decimals_y: int = 2,
+        decimals_x: int = 2,
+        bottom_ylim: float = None,
+        top_ylim: float = None,
+        grid: bool = True,
+    ):
         color = iter(color(np.linspace(0, 1, len(self))))
         working_instance = deepcopy(self.collection_class)
         for attribute in self.attributes:
@@ -229,6 +232,89 @@ class timeseries_collection(_collection):
                     old_top_ylim = new_top_ylim
         return ax, img
 
+    def to_FRF(
+        self,
+        excitation: timeseries_collection,
+        FRF_type: str = "H1",
+        resp_delay: int = 0,
+        new_path: Optional[Path] = None,
+    ):
+        if new_path is None:
+            new_path = self.path.parent / f"{self.path.stem}_frf.h5"
+        working_instance = deepcopy(self.collection_class)
+        for attribute in self.attributes:
+            if attribute == "label":
+                setattr(working_instance, attribute, self.label[0])
+            elif attribute == "measurements":
+                setattr(
+                    working_instance,
+                    attribute,
+                    self.measurements[0][()] * self.measurements_units,
+                )
+            else:
+                setattr(working_instance, attribute, getattr(self, attribute))
+        working_excitation = deepcopy(excitation.collection_class)
+        for attribute in excitation.attributes:
+            if attribute == "label":
+                setattr(working_excitation, attribute, excitation.label[0])
+            elif attribute == "measurements":
+                setattr(
+                    working_excitation,
+                    attribute,
+                    excitation.measurements[0][()] * excitation.measurements_units,
+                )
+            else:
+                setattr(working_excitation, attribute, getattr(excitation, attribute))
+        frf_collection_instance = frf_collection(
+            [
+                working_instance.to_FRF(
+                    excitation=working_excitation,
+                    FRF_type=FRF_type,
+                    resp_delay=resp_delay,
+                )
+            ],
+            new_path,
+        )
+        for i, label in enumerate(self.label):
+            if i > 0:
+                working_instance = deepcopy(self.collection_class)
+                for attribute in self.attributes:
+                    if attribute == "label":
+                        setattr(working_instance, attribute, label)
+                    elif attribute == "measurements":
+                        setattr(
+                            working_instance,
+                            attribute,
+                            self.measurements[i][()] * self.measurements_units,
+                        )
+                    else:
+                        setattr(working_instance, attribute, getattr(self, attribute))
+                working_excitation = deepcopy(excitation.collection_class)
+                for attribute in excitation.attributes:
+                    if attribute == "label":
+                        setattr(working_excitation, attribute, excitation.label[i])
+                    elif attribute == "measurements":
+                        setattr(
+                            working_excitation,
+                            attribute,
+                            excitation.measurements[i][()]
+                            * excitation.measurements_units,
+                        )
+                    else:
+                        setattr(
+                            working_excitation,
+                            attribute,
+                            getattr(excitation, attribute),
+                        )
+                frf_collection_instance.append(
+                    working_instance.to_FRF(
+                        excitation=working_excitation,
+                        FRF_type=FRF_type,
+                        resp_delay=resp_delay,
+                    )
+                )
+        return frf_collection_instance
+
 
 if __name__ == "__main__":
 
@@ -239,18 +325,33 @@ if __name__ == "__main__":
     signal = np.vstack((signal, np.sin(4 * time)))
     signal = np.vstack((signal, np.sin(5 * time)))
     signal = signal.reshape((time.shape[0], -1))
-    signal_1 = signal + 1
-    signal_2 = signal + 2
+    signal_1 = signal * 2
+    signal_2 = signal * 4
+    signal_3 = signal * 6
     test_object = timeseries(signal, time_end=30)
     test_object_1 = timeseries(signal_1, time_end=30)
     test_object_2 = timeseries(signal_2, time_end=30)
+    test_object_3 = timeseries(signal_3, time_end=30)
     test_collection = timeseries_collection([test_object, test_object_1, test_object_2])
     print(test_collection.measurements)
     test_collection.plot()
     plt.show()
+    excitation_test = timeseries(np.sin(1 * time), time_end=30, method="excitation")
+    excitation_test = timeseries_collection(
+        [excitation_test, excitation_test, excitation_test], path="test_exc.h5"
+    )
+    frf_test = test_collection.to_FRF(excitation_test)
+    frf_test.plot(format="mod-phase")
+    plt.show()
+    print(test_collection.append(test_object_3).measurements)
     print(test_collection.change_time_span(new_max_time=20).measurements)
     print(test_collection.change_sampling_rate(new_sampling_rate=0.2).measurements)
-    print(test_collection[["Vibrational data", "Vibrational data_2"]].measurements)
+    print(
+        test_collection[
+            ["Vibrational data", "Vibrational data_1", "Vibrational data_2"]
+        ].measurements
+    )
     print(test_collection[1:-1].measurements)
-    print(test_collection["Vibrational data"].measurements)
     test_collection.close()
+    excitation_test.close()
+    frf_test.close()
