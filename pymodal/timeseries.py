@@ -344,7 +344,6 @@ if __name__ == "__main__":
     signal = np.vstack((signal, np.sin(5 * time)))
     signal = signal.reshape((time.shape[0], -1))
     test_object = timeseries(signal, time_end=30)
-    print(len(timeseries))
     test_object.plot()
     plt.show()
     print(test_object.measurements.shape)

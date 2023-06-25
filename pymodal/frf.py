@@ -409,6 +409,7 @@ if __name__ == "__main__":
     signal = signal.reshape((time.shape[0], -1))
     signal = np.fft.fft(signal, axis=0)
     test_object = frf(signal, freq_end=5)
+    print(len(test_object))
     test_object.plot("mod-phase")
     plt.show()
     test_object.plot("real")
