@@ -1,4 +1,4 @@
-from pymodal import _signal_collection, timeseries, frf_collection, timeseries_collection
+from pymodal import _signal_collection, timeseries, frf_collection, timeseries_collection, H5Dataset
 from pathlib import Path
 import numpy as np
 from copy import deepcopy
@@ -350,6 +350,8 @@ class timeseries_collection(_signal_collection):
                 self.append(working_instance)
         return self
 
+    def torch_dataset(self, limit=-1):
+        return H5Dataset(list([f"measurements/{name}" for name in self.name]), limit=limit)
 
 if __name__ == "__main__":
     time = np.arange(0, 30 + 0.05, 0.1)

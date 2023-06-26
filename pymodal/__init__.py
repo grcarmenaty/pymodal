@@ -1,4 +1,4 @@
-from .utils import change_domain_resolution, change_domain_span, lineplot
+from .utils import change_domain_resolution, change_domain_span, lineplot, H5Dataset
 
 from .signal_parent import _signal
 from .timeseries import timeseries
@@ -13,6 +13,7 @@ __all__ = [
     "change_domain_resolution",
     "change_domain_span",
     "lineplot",
+    "H5Dataset",
     "_signal",
     "timeseries",
     "frf",
