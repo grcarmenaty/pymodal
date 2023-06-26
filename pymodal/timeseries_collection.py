@@ -7,6 +7,8 @@ import h5py
 from warnings import warn, catch_warnings, filterwarnings
 import matplotlib.pyplot as plt
 from typing import Optional
+from audiomentations import Compose, AddGaussianNoise
+import random
 
 num_processes = cpu_count()
 
@@ -315,9 +317,41 @@ class timeseries_collection(_collection):
                 )
         return frf_collection_instance
 
+    def AddGaussianNoise(
+        self, min_amplitude=0.001, max_amplitude=0.015, sample: Optional[float] = None
+    ):
+        if sample is None:
+            sample = 1.0
+        if type(sample) is float:
+            n = int(np.floor(len(self) * sample))
+            sample = random.sample(self.label, n)
+        working_instance = deepcopy(self.collection_class)
+        for attribute in self.attributes:
+            if attribute != "label" and attribute != "measurements":
+                setattr(working_instance, attribute, getattr(self, attribute))
+        augmenter = Compose(
+            [
+                AddGaussianNoise(
+                    min_amplitude=min_amplitude, max_amplitude=max_amplitude, p=1.0
+                )
+            ]
+        )
+        for i, label in enumerate(self.label):
+            if label in sample:
+                array = self.measurements[i][()]
+                augmented_samples = np.empty(array.shape)
+                for i in range(array.shape[1]):
+                    for j in range(array.shape[2]):
+                        augmented_samples[:, i, j] = augmenter(
+                            samples=array[:, i, j], sample_rate=self.sampling_rate
+                        )
+                working_instance.label = f"{label}_augmented"
+                working_instance.measurements = augmented_samples
+                self.append(working_instance)
+        return self
+
 
 if __name__ == "__main__":
-
     time = np.arange(0, 30 + 0.05, 0.1)
     signal = np.sin(1 * time)
     signal = np.vstack((signal, np.sin(2 * time)))
@@ -342,6 +376,8 @@ if __name__ == "__main__":
     )
     frf_test = test_collection.to_FRF(excitation_test)
     frf_test.plot(format="mod-phase")
+    plt.show()
+    test_collection.AddGaussianNoise(min_amplitude=0.4, max_amplitude=0.6).plot()
     plt.show()
     print(test_collection.append(test_object_3).measurements)
     print(test_collection.change_time_span(new_max_time=20).measurements)
