@@ -148,9 +148,6 @@ class _collection:
         if type(key) is str:
             key = [key]
         if type(key) is set or type(key) is list:
-            for label in self.label:
-                if label not in key:
-                    del self.file[f"measurements/{label}"]
             self.label = list(key)
             self.measurements = list(
                 [self.file[f"measurements/{label}"] for label in self.label]
