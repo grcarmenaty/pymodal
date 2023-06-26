@@ -21,13 +21,13 @@ def change_freq_span(var):
                 setattr(
                     working_instance,
                     attribute,
-                    f[f"measurements/{collection.name[i]}"][()]
+                    f[f"measurements/{collection.name[i]}/data"][()]
                     * collection.measurements_units,
                 )
         else:
             setattr(working_instance, attribute, getattr(collection, attribute))
     with h5py.File(collection.path, "a") as f:
-        del f[f"measurements/{collection.name[i]}"]
+        del f[f"measurements/{collection.name[i]}/data"]
         with catch_warnings():
             filterwarnings(
                 "ignore",
@@ -37,7 +37,7 @@ def change_freq_span(var):
             working_instance = working_instance.change_freq_span(
                 new_min_freq, new_max_freq
             )
-            f[f"measurements/{collection.name[i]}"] = working_instance.measurements
+            f[f"measurements/{collection.name[i]}/data"] = working_instance.measurements
     del working_instance.measurements
     return working_instance
 
@@ -53,13 +53,13 @@ def change_freq_resolution(var):
                 setattr(
                     working_instance,
                     attribute,
-                    f[f"measurements/{collection.name[i]}"][()]
+                    f[f"measurements/{collection.name[i]}/data"][()]
                     * collection.measurements_units,
                 )
         else:
             setattr(working_instance, attribute, getattr(collection, attribute))
     with h5py.File(collection.path, "a") as f:
-        del f[f"measurements/{collection.name[i]}"]
+        del f[f"measurements/{collection.name[i]}/data"]
         with catch_warnings():
             filterwarnings(
                 "ignore",
@@ -67,7 +67,7 @@ def change_freq_resolution(var):
                 " to ndarray.",
             )
             working_instance = working_instance.change_freq_resolution(freq_resolution)
-            f[f"measurements/{collection.name[i]}"] = working_instance.measurements
+            f[f"measurements/{collection.name[i]}/data"] = working_instance.measurements
     del working_instance.measurements
     return working_instance
 
@@ -94,7 +94,7 @@ class frf_collection(_signal_collection):
         attributes_to_match.remove("name")
         self.file = h5py.File(self.path, "a")
         self.measurements = list(
-            [self.file[f"measurements/{name}"] for name in self.name]
+            [self.file[f"measurements/{name}/data"] for name in self.name]
         )
         for attribute in attributes_to_match:
             self.file["measurements"].attrs[attribute] = getattr(
@@ -121,7 +121,7 @@ class frf_collection(_signal_collection):
         attributes_to_match.remove("name")
         self.file = h5py.File(self.path, "a")
         self.measurements = list(
-            [self.file[f"measurements/{name}"] for name in self.name]
+            [self.file[f"measurements/{name}/data"] for name in self.name]
         )
         for attribute in attributes_to_match:
             self.file["measurements"].attrs[attribute] = getattr(

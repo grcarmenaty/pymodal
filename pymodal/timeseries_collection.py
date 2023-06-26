@@ -1,4 +1,4 @@
-from pymodal import _signal_collection, timeseries, frf_collection, timeseries_collection, H5Dataset
+from pymodal import _signal_collection, timeseries, frf_collection, timeseries_collection, HDF5Dataset
 from pathlib import Path
 import numpy as np
 from copy import deepcopy
@@ -24,13 +24,13 @@ def change_time_span(var):
                 setattr(
                     working_instance,
                     attribute,
-                    f[f"measurements/{collection.name[i]}"][()]
+                    f[f"measurements/{collection.name[i]}/data"][()]
                     * collection.measurements_units,
                 )
         else:
             setattr(working_instance, attribute, getattr(collection, attribute))
     with h5py.File(collection.path, "a") as f:
-        del f[f"measurements/{collection.name[i]}"]
+        del f[f"measurements/{collection.name[i]}/data"]
         with catch_warnings():
             filterwarnings(
                 "ignore",
@@ -40,7 +40,7 @@ def change_time_span(var):
             working_instance = working_instance.change_time_span(
                 new_min_time, new_max_time
             )
-            f[f"measurements/{collection.name[i]}"] = working_instance.measurements
+            f[f"measurements/{collection.name[i]}/data"] = working_instance.measurements
     del working_instance.measurements
     return working_instance
 
@@ -56,13 +56,13 @@ def change_sampling_rate(var):
                 setattr(
                     working_instance,
                     attribute,
-                    f[f"measurements/{collection.name[i]}"][()]
+                    f[f"measurements/{collection.name[i]}/data"][()]
                     * collection.measurements_units,
                 )
         else:
             setattr(working_instance, attribute, getattr(collection, attribute))
     with h5py.File(collection.path, "a") as f:
-        del f[f"measurements/{collection.name[i]}"]
+        del f[f"measurements/{collection.name[i]}/data"]
         with catch_warnings():
             filterwarnings(
                 "ignore",
@@ -70,14 +70,14 @@ def change_sampling_rate(var):
                 " to ndarray.",
             )
             working_instance = working_instance.change_sampling_rate(new_sampling_rate)
-            f[f"measurements/{collection.name[i]}"] = working_instance.measurements
+            f[f"measurements/{collection.name[i]}/data"] = working_instance.measurements
     del working_instance.measurements
     return working_instance
 
 
 class timeseries_collection(_signal_collection):
-    def __init__(self, exp_list: list[timeseries], path: Path = Path("temp.h5")):
-        super().__init__(exp_list=exp_list, path=path)
+    def __init__(self, exp_list: list[timeseries], labels: Optional[list[float]] = None, path: Path = Path("temp.h5")):
+        super().__init__(exp_list=exp_list, labels=labels, path=path)
         del exp_list
 
     def change_time_span(self, new_min_time=None, new_max_time=None):
@@ -97,7 +97,7 @@ class timeseries_collection(_signal_collection):
         attributes_to_match.remove("name")
         self.file = h5py.File(self.path, "a")
         self.measurements = list(
-            [self.file[f"measurements/{name}"] for name in self.name]
+            [self.file[f"measurements/{name}/data"] for name in self.name]
         )
         for attribute in attributes_to_match:
             self.file["measurements"].attrs[attribute] = getattr(
@@ -124,7 +124,7 @@ class timeseries_collection(_signal_collection):
         attributes_to_match.remove("name")
         self.file = h5py.File(self.path, "a")
         self.measurements = list(
-            [self.file[f"measurements/{name}"] for name in self.name]
+            [self.file[f"measurements/{name}/data"] for name in self.name]
         )
         for attribute in attributes_to_match:
             self.file["measurements"].attrs[attribute] = getattr(
@@ -340,18 +340,28 @@ class timeseries_collection(_signal_collection):
             if name in sample:
                 array = self.measurements[i][()]
                 augmented_samples = np.empty(array.shape)
-                for i in range(array.shape[1]):
-                    for j in range(array.shape[2]):
-                        augmented_samples[:, i, j] = augmenter(
-                            samples=array[:, i, j], sample_rate=self.sampling_rate
+                for j in range(array.shape[1]):
+                    for k in range(array.shape[2]):
+                        augmented_samples[:, j, k] = augmenter(
+                            samples=array[:, j, k], sample_rate=self.sampling_rate
                         )
                 working_instance.name = f"{name}_augmented"
                 working_instance.measurements = augmented_samples
-                self.append(working_instance)
+                self.append(working_instance, self.labels[i])
         return self
 
-    def torch_dataset(self, limit=-1):
-        return H5Dataset(list([f"measurements/{name}" for name in self.name]), limit=limit)
+    def torch_dataset(self):
+        self.dataset = HDF5Dataset(self.path)
+        return self
+    
+    def close(self, keep: bool = False):
+        super().close(keep=keep)
+        try:
+            self.h5t_file.close()
+            if not keep:
+                self.h5t_path.unlink()
+        except Exception as _:
+            pass
 
 if __name__ == "__main__":
     time = np.arange(0, 30 + 0.05, 0.1)
@@ -368,7 +378,7 @@ if __name__ == "__main__":
     test_object_1 = timeseries(signal_1, time_end=30)
     test_object_2 = timeseries(signal_2, time_end=30)
     test_object_3 = timeseries(signal_3, time_end=30)
-    test_collection = timeseries_collection([test_object, test_object_1, test_object_2])
+    test_collection = timeseries_collection([test_object, test_object_1, test_object_2], labels=[0, 1, 2])
     print(test_collection.measurements)
     test_collection.plot()
     plt.show()
@@ -381,7 +391,14 @@ if __name__ == "__main__":
     plt.show()
     test_collection.AddGaussianNoise(min_amplitude=0.4, max_amplitude=0.6).plot()
     plt.show()
-    print(test_collection.append(test_object_3).measurements)
+    print(test_collection.torch_dataset().dataset.get_data_infos("data"))
+    print(test_collection.dataset.get_data("data", -1))
+    print(test_collection.dataset.get_data("label", -1))
+    import torch
+    loader = torch.utils.data.DataLoader(test_collection.dataset, num_workers=2)
+    print(next(iter(loader)))
+    print(next(iter(loader)))
+    print(test_collection.append(test_object_3, 2).measurements)
     print(test_collection.change_time_span(new_max_time=20).measurements)
     print(test_collection.change_sampling_rate(new_sampling_rate=0.2).measurements)
     print(

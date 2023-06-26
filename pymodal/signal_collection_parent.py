@@ -8,6 +8,7 @@ import os
 import inspect
 from copy import deepcopy
 from warnings import warn, catch_warnings, filterwarnings
+from typing import Optional
 
 
 os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
@@ -97,7 +98,7 @@ def parallel_attributes_match(instances, attributes_to_match):
 
 
 class _signal_collection:
-    def __init__(self, exp_list: list[_signal], path: Path = Path("temp.h5")):
+    def __init__(self, exp_list: list[_signal], labels: Optional[list[float]] = None, path: Path = Path("temp.h5")):
 
         self.path = Path(path)
         if self.path.exists():
@@ -113,7 +114,7 @@ class _signal_collection:
         for attribute in attributes_to_match:
             setattr(self, attribute, getattr(exp_list[0], attribute))
         array_info = [
-            (array.magnitude, f"measurements/{self.name[i]}", self.path)
+            (array.magnitude, f"measurements/{self.name[i]}/data", self.path)
             for i, array in enumerate([exp.measurements for exp in exp_list])
         ]
         # save_array(array_info[0])
@@ -124,7 +125,7 @@ class _signal_collection:
         exp_list = exp_list[0]
         self.file = h5py.File(self.path, "a")
         self.measurements = list(
-            [self.file[f"measurements/{name}"] for name in self.name]
+            [self.file[f"measurements/{name}/data"] for name in self.name]
         )
         self.collection_class = exp_list
         with catch_warnings():
@@ -140,7 +141,12 @@ class _signal_collection:
                     )
                 setattr(self.collection_class, attribute, None)
         del exp_list
-
+        if labels is not None:
+            for i, label in enumerate(labels):
+                self.file[f"measurements/{self.name[i]}/label"] = label
+            self.labels = list(
+                [self.file[f"measurements/{name}/label"] for name in self.name]
+            )
     def __len__(self):
         return len(self.name)
 
@@ -150,8 +156,14 @@ class _signal_collection:
         if type(key) is set or type(key) is list:
             self.name = list(key)
             self.measurements = list(
-                [self.file[f"measurements/{name}"] for name in self.name]
+                [self.file[f"measurements/{name}/data"] for name in self.name]
             )
+            try:
+                self.labels = list(
+                    [self.file[f"measurements/{name}/label"] for name in self.name]
+                )
+            except Exception as _:
+                pass
         else:
             if type(key) is int:
                 key = slice(key, key + 1)
@@ -168,41 +180,41 @@ class _signal_collection:
             if len(key) == 1:
                 if self.method in ["SIMO"]:
                     for i, measurement in enumerate(self.measurements):
-                        del self.file[f"measurements/{self.name[i]}"]
-                        self.file[f"measurements/{self.name[i]}"] = measurement[
+                        del self.file[f"measurements/{self.name[i]}/data"]
+                        self.file[f"measurements/{self.name[i]}/data"] = measurement[
                             :, key[0], :
                         ]
                     self.coordinates = self.coordinates[key[0], :]
                     self.orientations = self.orientations[key[0], :]
                 elif self.method in ["MIMO"]:
                     for i, measurement in enumerate(self.measurements):
-                        del self.file[f"measurements/{self.name[i]}"]
-                        self.file[f"measurements/{self.name[i]}"] = measurement[
+                        del self.file[f"measurements/{self.name[i]}/data"]
+                        self.file[f"measurements/{self.name[i]}/data"] = measurement[
                             :, key[0], :
                         ]
                     self.coordinates = self.coordinates[key[0], :, :]
                     self.orientations = self.orientations[key[0], :, :]
                 elif self.method in ["MISO", "excitation"]:
                     for i, measurement in enumerate(self.measurements):
-                        del self.file[f"measurements/{self.name[i]}"]
-                        self.file[f"measurements/{self.name[i]}"] = measurement[
+                        del self.file[f"measurements/{self.name[i]}/data"]
+                        self.file[f"measurements/{self.name[i]}/data"] = measurement[
                             :, :, key[0]
                         ]
                     self.coordinates = self.coordinates[:, key[0]]
                     self.orientations = self.orientations[:, key[0]]
                 self.measurements = list(
-                    [self.file[f"measurements/{name}"] for name in self.name]
+                    [self.file[f"measurements/{name}/data"] for name in self.name]
                 )
             elif len(key) == 2:
                 for i, measurement in enumerate(self.measurements):
-                    del self.file[f"measurements/{self.name[i]}"]
-                    self.file[f"measurements/{self.name[i]}"] = measurement[
+                    del self.file[f"measurements/{self.name[i]}/data"]
+                    self.file[f"measurements/{self.name[i]}/data"] = measurement[
                         :, key[0], key[1]
                     ]
                 self.coordinates = self.coordinates[:, key[0], key[1]]
                 self.orientations = self.orientations[:, key[0], key[1]]
                 self.measurements = list(
-                    [self.file[f"measurements/{name}"] for name in self.name]
+                    [self.file[f"measurements/{name}/data"] for name in self.name]
                 )
             else:
                 raise ValueError("Too many keys provided.")
@@ -218,15 +230,21 @@ class _signal_collection:
         if not keep:
             self.path.unlink()
 
-    def append(self, signal: _signal):
+    def append(self, signal: _signal, label=None):
         attributes_to_match = deepcopy(self.attributes)
         attributes_to_match.remove("measurements")
         attributes_to_match.remove("name")
         assert attributes_match(self, signal, attributes_to_match)
         self.name.append(signal.name)
         self.name = add_suffix(self.name)
-        self.file[f"measurements/{self.name[-1]}"] = signal.measurements
-        self.measurements.append(self.file[f"measurements/{self.name[-1]}"])
+        self.file[f"measurements/{self.name[-1]}/data"] = signal.measurements
+        self.measurements.append(self.file[f"measurements/{self.name[-1]}/data"])
+        if label is not None:
+            try:
+                self.labels.append(label)
+                self.file[f"measurements/{self.name[-1]}/label"] = label
+            except Exception as _:
+                pass
         return self
 
 
