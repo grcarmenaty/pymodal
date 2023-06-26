@@ -25,7 +25,9 @@ setuptools.setup(
         "matplotlib>=3.1.3",
         "pandas>=1.0.1",
         "Pint>=0.20.1",
-        "pyFRF>=0.40"
+        "pyFRF>=0.40",
+        "h5py>=3.9.0",
+        "audiomentations>=0.31.0"
     ],
     # Should be as specific as possible
     extras_require={
