@@ -3,7 +3,7 @@ from .utils import change_domain_resolution, change_domain_span, lineplot
 from .signal_parent import _signal
 from .timeseries import timeseries
 from .frf import frf
-from .collection_parent import _collection
+from .signal_collection_parent import _signal_collection
 from .timeseries_collection import timeseries_collection
 from .frf_collection import frf_collection
 
@@ -16,7 +16,7 @@ __all__ = [
     "_signal",
     "timeseries",
     "frf",
-    "_collection",
+    "_signal_collection",
     "timeseries_collection",
     "frf_collection",
 ]

@@ -25,7 +25,7 @@ class frf(_signal):
         freq_units: Optional[str] = "hertz",
         space_units: Optional[str] = "millimeter",
         method: str = "SIMO",
-        label: Optional[str] = None,
+        name: Optional[str] = None,
     ):
         """Class designed to store all vibrational frequency response function (FRF)
         information measured from a three-dimensional body, along with the spatial
@@ -69,8 +69,8 @@ class frf(_signal):
             Whether the method used to get the measurements is Multiple Input Single
             Output (MISO), Single Input Multiple Output (SIMO) or Multiple Input
             Multiple Output (MIMO), by default "SIMO".
-        label : Optional[str], optional
-            An identifying label for the measurements stored in this instance, by
+        name : Optional[str], optional
+            An identifying name for the measurements stored in this instance, by
             default None.
         """
         assert method in ["MISO", "SIMO", "MIMO"]
@@ -87,7 +87,7 @@ class frf(_signal):
             domain_units=freq_units,
             space_units=space_units,
             method=method,
-            label=label,
+            name=name,
         )
         self.freq_start = self.domain_start
         self.freq_end = self.domain_end

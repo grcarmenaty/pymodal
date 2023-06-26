@@ -25,7 +25,7 @@ class timeseries(_signal):
         time_units: Optional[str] = None,
         space_units: Optional[str] = None,
         method: str = "SIMO",
-        label: Optional[str] = None,
+        name: Optional[str] = None,
     ):
         """Class designed to store all vibrational temporal information measured from
         a three-dimensional body, be it inputs or outputs, along with the spatial
@@ -70,8 +70,8 @@ class timeseries(_signal):
             Whether the method used to get the measurements is Multiple Input Single
             Output (MISO), Single Input Multiple Output (SIMO), Multiple Input Multiple
             Output (MIMO), or a recording of the excitation inputs, by default "SIMO"
-        label : string, optional
-            An identifying label for the measurements stored in this instance of the
+        name : string, optional
+            An identifying name for the measurements stored in this instance of the
             signal class.
         """
         super().__init__(
@@ -87,7 +87,7 @@ class timeseries(_signal):
             domain_units=time_units,
             space_units=space_units,
             method=method,
-            label=label,
+            name=name,
         )
         self.time_start = self.domain_start
         self.time_end = self.domain_end

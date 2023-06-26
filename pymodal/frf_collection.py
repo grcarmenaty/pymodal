@@ -1,4 +1,4 @@
-from pymodal import _collection, timeseries, frf
+from pymodal import _signal_collection, timeseries, frf
 from pathlib import Path
 import numpy as np
 from copy import deepcopy
@@ -14,20 +14,20 @@ def change_freq_span(var):
     collection, i, new_min_freq, new_max_freq = var
     working_instance = deepcopy(collection.collection_class)
     for attribute in collection.attributes:
-        if attribute == "label":
-            setattr(working_instance, attribute, collection.label[i])
+        if attribute == "name":
+            setattr(working_instance, attribute, collection.name[i])
         elif attribute == "measurements":
             with h5py.File(collection.path, "r") as f:
                 setattr(
                     working_instance,
                     attribute,
-                    f[f"measurements/{collection.label[i]}"][()]
+                    f[f"measurements/{collection.name[i]}"][()]
                     * collection.measurements_units,
                 )
         else:
             setattr(working_instance, attribute, getattr(collection, attribute))
     with h5py.File(collection.path, "a") as f:
-        del f[f"measurements/{collection.label[i]}"]
+        del f[f"measurements/{collection.name[i]}"]
         with catch_warnings():
             filterwarnings(
                 "ignore",
@@ -37,7 +37,7 @@ def change_freq_span(var):
             working_instance = working_instance.change_freq_span(
                 new_min_freq, new_max_freq
             )
-            f[f"measurements/{collection.label[i]}"] = working_instance.measurements
+            f[f"measurements/{collection.name[i]}"] = working_instance.measurements
     del working_instance.measurements
     return working_instance
 
@@ -46,20 +46,20 @@ def change_freq_resolution(var):
     collection, i, freq_resolution = var
     working_instance = deepcopy(collection.collection_class)
     for attribute in collection.attributes:
-        if attribute == "label":
-            setattr(working_instance, attribute, collection.label[i])
+        if attribute == "name":
+            setattr(working_instance, attribute, collection.name[i])
         elif attribute == "measurements":
             with h5py.File(collection.path, "r") as f:
                 setattr(
                     working_instance,
                     attribute,
-                    f[f"measurements/{collection.label[i]}"][()]
+                    f[f"measurements/{collection.name[i]}"][()]
                     * collection.measurements_units,
                 )
         else:
             setattr(working_instance, attribute, getattr(collection, attribute))
     with h5py.File(collection.path, "a") as f:
-        del f[f"measurements/{collection.label[i]}"]
+        del f[f"measurements/{collection.name[i]}"]
         with catch_warnings():
             filterwarnings(
                 "ignore",
@@ -67,12 +67,12 @@ def change_freq_resolution(var):
                 " to ndarray.",
             )
             working_instance = working_instance.change_freq_resolution(freq_resolution)
-            f[f"measurements/{collection.label[i]}"] = working_instance.measurements
+            f[f"measurements/{collection.name[i]}"] = working_instance.measurements
     del working_instance.measurements
     return working_instance
 
 
-class frf_collection(_collection):
+class frf_collection(_signal_collection):
     def __init__(self, exp_list: list[frf], path: Path = Path("temp.h5")):
         super().__init__(exp_list=exp_list, path=path)
         del exp_list
@@ -91,10 +91,10 @@ class frf_collection(_collection):
         # working_instance = working_instance[0]
         attributes_to_match = deepcopy(self.attributes)
         attributes_to_match.remove("measurements")
-        attributes_to_match.remove("label")
+        attributes_to_match.remove("name")
         self.file = h5py.File(self.path, "a")
         self.measurements = list(
-            [self.file[f"measurements/{label}"] for label in self.label]
+            [self.file[f"measurements/{name}"] for name in self.name]
         )
         for attribute in attributes_to_match:
             self.file["measurements"].attrs[attribute] = getattr(
@@ -118,10 +118,10 @@ class frf_collection(_collection):
         # working_instance = working_instance[0]
         attributes_to_match = deepcopy(self.attributes)
         attributes_to_match.remove("measurements")
-        attributes_to_match.remove("label")
+        attributes_to_match.remove("name")
         self.file = h5py.File(self.path, "a")
         self.measurements = list(
-            [self.file[f"measurements/{label}"] for label in self.label]
+            [self.file[f"measurements/{name}"] for name in self.name]
         )
         for attribute in attributes_to_match:
             self.file["measurements"].attrs[attribute] = getattr(
@@ -156,8 +156,8 @@ class frf_collection(_collection):
         color = iter(color(np.linspace(0, 1, len(self))))
         working_instance = deepcopy(self.collection_class)
         for attribute in self.attributes:
-            if attribute == "label":
-                setattr(working_instance, attribute, self.label[0])
+            if attribute == "name":
+                setattr(working_instance, attribute, self.name[0])
             elif attribute == "measurements":
                 setattr(
                     working_instance,
@@ -195,12 +195,12 @@ class frf_collection(_collection):
                 old_top_ylim.append(ax_n[1])
         else:
             old_bottom_ylim, old_top_ylim = ax.get_ylim()
-        for i, label in enumerate(self.label):
+        for i, name in enumerate(self.name):
             if i > 0:
                 working_instance = deepcopy(self.collection_class)
                 for attribute in self.attributes:
-                    if attribute == "label":
-                        setattr(working_instance, attribute, label)
+                    if attribute == "name":
+                        setattr(working_instance, attribute, name)
                     elif attribute == "measurements":
                         setattr(
                             working_instance,

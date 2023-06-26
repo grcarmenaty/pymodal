@@ -96,24 +96,24 @@ def parallel_attributes_match(instances, attributes_to_match):
     return False
 
 
-class _collection:
+class _signal_collection:
     def __init__(self, exp_list: list[_signal], path: Path = Path("temp.h5")):
 
         self.path = Path(path)
         if self.path.exists():
             self.path.unlink()
 
-        self.label = add_suffix(list([exp.label for exp in exp_list]))
+        self.name = add_suffix(list([exp.name for exp in exp_list]))
 
         self.attributes = get_attributes(exp_list[0])
         attributes_to_match = deepcopy(self.attributes)
         attributes_to_match.remove("measurements")
-        attributes_to_match.remove("label")
+        attributes_to_match.remove("name")
         assert parallel_attributes_match(exp_list, attributes_to_match)
         for attribute in attributes_to_match:
             setattr(self, attribute, getattr(exp_list[0], attribute))
         array_info = [
-            (array.magnitude, f"measurements/{self.label[i]}", self.path)
+            (array.magnitude, f"measurements/{self.name[i]}", self.path)
             for i, array in enumerate([exp.measurements for exp in exp_list])
         ]
         # save_array(array_info[0])
@@ -124,7 +124,7 @@ class _collection:
         exp_list = exp_list[0]
         self.file = h5py.File(self.path, "a")
         self.measurements = list(
-            [self.file[f"measurements/{label}"] for label in self.label]
+            [self.file[f"measurements/{name}"] for name in self.name]
         )
         self.collection_class = exp_list
         with catch_warnings():
@@ -134,7 +134,7 @@ class _collection:
                 " to ndarray.",
             )
             for attribute in self.attributes:
-                if attribute not in ["measurements", "label"]:
+                if attribute not in ["measurements", "name"]:
                     self.file["measurements"].attrs[attribute] = getattr(
                         exp_list, attribute
                     )
@@ -142,15 +142,15 @@ class _collection:
         del exp_list
 
     def __len__(self):
-        return len(self.label)
+        return len(self.name)
 
     def __getitem__(self, key: tuple[slice]):
         if type(key) is str:
             key = [key]
         if type(key) is set or type(key) is list:
-            self.label = list(key)
+            self.name = list(key)
             self.measurements = list(
-                [self.file[f"measurements/{label}"] for label in self.label]
+                [self.file[f"measurements/{name}"] for name in self.name]
             )
         else:
             if type(key) is int:
@@ -168,41 +168,41 @@ class _collection:
             if len(key) == 1:
                 if self.method in ["SIMO"]:
                     for i, measurement in enumerate(self.measurements):
-                        del self.file[f"measurements/{self.label[i]}"]
-                        self.file[f"measurements/{self.label[i]}"] = measurement[
+                        del self.file[f"measurements/{self.name[i]}"]
+                        self.file[f"measurements/{self.name[i]}"] = measurement[
                             :, key[0], :
                         ]
                     self.coordinates = self.coordinates[key[0], :]
                     self.orientations = self.orientations[key[0], :]
                 elif self.method in ["MIMO"]:
                     for i, measurement in enumerate(self.measurements):
-                        del self.file[f"measurements/{self.label[i]}"]
-                        self.file[f"measurements/{self.label[i]}"] = measurement[
+                        del self.file[f"measurements/{self.name[i]}"]
+                        self.file[f"measurements/{self.name[i]}"] = measurement[
                             :, key[0], :
                         ]
                     self.coordinates = self.coordinates[key[0], :, :]
                     self.orientations = self.orientations[key[0], :, :]
                 elif self.method in ["MISO", "excitation"]:
                     for i, measurement in enumerate(self.measurements):
-                        del self.file[f"measurements/{self.label[i]}"]
-                        self.file[f"measurements/{self.label[i]}"] = measurement[
+                        del self.file[f"measurements/{self.name[i]}"]
+                        self.file[f"measurements/{self.name[i]}"] = measurement[
                             :, :, key[0]
                         ]
                     self.coordinates = self.coordinates[:, key[0]]
                     self.orientations = self.orientations[:, key[0]]
                 self.measurements = list(
-                    [self.file[f"measurements/{label}"] for label in self.label]
+                    [self.file[f"measurements/{name}"] for name in self.name]
                 )
             elif len(key) == 2:
                 for i, measurement in enumerate(self.measurements):
-                    del self.file[f"measurements/{self.label[i]}"]
-                    self.file[f"measurements/{self.label[i]}"] = measurement[
+                    del self.file[f"measurements/{self.name[i]}"]
+                    self.file[f"measurements/{self.name[i]}"] = measurement[
                         :, key[0], key[1]
                     ]
                 self.coordinates = self.coordinates[:, key[0], key[1]]
                 self.orientations = self.orientations[:, key[0], key[1]]
                 self.measurements = list(
-                    [self.file[f"measurements/{label}"] for label in self.label]
+                    [self.file[f"measurements/{name}"] for name in self.name]
                 )
             else:
                 raise ValueError("Too many keys provided.")
@@ -221,12 +221,12 @@ class _collection:
     def append(self, signal: _signal):
         attributes_to_match = deepcopy(self.attributes)
         attributes_to_match.remove("measurements")
-        attributes_to_match.remove("label")
+        attributes_to_match.remove("name")
         assert attributes_match(self, signal, attributes_to_match)
-        self.label.append(signal.label)
-        self.label = add_suffix(self.label)
-        self.file[f"measurements/{self.label[-1]}"] = signal.measurements
-        self.measurements.append(self.file[f"measurements/{self.label[-1]}"])
+        self.name.append(signal.name)
+        self.name = add_suffix(self.name)
+        self.file[f"measurements/{self.name[-1]}"] = signal.measurements
+        self.measurements.append(self.file[f"measurements/{self.name[-1]}"])
         return self
 
 
@@ -248,7 +248,7 @@ if __name__ == "__main__":
     test_object_1 = _signal(signal_1, domain_end=5)
     test_object_2 = _signal(signal_2, domain_end=5)
     test_object_3 = _signal(signal_2, domain_end=5)
-    test_collection = _collection([test_object_0, test_object_1, test_object_2])
+    test_collection = _signal_collection([test_object_0, test_object_1, test_object_2])
     print(test_collection.measurements)
     print(test_collection.append(test_object_3).measurements)
     print(list(test_collection.file["measurements"].attrs.items()))

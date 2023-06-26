@@ -1,4 +1,4 @@
-from pymodal import _collection, timeseries, frf_collection, timeseries_collection
+from pymodal import _signal_collection, timeseries, frf_collection, timeseries_collection
 from pathlib import Path
 import numpy as np
 from copy import deepcopy
@@ -17,20 +17,20 @@ def change_time_span(var):
     collection, i, new_min_time, new_max_time = var
     working_instance = deepcopy(collection.collection_class)
     for attribute in collection.attributes:
-        if attribute == "label":
-            setattr(working_instance, attribute, collection.label[i])
+        if attribute == "name":
+            setattr(working_instance, attribute, collection.name[i])
         elif attribute == "measurements":
             with h5py.File(collection.path, "r") as f:
                 setattr(
                     working_instance,
                     attribute,
-                    f[f"measurements/{collection.label[i]}"][()]
+                    f[f"measurements/{collection.name[i]}"][()]
                     * collection.measurements_units,
                 )
         else:
             setattr(working_instance, attribute, getattr(collection, attribute))
     with h5py.File(collection.path, "a") as f:
-        del f[f"measurements/{collection.label[i]}"]
+        del f[f"measurements/{collection.name[i]}"]
         with catch_warnings():
             filterwarnings(
                 "ignore",
@@ -40,7 +40,7 @@ def change_time_span(var):
             working_instance = working_instance.change_time_span(
                 new_min_time, new_max_time
             )
-            f[f"measurements/{collection.label[i]}"] = working_instance.measurements
+            f[f"measurements/{collection.name[i]}"] = working_instance.measurements
     del working_instance.measurements
     return working_instance
 
@@ -49,20 +49,20 @@ def change_sampling_rate(var):
     collection, i, new_sampling_rate = var
     working_instance = deepcopy(collection.collection_class)
     for attribute in collection.attributes:
-        if attribute == "label":
-            setattr(working_instance, attribute, collection.label[i])
+        if attribute == "name":
+            setattr(working_instance, attribute, collection.name[i])
         elif attribute == "measurements":
             with h5py.File(collection.path, "r") as f:
                 setattr(
                     working_instance,
                     attribute,
-                    f[f"measurements/{collection.label[i]}"][()]
+                    f[f"measurements/{collection.name[i]}"][()]
                     * collection.measurements_units,
                 )
         else:
             setattr(working_instance, attribute, getattr(collection, attribute))
     with h5py.File(collection.path, "a") as f:
-        del f[f"measurements/{collection.label[i]}"]
+        del f[f"measurements/{collection.name[i]}"]
         with catch_warnings():
             filterwarnings(
                 "ignore",
@@ -70,12 +70,12 @@ def change_sampling_rate(var):
                 " to ndarray.",
             )
             working_instance = working_instance.change_sampling_rate(new_sampling_rate)
-            f[f"measurements/{collection.label[i]}"] = working_instance.measurements
+            f[f"measurements/{collection.name[i]}"] = working_instance.measurements
     del working_instance.measurements
     return working_instance
 
 
-class timeseries_collection(_collection):
+class timeseries_collection(_signal_collection):
     def __init__(self, exp_list: list[timeseries], path: Path = Path("temp.h5")):
         super().__init__(exp_list=exp_list, path=path)
         del exp_list
@@ -94,10 +94,10 @@ class timeseries_collection(_collection):
         # working_instance = working_instance[0]
         attributes_to_match = deepcopy(self.attributes)
         attributes_to_match.remove("measurements")
-        attributes_to_match.remove("label")
+        attributes_to_match.remove("name")
         self.file = h5py.File(self.path, "a")
         self.measurements = list(
-            [self.file[f"measurements/{label}"] for label in self.label]
+            [self.file[f"measurements/{name}"] for name in self.name]
         )
         for attribute in attributes_to_match:
             self.file["measurements"].attrs[attribute] = getattr(
@@ -121,10 +121,10 @@ class timeseries_collection(_collection):
         # working_instance = working_instance[0]
         attributes_to_match = deepcopy(self.attributes)
         attributes_to_match.remove("measurements")
-        attributes_to_match.remove("label")
+        attributes_to_match.remove("name")
         self.file = h5py.File(self.path, "a")
         self.measurements = list(
-            [self.file[f"measurements/{label}"] for label in self.label]
+            [self.file[f"measurements/{name}"] for name in self.name]
         )
         for attribute in attributes_to_match:
             self.file["measurements"].attrs[attribute] = getattr(
@@ -158,8 +158,8 @@ class timeseries_collection(_collection):
         color = iter(color(np.linspace(0, 1, len(self))))
         working_instance = deepcopy(self.collection_class)
         for attribute in self.attributes:
-            if attribute == "label":
-                setattr(working_instance, attribute, self.label[0])
+            if attribute == "name":
+                setattr(working_instance, attribute, self.name[0])
             elif attribute == "measurements":
                 setattr(
                     working_instance,
@@ -189,12 +189,12 @@ class timeseries_collection(_collection):
             grid=grid,
         )
         old_bottom_ylim, old_top_ylim = ax.get_ylim()
-        for i, label in enumerate(self.label):
+        for i, name in enumerate(self.name):
             if i > 0:
                 working_instance = deepcopy(self.collection_class)
                 for attribute in self.attributes:
-                    if attribute == "label":
-                        setattr(working_instance, attribute, label)
+                    if attribute == "name":
+                        setattr(working_instance, attribute, name)
                     elif attribute == "measurements":
                         setattr(
                             working_instance,
@@ -245,8 +245,8 @@ class timeseries_collection(_collection):
             new_path = self.path.parent / f"{self.path.stem}_frf.h5"
         working_instance = deepcopy(self.collection_class)
         for attribute in self.attributes:
-            if attribute == "label":
-                setattr(working_instance, attribute, self.label[0])
+            if attribute == "name":
+                setattr(working_instance, attribute, self.name[0])
             elif attribute == "measurements":
                 setattr(
                     working_instance,
@@ -257,8 +257,8 @@ class timeseries_collection(_collection):
                 setattr(working_instance, attribute, getattr(self, attribute))
         working_excitation = deepcopy(excitation.collection_class)
         for attribute in excitation.attributes:
-            if attribute == "label":
-                setattr(working_excitation, attribute, excitation.label[0])
+            if attribute == "name":
+                setattr(working_excitation, attribute, excitation.name[0])
             elif attribute == "measurements":
                 setattr(
                     working_excitation,
@@ -277,12 +277,12 @@ class timeseries_collection(_collection):
             ],
             new_path,
         )
-        for i, label in enumerate(self.label):
+        for i, name in enumerate(self.name):
             if i > 0:
                 working_instance = deepcopy(self.collection_class)
                 for attribute in self.attributes:
-                    if attribute == "label":
-                        setattr(working_instance, attribute, label)
+                    if attribute == "name":
+                        setattr(working_instance, attribute, name)
                     elif attribute == "measurements":
                         setattr(
                             working_instance,
@@ -293,8 +293,8 @@ class timeseries_collection(_collection):
                         setattr(working_instance, attribute, getattr(self, attribute))
                 working_excitation = deepcopy(excitation.collection_class)
                 for attribute in excitation.attributes:
-                    if attribute == "label":
-                        setattr(working_excitation, attribute, excitation.label[i])
+                    if attribute == "name":
+                        setattr(working_excitation, attribute, excitation.name[i])
                     elif attribute == "measurements":
                         setattr(
                             working_excitation,
@@ -324,10 +324,10 @@ class timeseries_collection(_collection):
             sample = 1.0
         if type(sample) is float:
             n = int(np.floor(len(self) * sample))
-            sample = random.sample(self.label, n)
+            sample = random.sample(self.name, n)
         working_instance = deepcopy(self.collection_class)
         for attribute in self.attributes:
-            if attribute != "label" and attribute != "measurements":
+            if attribute != "name" and attribute != "measurements":
                 setattr(working_instance, attribute, getattr(self, attribute))
         augmenter = Compose(
             [
@@ -336,8 +336,8 @@ class timeseries_collection(_collection):
                 )
             ]
         )
-        for i, label in enumerate(self.label):
-            if label in sample:
+        for i, name in enumerate(self.name):
+            if name in sample:
                 array = self.measurements[i][()]
                 augmented_samples = np.empty(array.shape)
                 for i in range(array.shape[1]):
@@ -345,7 +345,7 @@ class timeseries_collection(_collection):
                         augmented_samples[:, i, j] = augmenter(
                             samples=array[:, i, j], sample_rate=self.sampling_rate
                         )
-                working_instance.label = f"{label}_augmented"
+                working_instance.name = f"{name}_augmented"
                 working_instance.measurements = augmented_samples
                 self.append(working_instance)
         return self

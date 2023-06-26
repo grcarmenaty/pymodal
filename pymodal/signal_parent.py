@@ -32,7 +32,7 @@ class _signal:
         domain_units: Optional[str] = None,
         space_units: Optional[str] = None,
         method: str = "SIMO",
-        label: Optional[str] = None,
+        name: Optional[str] = None,
     ):
         """This class is intended as a parent class for any class involving the handling
         of a series of measurements relating to spatial coordinates, along a temporal
@@ -77,11 +77,11 @@ class _signal:
             Whether the method used to get the measurements is Multiple Input Single
             Output (MISO), Single Input Multiple Output (SIMO), Multiple Input Multiple
             Output (MIMO), or a recording of the excitation inputs, by default "SIMO"
-        label : string, optional
-            An identifying label for the measurements stored in this instance of the
+        name : string, optional
+            An identifying name for the measurements stored in this instance of the
             signal class.
         """
-        self.label = "Vibrational data" if label is None else label
+        self.name = "Vibrational data" if name is None else name
         # Measurement checks
         self.method = method
         assert self.method in ["MISO", "SIMO", "MIMO", "excitation"]
@@ -481,7 +481,7 @@ class _signal:
             self.domain_units,
             self.space_units,
             self.method,
-            self.label,
+            self.name,
         )
         return self_copy
 
@@ -530,7 +530,7 @@ class _signal:
             self.domain_units,
             self.space_units,
             self.method,
-            self.label,
+            self.name,
         )
         assert np.allclose(
             self_copy.domain_resolution,
@@ -560,7 +560,7 @@ class _signal:
         grid: bool = True,
         log: bool = False,
     ):
-        title = self.label if title is None else title
+        title = self.name if title is None else title
         ylabel = (
             f"Amplitude ({self.measurements_units.u:~P})" if ylabel is None else ylabel
         )
