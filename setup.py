@@ -27,7 +27,8 @@ setuptools.setup(
         "Pint>=0.20.1",
         "pyFRF>=0.40",
         "h5py>=3.9.0",
-        "audiomentations>=0.31.0"
+        "audiomentations>=0.31.0",
+        "torch>=2.0.1"
     ],
     # Should be as specific as possible
     extras_require={
