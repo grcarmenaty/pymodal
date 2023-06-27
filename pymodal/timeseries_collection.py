@@ -1,4 +1,4 @@
-from pymodal import _signal_collection, timeseries, frf_collection, timeseries_collection, HDF5Dataset
+from pymodal import _signal_collection, timeseries, frf_collection, timeseries_collection
 from pathlib import Path
 import numpy as np
 from copy import deepcopy
@@ -229,7 +229,7 @@ class timeseries_collection(_signal_collection):
                 else:
                     old_bottom_ylim = new_bottom_ylim
                 if new_top_ylim < old_top_ylim:
-                    ax.set_ylim(bottom=old_top_ylim)
+                    ax.set_ylim(top=old_top_ylim)
                 else:
                     old_top_ylim = new_top_ylim
         return ax, img
@@ -267,6 +267,7 @@ class timeseries_collection(_signal_collection):
                 )
             else:
                 setattr(working_excitation, attribute, getattr(excitation, attribute))
+        from pymodal import frf_collection
         frf_collection_instance = frf_collection(
             [
                 working_instance.to_FRF(
@@ -347,21 +348,12 @@ class timeseries_collection(_signal_collection):
                         )
                 working_instance.name = f"{name}_augmented"
                 working_instance.measurements = augmented_samples
-                self.append(working_instance, self.labels[i])
+                try:
+                    self.append(working_instance, self.labels[i])
+                except Exception as _:
+                    self.append(working_instance)
         return self
 
-    def torch_dataset(self):
-        self.dataset = HDF5Dataset(self.path)
-        return self
-    
-    def close(self, keep: bool = False):
-        super().close(keep=keep)
-        try:
-            self.h5t_file.close()
-            if not keep:
-                self.h5t_path.unlink()
-        except Exception as _:
-            pass
 
 if __name__ == "__main__":
     time = np.arange(0, 30 + 0.05, 0.1)
@@ -398,6 +390,7 @@ if __name__ == "__main__":
     loader = torch.utils.data.DataLoader(test_collection.dataset, num_workers=2)
     print(next(iter(loader)))
     print(next(iter(loader)))
+    test_collection.open()
     print(test_collection.append(test_object_3, 2).measurements)
     print(test_collection.change_time_span(new_max_time=20).measurements)
     print(test_collection.change_sampling_rate(new_sampling_rate=0.2).measurements)
@@ -407,6 +400,7 @@ if __name__ == "__main__":
         ].measurements
     )
     print(test_collection[1:-1].measurements)
+    print(test_collection.select_all().measurements)
     test_collection.close()
     excitation_test.close()
     frf_test.close()

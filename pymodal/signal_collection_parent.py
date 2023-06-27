@@ -1,5 +1,5 @@
 import numpy as np
-from pymodal import _signal
+from pymodal import _signal, HDF5Dataset
 import h5py
 from pathlib import Path
 from multiprocessing import Pool, cpu_count
@@ -224,6 +224,10 @@ class _signal_collection:
             self.file["measurements"].attrs["orientations"] = self.orientations
         return self
 
+    def select_all(self):
+        self = self[list(element[0] for element in list(list(self.file.items())[0][1].items()))]
+        return self
+
     def close(self, keep: bool = False):
 
         self.file.close()
@@ -247,6 +251,17 @@ class _signal_collection:
                 pass
         return self
 
+    def torch_dataset(self):
+        self.close(keep=True)
+        self.dataset = HDF5Dataset(self.path)
+        return self
+
+    def open(self):
+        self.file = h5py.File(self.path, "a")
+        self.measurements = list(
+            [self.file[f"measurements/{name}/data"] for name in self.name]
+        )
+        return self
 
 if __name__ == "__main__":
     from pymodal import frf
