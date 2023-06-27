@@ -2,13 +2,14 @@ import numpy as np
 from pymodal import _signal, HDF5Dataset
 import h5py
 from pathlib import Path
-from multiprocessing import Pool, cpu_count
+from multiprocessing import cpu_count
 import pint
 import os
 import inspect
 from copy import deepcopy
-from warnings import warn, catch_warnings, filterwarnings
+from warnings import catch_warnings, filterwarnings
 from typing import Optional
+import time
 
 
 os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
@@ -54,6 +55,7 @@ def get_attributes(obj):
 
 num_processes = cpu_count()
 
+
 # Check if specified attributes match
 def attributes_match(instance1, instance2, attributes_to_match):
     for attribute in attributes_to_match:
@@ -98,8 +100,14 @@ def parallel_attributes_match(instances, attributes_to_match):
 
 
 class _signal_collection:
-    def __init__(self, exp_list: list[_signal], labels: Optional[list[float]] = None, path: Path = Path("temp.h5")):
-
+    def __init__(
+        self,
+        exp_list: list[_signal],
+        labels: Optional[list[float]] = None,
+        path: Optional[Path] = None,
+    ):
+        if path is None:
+            path = f"{int(time.time()*1000)}.h5"
         self.path = Path(path)
         if self.path.exists():
             self.path.unlink()
@@ -147,6 +155,9 @@ class _signal_collection:
             self.labels = list(
                 [self.file[f"measurements/{name}/label"] for name in self.name]
             )
+        else:
+            self.labels = labels
+
     def __len__(self):
         return len(self.name)
 
@@ -162,7 +173,7 @@ class _signal_collection:
                 self.labels = list(
                     [self.file[f"measurements/{name}/label"] for name in self.name]
                 )
-            except Exception as _:
+            except Exception as __:  # noqa:F841
                 pass
         else:
             if type(key) is int:
@@ -173,10 +184,11 @@ class _signal_collection:
             for i, index in enumerate(key):
                 if type(index) is int:
                     key[i] = slice(index, index + 1)
-            # If only one key is provided, it is assumed to refer to an output selection,
-            # unless the system type is supposed to have only one input, in which case it
-            # will be assumed to refer to an input selection. If two keys are provided, the
-            # first one is assumed to refer to an output, the second to an input.
+            # If only one key is provided, it is assumed to refer to an output
+            # selection, unless the system type is supposed to have only one
+            # input, in which case it will be assumed to refer to an input selection.
+            # If two keys are provided, the first one is assumed to refer to an
+            # output, the second to an input.
             if len(key) == 1:
                 if self.method in ["SIMO"]:
                     for i, measurement in enumerate(self.measurements):
@@ -225,11 +237,12 @@ class _signal_collection:
         return self
 
     def select_all(self):
-        self = self[list(element[0] for element in list(list(self.file.items())[0][1].items()))]
+        self = self[
+            list(element[0] for element in list(list(self.file.items())[0][1].items()))
+        ]
         return self
 
     def close(self, keep: bool = False):
-
         self.file.close()
         if not keep:
             self.path.unlink()
@@ -245,9 +258,9 @@ class _signal_collection:
         self.measurements.append(self.file[f"measurements/{self.name[-1]}/data"])
         if label is not None:
             try:
-                self.labels.append(label)
                 self.file[f"measurements/{self.name[-1]}/label"] = label
-            except Exception as _:
+                self.labels.append(self.file[f"measurements/{self.name[-1]}/label"])
+            except Exception as __:  # noqa:F841
                 pass
         return self
 
@@ -263,16 +276,16 @@ class _signal_collection:
         )
         return self
 
-if __name__ == "__main__":
-    from pymodal import frf
 
-    time = np.arange(0, 30 + 0.05, 0.1)
-    signal = np.sin(1 * time)
-    signal = np.vstack((signal, np.sin(2 * time)))
-    signal = np.vstack((signal, np.sin(3 * time)))
-    signal = np.vstack((signal, np.sin(4 * time)))
-    signal = np.vstack((signal, np.sin(5 * time)))
-    signal = signal.reshape((time.shape[0], -1))
+if __name__ == "__main__":
+
+    t = np.arange(0, 30 + 0.05, 0.1)
+    signal = np.sin(1 * t)
+    signal = np.vstack((signal, np.sin(2 * t)))
+    signal = np.vstack((signal, np.sin(3 * t)))
+    signal = np.vstack((signal, np.sin(4 * t)))
+    signal = np.vstack((signal, np.sin(5 * t)))
+    signal = signal.reshape((t.shape[0], -1))
     signal = np.fft.fft(signal, axis=0)
     signal_1 = signal * 2
     signal_2 = signal * 4

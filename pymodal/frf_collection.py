@@ -1,11 +1,12 @@
-from pymodal import _signal_collection, timeseries, frf
+from pymodal import _signal_collection, frf
 from pathlib import Path
 import numpy as np
 from copy import deepcopy
-from multiprocessing import Pool, cpu_count
+from multiprocessing import cpu_count
 import h5py
-from warnings import warn, catch_warnings, filterwarnings
+from warnings import catch_warnings, filterwarnings
 import matplotlib.pyplot as plt
+from typing import Optional
 
 num_processes = cpu_count()
 
@@ -73,8 +74,13 @@ def change_freq_resolution(var):
 
 
 class frf_collection(_signal_collection):
-    def __init__(self, exp_list: list[frf], path: Path = Path("temp.h5")):
-        super().__init__(exp_list=exp_list, path=path)
+    def __init__(
+        self,
+        exp_list: list[frf],
+        labels: Optional[list[int]] = None,
+        path: Optional[Path] = None,
+    ):
+        super().__init__(exp_list=exp_list, labels=labels, path=path)
         del exp_list
 
     def change_freq_span(self, new_min_freq=None, new_max_freq=None):
@@ -191,8 +197,8 @@ class frf_collection(_signal_collection):
             old_top_ylim = []
             for ax_n in ax:
                 ylim = ax_n.get_ylim()
-                old_bottom_ylim.append(ax_n[0])
-                old_top_ylim.append(ax_n[1])
+                old_bottom_ylim.append(ylim[0])
+                old_top_ylim.append(ylim[1])
         else:
             old_bottom_ylim, old_top_ylim = ax.get_ylim()
         for i, name in enumerate(self.name):
@@ -244,7 +250,6 @@ class frf_collection(_signal_collection):
 
 
 if __name__ == "__main__":
-
     time = np.arange(0, 30 + 0.05, 0.1)
     signal = np.sin(1 * time)
     signal = np.vstack((signal, np.sin(2 * time)))
@@ -263,13 +268,24 @@ if __name__ == "__main__":
     signal_2 = signal_2.reshape((time.shape[0], -1))
     signal_2 = np.fft.fft(signal_2, axis=0)
     test_object_2 = frf(signal_2, freq_end=5)
-    test_collection = frf_collection([test_object, test_object_1, test_object_2])
+    test_collection = frf_collection(
+        [test_object, test_object_1, test_object_2], labels=[0, 1, 2]
+    )
     print(test_collection.measurements)
     test_collection.plot()
     plt.show()
+    print(test_collection.torch_dataset().dataset.get_data_infos("data"))
+    print(test_collection.dataset.get_data("data", -1))
+    print(test_collection.dataset.get_data("label", -1))
+    import torch
+
+    loader = torch.utils.data.DataLoader(test_collection.dataset, num_workers=2)
+    print(next(iter(loader)))
+    print(next(iter(loader)))
     print(test_collection.change_freq_span(new_max_freq=10).measurements)
     print(test_collection.change_freq_resolution(freq_resolution=0.2).measurements)
     print(test_collection[["Vibrational data", "Vibrational data_2"]].measurements)
     print(test_collection[1:-1].measurements)
     print(test_collection["Vibrational data"].measurements)
+    print(test_collection.select_all().measurements)
     test_collection.close()

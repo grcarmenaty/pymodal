@@ -6,9 +6,6 @@ from typing import Optional
 from pint import UnitRegistry, Quantity
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import torch
-from torch.utils.data import Dataset
-import h5py
 
 # If a function will only be used internally in the utils, use __ before its name, if
 # it is intended for use in other modules but not by an end user, use _ before its name

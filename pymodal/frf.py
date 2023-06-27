@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Optional
 import numpy.typing as npt
-from pymodal import _signal, lineplot
+from pymodal import _signal
 from matplotlib import pyplot as plt
 from pint import UnitRegistry
 from copy import deepcopy

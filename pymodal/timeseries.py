@@ -1,11 +1,11 @@
 import numpy as np
 from typing import Optional
 import numpy.typing as npt
-from pymodal import _signal, frf, timeseries
+from pymodal import _signal, timeseries
 from pyFRF import FRF
-from pint import UnitRegistry, set_application_registry
+from pint import UnitRegistry
 from matplotlib import pyplot as plt
-from warnings import warn, catch_warnings, filterwarnings
+from warnings import catch_warnings, filterwarnings
 
 ureg = UnitRegistry()
 

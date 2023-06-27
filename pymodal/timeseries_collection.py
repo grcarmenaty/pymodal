@@ -1,10 +1,14 @@
-from pymodal import _signal_collection, timeseries, frf_collection, timeseries_collection
+from pymodal import (
+    _signal_collection,
+    timeseries,
+    timeseries_collection,
+)
 from pathlib import Path
 import numpy as np
 from copy import deepcopy
-from multiprocessing import Pool, cpu_count
+from multiprocessing import cpu_count
 import h5py
-from warnings import warn, catch_warnings, filterwarnings
+from warnings import catch_warnings, filterwarnings
 import matplotlib.pyplot as plt
 from typing import Optional
 from audiomentations import Compose, AddGaussianNoise
@@ -76,7 +80,12 @@ def change_sampling_rate(var):
 
 
 class timeseries_collection(_signal_collection):
-    def __init__(self, exp_list: list[timeseries], labels: Optional[list[float]] = None, path: Path = Path("temp.h5")):
+    def __init__(
+        self,
+        exp_list: list[timeseries],
+        labels: Optional[list[float]] = None,
+        path: Optional[Path] = None,
+    ):
         super().__init__(exp_list=exp_list, labels=labels, path=path)
         del exp_list
 
@@ -241,8 +250,6 @@ class timeseries_collection(_signal_collection):
         resp_delay: int = 0,
         new_path: Optional[Path] = None,
     ):
-        if new_path is None:
-            new_path = self.path.parent / f"{self.path.stem}_frf.h5"
         working_instance = deepcopy(self.collection_class)
         for attribute in self.attributes:
             if attribute == "name":
@@ -268,6 +275,9 @@ class timeseries_collection(_signal_collection):
             else:
                 setattr(working_excitation, attribute, getattr(excitation, attribute))
         from pymodal import frf_collection
+
+        if self.labels is not None:
+            labels = [label[()] for label in self.labels]
         frf_collection_instance = frf_collection(
             [
                 working_instance.to_FRF(
@@ -276,7 +286,8 @@ class timeseries_collection(_signal_collection):
                     resp_delay=resp_delay,
                 )
             ],
-            new_path,
+            labels=[labels[0]],
+            path=new_path,
         )
         for i, name in enumerate(self.name):
             if i > 0:
@@ -314,7 +325,8 @@ class timeseries_collection(_signal_collection):
                         excitation=working_excitation,
                         FRF_type=FRF_type,
                         resp_delay=resp_delay,
-                    )
+                    ),
+                    labels[i],
                 )
         return frf_collection_instance
 
@@ -350,7 +362,8 @@ class timeseries_collection(_signal_collection):
                 working_instance.measurements = augmented_samples
                 try:
                     self.append(working_instance, self.labels[i])
-                except Exception as _:
+                except Exception as __:  # noqa:F841
+                    pass
                     self.append(working_instance)
         return self
 
@@ -370,13 +383,15 @@ if __name__ == "__main__":
     test_object_1 = timeseries(signal_1, time_end=30)
     test_object_2 = timeseries(signal_2, time_end=30)
     test_object_3 = timeseries(signal_3, time_end=30)
-    test_collection = timeseries_collection([test_object, test_object_1, test_object_2], labels=[0, 1, 2])
+    test_collection = timeseries_collection(
+        [test_object, test_object_1, test_object_2], labels=[0, 1, 2]
+    )
     print(test_collection.measurements)
     test_collection.plot()
     plt.show()
     excitation_test = timeseries(np.sin(1 * time), time_end=30, method="excitation")
     excitation_test = timeseries_collection(
-        [excitation_test, excitation_test, excitation_test], path="test_exc.h5"
+        [excitation_test, excitation_test, excitation_test]
     )
     frf_test = test_collection.to_FRF(excitation_test)
     frf_test.plot(format="mod-phase")
@@ -387,6 +402,7 @@ if __name__ == "__main__":
     print(test_collection.dataset.get_data("data", -1))
     print(test_collection.dataset.get_data("label", -1))
     import torch
+
     loader = torch.utils.data.DataLoader(test_collection.dataset, num_workers=2)
     print(next(iter(loader)))
     print(next(iter(loader)))
