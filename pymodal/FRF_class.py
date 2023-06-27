@@ -247,7 +247,58 @@ class FRF():
                    name=new_name,
                    part=self.part,
                    modal_frequencies=self.modal_frequencies)
+    
+    def extract_measure(self, substrings:list, exact:bool = False):
+        """
+        Create a new instance with the a set of FRFs corresponding to the substrings.
+        The selection can be done with exact = True meaning all FRFs match with all substrings
+        or with False at least each FRF correspond to a single substring.
+        This function can be useful to extract a set of FRFs given a specific damage scenario or envrionmental condition.
+        
+        Parameters
+        ----------
+        substrings : list
+            FRFs with names whom contain any or all FRFs (depending on variable exact) will be added to the new FRF instance
+        exact : bool
+            True = FRF name contains all substrings
+            False = FRF name contains at least one of the substrings being searched.
 
+        Returns
+        -------
+        out : FRF class
+            New instance with all FRFs corresponding to substrings given.
+
+        """
+        new_frf = self.value[:,:,0]
+        new_name = []
+
+        if exact == False:
+            for frf in range(np.shape(self.value)[2]):
+                for substring in substrings:
+                    if substring in self.name[frf]:
+                        new_frf = np.dstack((new_frf,self.value[:,:,frf]))
+                        new_name.append(self.name[frf])
+                        break
+
+            new_frf = new_frf[:,:,1:]
+
+        else: 
+            for frf in range(np.shape(self.value)[2]):
+                if all(substring in substrings for substring in self.name[frf]) == True:
+                        new_frf = np.dstack((new_frf,self.value[:,:,frf]))
+                        new_name.append(self.name[frf])
+
+            new_frf = new_frf[:,:,1:]   
+
+        return FRF(frf=new_frf,
+                   resolution=self.resolution,
+                   bandwidth=self.bandwidth,
+                   max_freq=self.max_freq,
+                   min_freq=self.min_freq,
+                   name=new_name,
+                   part=self.part,
+                   modal_frequencies=self.modal_frequencies)
+    
 
     def normalize(self):  #untested
         """
