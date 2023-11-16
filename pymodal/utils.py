@@ -271,11 +271,11 @@ def change_domain_span(
 
 def lineplot(
     y: np.ndarray,
-    x: np.ndarray = None,
-    ax: plt.Axes = None,
+    x: np.ndarray | None = None,
+    ax: plt.Axes | None = None,
     fontname: str = "DejaVu Serif",
     fontsize: float = 12,
-    title: str = None,
+    title: str | None = None,
     title_size: float = 12,
     major_y_locator: int = 4,
     minor_y_locator: int = 4,
@@ -283,12 +283,12 @@ def lineplot(
     minor_x_locator: int = 4,
     color: str = "blue",
     linestyle: str = "-",
-    ylabel: str = None,
-    xlabel: str = None,
+    ylabel: str | None = None,
+    xlabel: str | None = None,
     decimals_y: int = 2,
     decimals_x: int = 2,
-    bottom_ylim: float = None,
-    top_ylim: float = None,
+    bottom_ylim: float | None = None,
+    top_ylim: float | None = None,
     grid: bool = True,
     log: bool = False,
 ):
@@ -330,10 +330,10 @@ def lineplot(
         Label for the y axis, default is None.
     bottom_ylim: float, optional
         Smallest plotted value, if unspecified will be set to the minimum value of y
-        minus 25% of its value, default is None.
+        minus 12.5% of the minimum to maximum value of the data, default is None.
     top_ylim: float, optional
         Greatest plotted value, if unspecified will be set to the maximum value of y
-        plus 25% of its value, default is None.
+        plus 12.5% of the minimum to maximum value of the data, default is None.
     Returns
     -------
     out: AxesSubplot class
@@ -359,9 +359,10 @@ def lineplot(
     if not isinstance(x, Quantity):
         x = x * ureg("")
     if ax is None:  # If this is not a subplot of a greater figure:
-        fig, ax = plt.subplots()
+        __, ax = plt.subplots()
     # Set limits for x axis between the minimum and maximum domain array values.
     ax.set_xlim(left=x.m[0], right=x.m[-1])
+    # Calculate major and minor ticks locators and labels for the x axis
     x_span = x.m[-1] - x.m[0]
     x_step = x_span / major_x_locator
     x_ticks_labels = np.arange(x.m[0], x.m[-1] + x_step / 2, x_step)
@@ -373,7 +374,7 @@ def lineplot(
     x_minor_step = x_span / (major_x_locator * minor_x_locator)
     x_minor_ticks = np.arange(x.m[0], x.m[-1] + x_minor_step / 2, x_minor_step)
     ax.set_xticks([tick for tick in x_minor_ticks], minor=True)
-    if log:
+    if log:  # If y is logarithmic, y ticks and labels are straightforward
         ax.set_yscale("log")
         top = np.nanmax(y.m)
         bottom = np.nanmin(y.m)
@@ -381,6 +382,8 @@ def lineplot(
         bottom_ylim = 10 ** np.floor(np.log10(bottom))
         ax.set_ylim(top=top_ylim, bottom=bottom_ylim)
     else:
+        # Set limits for y axis between the minimum and maximum data values with 12.5%
+        # margin unless otherwise specified.
         if bottom_ylim is None or top_ylim is None:
             top = np.nanmax(y.m)
             bottom = np.nanmin(y.m)
@@ -388,6 +391,7 @@ def lineplot(
             bottom_ylim = bottom - 0.125 * span if bottom_ylim is None else bottom_ylim
             top_ylim = top + 0.125 * span if top_ylim is None else top_ylim
         ax.set_ylim(top=top_ylim, bottom=bottom_ylim)
+        # Calculate major and minor ticks locators and labels for the y axis
         y_span = top_ylim - bottom_ylim
         y_step = y_span / major_y_locator
         y_ticks_labels = np.arange(bottom_ylim, top_ylim + y_step / 2, y_step)
@@ -398,6 +402,7 @@ def lineplot(
             bottom_ylim, top_ylim + y_minor_step / 2, y_minor_step
         )
         ax.set_yticks([tick for tick in y_minor_ticks], minor=True)
+    # Set labels and titles
     if xlabel is not None:
         ax.set_xlabel(xlabel, fontname=fontname, fontsize=fontsize)
     if ylabel is not None:
