@@ -4,10 +4,6 @@ from .utils import (  # noqa F401
     change_domain_resolution,
     change_domain_span,
     lineplot,
-    save_array,
-    load_array,
-    load_FRF,
-    plot_FRF,
     value_CFDAC,
     value_CFDAC_A,
     value_FDAC,
@@ -39,16 +35,11 @@ from .frf import frf
 from .signal_collection_parent import _signal_collection
 from .timeseries_collection import timeseries_collection
 from .frf_collection import frf_collection
-from .FRF_class import FRF
 
 __all__ = [
     "change_domain_resolution",
     "change_domain_span",
     "lineplot",
-    "save_array",
-    "load_array",
-    "load_FRF",
-    "plot_FRF",
     "value_CFDAC",
     "value_CFDAC_A",
     "value_FDAC",
@@ -78,5 +69,4 @@ __all__ = [
     "_signal_collection",
     "timeseries_collection",
     "frf_collection",
-    "FRF",
 ]

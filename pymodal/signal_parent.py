@@ -591,3 +591,58 @@ class _signal:
             log=log,
         )
         return ax, img
+
+    def save(self, path):
+        import h5py
+        from pathlib import Path
+        with h5py.File(Path(path), 'w') as f:
+            f.create_dataset('measurements', data=self.measurements.magnitude)
+            f.create_dataset('coordinates', data=self.coordinates.magnitude)
+            f.create_dataset('orientations', data=self.orientations)
+            f.attrs['measurements_units'] = str(self.measurements_units.units)
+            f.attrs['domain_units'] = str(self.domain_units)
+            f.attrs['space_units'] = str(self.space_units)
+            f.attrs['method'] = self.method
+            f.attrs['name'] = self.name
+            f.attrs['domain_start'] = self.domain_start.magnitude
+            f.attrs['domain_end'] = self.domain_end.magnitude
+            f.attrs['domain_resolution'] = self.domain_resolution.magnitude
+            f.attrs['dof'] = self.dof
+
+    @staticmethod
+    def _load_hdf5(path):
+        import h5py
+        from pathlib import Path
+        with h5py.File(Path(path), 'r') as f:
+            return {
+                'measurements': f['measurements'][:],
+                'coordinates': f['coordinates'][:],
+                'orientations': f['orientations'][:],
+                'measurements_units': str(f.attrs['measurements_units']),
+                'domain_units': str(f.attrs['domain_units']),
+                'space_units': str(f.attrs['space_units']),
+                'method': str(f.attrs['method']),
+                'name': str(f.attrs['name']),
+                'domain_start': float(f.attrs['domain_start']),
+                'domain_end': float(f.attrs['domain_end']),
+                'domain_resolution': float(f.attrs['domain_resolution']),
+                'dof': int(f.attrs['dof']),
+            }
+
+    @classmethod
+    def load(cls, path):
+        data = cls._load_hdf5(path)
+        return cls(
+            measurements=data['measurements'],
+            coordinates=data['coordinates'],
+            orientations=data['orientations'],
+            dof=data['dof'],
+            domain_start=data['domain_start'],
+            domain_end=data['domain_end'],
+            domain_resolution=data['domain_resolution'],
+            measurements_units=data['measurements_units'],
+            domain_units=data['domain_units'],
+            space_units=data['space_units'],
+            method=data['method'],
+            name=data['name'],
+        )

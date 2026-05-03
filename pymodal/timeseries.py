@@ -334,6 +334,24 @@ class timeseries(_signal):
             method=self.method,
         )
 
+    @classmethod
+    def load(cls, path):
+        data = cls._load_hdf5(path)
+        return cls(
+            measurements=data['measurements'],
+            coordinates=data['coordinates'],
+            orientations=data['orientations'],
+            dof=data['dof'],
+            time_start=data['domain_start'],
+            time_end=data['domain_end'],
+            sampling_rate=data['domain_resolution'],
+            measurements_units=data['measurements_units'],
+            time_units=data['domain_units'],
+            space_units=data['space_units'],
+            method=data['method'],
+            name=data['name'],
+        )
+
 
 if __name__ == "__main__":
 

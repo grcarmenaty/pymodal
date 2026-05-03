@@ -396,6 +396,24 @@ class frf(_signal):
         del measurements_backup
         return ax, img
 
+    @classmethod
+    def load(cls, path):
+        data = cls._load_hdf5(path)
+        return cls(
+            measurements=data['measurements'],
+            coordinates=data['coordinates'],
+            orientations=data['orientations'],
+            dof=data['dof'],
+            freq_start=data['domain_start'],
+            freq_end=data['domain_end'],
+            freq_resolution=data['domain_resolution'],
+            measurements_units=data['measurements_units'],
+            freq_units=data['domain_units'],
+            space_units=data['space_units'],
+            method=data['method'],
+            name=data['name'],
+        )
+
 
 if __name__ == "__main__":
     from matplotlib import pyplot as plt

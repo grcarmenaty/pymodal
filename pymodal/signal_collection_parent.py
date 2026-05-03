@@ -15,7 +15,7 @@ import time
 os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 
 
-def save_array(array_info):
+def _write_to_hdf5(array_info):
     array, dataset_name, file_name = array_info
     with h5py.File(file_name, "a") as hf:
         if dataset_name in hf:
@@ -129,7 +129,7 @@ class _signal_collection:
         # with Pool(num_processes) as pool:
         #     pool.map(save_array, array_info[1:])
         for array in array_info:
-            save_array(array)
+            _write_to_hdf5(array)
         exp_list = exp_list[0]
         self.file = h5py.File(self.path, "a")
         self.measurements = list(
