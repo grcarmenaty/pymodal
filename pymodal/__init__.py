@@ -1,4 +1,37 @@
-from .utils import change_domain_resolution, change_domain_span, lineplot
+import pymodal.papergraph  # noqa F401
+import pymodal.mapdl  # noqa F401
+from .utils import (  # noqa F401
+    change_domain_resolution,
+    change_domain_span,
+    lineplot,
+    save_array,
+    load_array,
+    load_FRF,
+    plot_FRF,
+    value_CFDAC,
+    value_CFDAC_A,
+    value_FDAC,
+    value_RVAC,
+    value_RVAC_2d,
+    value_GAC,
+    FRFRMS,
+    FRFSF,
+    FRFSM,
+    ODS_diff,
+    r2_imag,
+    # compress,
+    plot_control_chart,
+    SCI,
+    DRQ,
+    AIGAC,
+    unsigned_SCI,
+    M2L_func,
+    M2L,
+    plot_CFDAC,
+    damping_coefficient,
+    synthetic_FRF,
+    modal_superposition,
+)
 from .hdf5_dataset import HDF5Dataset
 from .signal_parent import _signal
 from .timeseries import timeseries
@@ -6,13 +39,38 @@ from .frf import frf
 from .signal_collection_parent import _signal_collection
 from .timeseries_collection import timeseries_collection
 from .frf_collection import frf_collection
+from .FRF_class import FRF
 
-# Please, add all imports to this list so that flake8 understands there is no PEP8
-# violation
 __all__ = [
     "change_domain_resolution",
     "change_domain_span",
     "lineplot",
+    "save_array",
+    "load_array",
+    "load_FRF",
+    "plot_FRF",
+    "value_CFDAC",
+    "value_CFDAC_A",
+    "value_FDAC",
+    "value_RVAC",
+    "value_RVAC_2d",
+    "value_GAC",
+    "FRFRMS",
+    "FRFSF",
+    "FRFSM",
+    "ODS_diff",
+    "r2_imag",
+    "plot_control_chart",
+    "SCI",
+    "DRQ",
+    "AIGAC",
+    "unsigned_SCI",
+    "M2L_func",
+    "M2L",
+    "plot_CFDAC",
+    "damping_coefficient",
+    "synthetic_FRF",
+    "modal_superposition",
     "HDF5Dataset",
     "_signal",
     "timeseries",
@@ -20,4 +78,5 @@ __all__ = [
     "_signal_collection",
     "timeseries_collection",
     "frf_collection",
+    "FRF",
 ]

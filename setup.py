@@ -28,7 +28,9 @@ setuptools.setup(
         "pyFRF>=0.40",
         "h5py>=3.9.0",
         "audiomentations>=0.31.0",
-        "torch>=2.0.1"
+        "torch>=2.0.1",
+        "ansys-mapdl-core>=0.39",
+        "astropy>=4.3",
     ],
     # Should be as specific as possible
     extras_require={
@@ -38,7 +40,7 @@ setuptools.setup(
             "docutils>=0.16",
             "doc8>=0.8.0",
             "flake8>=3.7.9",
-            "black>=23.1.0"
+            "black>=23.1.0",
         ],
     },
     python_requires='>=3.9',
