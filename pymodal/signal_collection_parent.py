@@ -25,6 +25,9 @@ def save_array(array_info):
         the path to the HDF5 file.
     """
     array, dataset_name, file_name = array_info
+    # Downcast complex128 → complex64 to halve storage and GPU transfer cost.
+    if np.iscomplexobj(array) and array.dtype == np.complex128:
+        array = array.astype(np.complex64)
     with h5py.File(file_name, "a") as hf:
         if dataset_name in hf:
             del hf[dataset_name]

@@ -172,7 +172,7 @@ class timeseries_collection(_signal_collection):
         Parameters
         ----------
         new_sampling_rate : float
-            Target sampling rate (inverse of the time step).
+            Target sampling frequency in Hz (fs = 1 / Δt).
 
         Returns
         -------
@@ -526,7 +526,7 @@ if __name__ == "__main__":
     test_collection.open()
     print(test_collection.append(test_object_3, 2).measurements)
     print(test_collection.change_time_span(new_max_time=20).measurements)
-    print(test_collection.change_sampling_rate(new_sampling_rate=0.2).measurements)
+    print(test_collection.change_sampling_rate(new_sampling_rate=5.0).measurements)
     print(
         test_collection[
             ["Vibrational data", "Vibrational data_1", "Vibrational data_2"]
