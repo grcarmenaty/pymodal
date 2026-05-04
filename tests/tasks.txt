@@ -1,7 +1,0 @@
-This document should serve to recount all tasks regarding testing:
-
-- all tests for ansys
-- all tests for papergraph (at least show graphs)
-- docstrings for some of existing tests
-- comments for all existing tests
-- add tests for analytical FRF synthesis

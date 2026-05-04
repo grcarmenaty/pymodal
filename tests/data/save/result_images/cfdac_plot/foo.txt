@@ -1,1 +1,0 @@
-This folder must exist for testing purposes.
