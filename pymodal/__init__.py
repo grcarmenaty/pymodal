@@ -1,4 +1,31 @@
-from .utils import change_domain_resolution, change_domain_span, lineplot
+from .utils import (  # noqa F401
+    change_domain_resolution,
+    change_domain_span,
+    lineplot,
+    save_array,
+    load_array,
+    value_CFDAC,
+    value_CFDAC_A,
+    value_FDAC,
+    value_RVAC,
+    value_RVAC_2d,
+    value_GAC,
+    FRFRMS,
+    FRFSF,
+    FRFSM,
+    ODS_diff,
+    r2_imag,
+    SCI,
+    DRQ,
+    AIGAC,
+    unsigned_SCI,
+    M2L_func,
+    M2L,
+    damping_coefficient,
+    synthetic_FRF,
+    modal_superposition,
+    plot_control_chart,
+)
 from .hdf5_dataset import HDF5Dataset
 from .signal_parent import _signal
 from .timeseries import timeseries
@@ -7,12 +34,33 @@ from .signal_collection_parent import _signal_collection
 from .timeseries_collection import timeseries_collection
 from .frf_collection import frf_collection
 
-# Please, add all imports to this list so that flake8 understands there is no PEP8
-# violation
 __all__ = [
     "change_domain_resolution",
     "change_domain_span",
     "lineplot",
+    "save_array",
+    "load_array",
+    "value_CFDAC",
+    "value_CFDAC_A",
+    "value_FDAC",
+    "value_RVAC",
+    "value_RVAC_2d",
+    "value_GAC",
+    "FRFRMS",
+    "FRFSF",
+    "FRFSM",
+    "ODS_diff",
+    "r2_imag",
+    "SCI",
+    "DRQ",
+    "AIGAC",
+    "unsigned_SCI",
+    "M2L_func",
+    "M2L",
+    "damping_coefficient",
+    "synthetic_FRF",
+    "modal_superposition",
+    "plot_control_chart",
     "HDF5Dataset",
     "_signal",
     "timeseries",
