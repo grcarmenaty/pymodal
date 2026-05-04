@@ -388,6 +388,8 @@ class timeseries_collection(_signal_collection):
 
         if self.labels is not None:
             labels = [label[()] for label in self.labels]
+        else:
+            labels = None
         frf_collection_instance = frf_collection(
             [
                 working_instance.to_FRF(
@@ -396,7 +398,7 @@ class timeseries_collection(_signal_collection):
                     resp_delay=resp_delay,
                 )
             ],
-            labels=[labels[0]],
+            labels=[labels[0]] if labels is not None else None,
             path=new_path,
         )
         for i, name in enumerate(self.name):
@@ -436,7 +438,7 @@ class timeseries_collection(_signal_collection):
                         FRF_type=FRF_type,
                         resp_delay=resp_delay,
                     ),
-                    labels[i],
+                    labels[i] if labels is not None else None,
                 )
         return frf_collection_instance
 
@@ -491,11 +493,8 @@ class timeseries_collection(_signal_collection):
                         )
                 working_instance.name = f"{name}_augmented"
                 working_instance.measurements = augmented_samples
-                try:
-                    self.append(working_instance, self.labels[i])
-                except Exception as __:  # noqa:F841
-                    pass
-                    self.append(working_instance)
+                label = self.labels[i] if self.labels is not None else None
+                self.append(working_instance, label)
         return self
 
 

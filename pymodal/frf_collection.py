@@ -334,7 +334,7 @@ class frf_collection(_signal_collection):
                         else:
                             old_bottom_ylim = new_bottom_ylim
                         if new_top_ylim < old_top_ylim:
-                            ax_n.set_ylim(bottom=old_top_ylim)
+                            ax_n.set_ylim(top=old_top_ylim)
                         else:
                             old_top_ylim = new_top_ylim
         return ax, img

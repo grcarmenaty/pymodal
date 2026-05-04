@@ -406,11 +406,10 @@ class _signal_collection:
         self.file[f"measurements/{self.name[-1]}/data"] = signal.measurements
         self.measurements.append(self.file[f"measurements/{self.name[-1]}/data"])
         if label is not None:
-            try:
-                self.file[f"measurements/{self.name[-1]}/label"] = label
-                self.labels.append(self.file[f"measurements/{self.name[-1]}/label"])
-            except Exception as __:  # noqa:F841
-                pass
+            self.file[f"measurements/{self.name[-1]}/label"] = label
+            if self.labels is None:
+                self.labels = []
+            self.labels.append(self.file[f"measurements/{self.name[-1]}/label"])
         return self
 
     def torch_dataset(self):
@@ -425,6 +424,9 @@ class _signal_collection:
         self
         """
         self.close(keep=True)
+        self.measurements = None
+        if self.labels is not None:
+            self.labels = None
         self.dataset = HDF5Dataset(self.path)
         return self
 

@@ -492,15 +492,14 @@ def save_array(array: np.ndarray, path: str):
     file_type = path.suffix
     file_type = file_type.lower()
 
-    if file_type in ".npy":
+    if file_type == ".npy":
         with open(path, "wb+") as fh:
             np_save(fh, array, allow_pickle=False)
-    elif file_type in ".npz":
+    elif file_type == ".npz":
         with open(path, "wb+") as fh:
             savez_compressed(fh, data=array)
-    elif file_type in ".mat":
+    elif file_type == ".mat":
         with open(path, "wb+") as fh:
-            print(type(fh))
             savemat(fh, {"data": array})
     else:
         raise Exception(f"Extension {file_type} not recognized. This function"
@@ -519,11 +518,11 @@ def load_array(path: str):
     path = Path(path)
     file_type = path.suffix
 
-    if file_type in ".npy":
+    if file_type == ".npy":
         return np_load(path)
-    elif file_type in ".npz":
+    elif file_type == ".npz":
         return np_load(path)["data"]
-    elif file_type in ".mat":
+    elif file_type == ".mat":
         with open(path, "r") as __:  # noqa F841
             array = loadmat(path)
             info = whosmat(path)

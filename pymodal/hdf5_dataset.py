@@ -8,18 +8,12 @@ from torch.utils import data
 
 
 class HDF5Dataset(data.Dataset):
-    """Represents an abstract HDF5 dataset.
+    """PyTorch Dataset wrapper over a single HDF5 file written by
+    :class:`_signal_collection`.
 
-    Input params:
-        file_path: Path to the folder containing the dataset (one or multiple HDF5
-            files).
-        recursive: If True, searches for h5 files in subdirectories.
-        load_data: If True, loads all the data immediately into RAM. Use this if
-            the dataset is fits into memory. Otherwise, leave this at false and
-            the data will load lazily.
-        data_cache_size: Number of HDF5 files that can be cached in the cache
-            (default=3).
-        transform: PyTorch transform to apply to every data instance (default=None).
+    Expects the HDF5 structure ``measurements/{name}/data`` and optionally
+    ``measurements/{name}/label``. Supports lazy loading with an LRU file-level
+    cache (``data_cache_size`` files kept in memory simultaneously).
     """
 
     def __init__(self, file_path, load_data=False, data_cache_size=3, transform=None):
@@ -121,7 +115,7 @@ class HDF5Dataset(data.Dataset):
         data_info structure.
         """
         with h5py.File(file_path) as h5_file:
-            for gname, group in h5_file.items():
+            for _, group in h5_file.items():
                 for gname, group in group.items():
                     for dname, ds in group.items():
                         # add data to the data cache and retrieve
