@@ -141,6 +141,17 @@ Tests pass on Python 3.9+. The CI workflow tests Python 3.9 and 3.10 on ubuntu, 
 ## Development Notes
 
 - Python ≥ 3.9 required. Use `Optional[X]` from `typing` for optional type hints — **not** `X | None` (which requires Python 3.10+).
-- The branch under active development is `signal`. The `master` branch is the legacy codebase.
+- The active development branch is `master` (formerly `signal`). The old `master` is preserved as `legacy`.
 - Multiprocessing is scaffolded in collection classes (commented-out `Pool` calls) but currently runs sequentially. Do not remove the commented blocks — they document the intended parallelism.
 - `HDF5_USE_FILE_LOCKING=FALSE` is set as an environment variable in `signal_collection_parent.py` to prevent HDF5 file locking issues on some filesystems.
+
+## Git and Authorship
+
+**NEVER appear as the commit author.** Every commit must be authored by the repository owner (Guillermo Reyes Carmenaty `<grcarmenaty@gmail.com>`). Before making any commit, verify that the git user identity is set to the owner's name and email — not to Claude, Anthropic, or any AI identity. If the local `user.name` / `user.email` config does not match the owner's identity, set it explicitly with:
+
+```bash
+git config user.name "Guillermo Reyes Carmenaty"
+git config user.email "grcarmenaty@gmail.com"
+```
+
+This must be checked at the start of every session and before every commit.
