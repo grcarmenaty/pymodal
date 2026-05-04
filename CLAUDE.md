@@ -1,16 +1,33 @@
 # pymodal — Claude Instructions
 
-## Purpose
+## Core Mission
 
-pymodal is a Python library for the management, storage, simulation, and analysis of vibration signals — primarily Frequency Response Functions (FRFs) and time-domain signals — for structural health monitoring (SHM) and experimental modal analysis. It provides:
+**pymodal's primary purpose is to make it easy to build large, labelled collections of vibrational signals stored on disk, and to feed those collections directly into PyTorch ML training pipelines — without loading the dataset into RAM.**
 
-- Structured data containers for time-series and FRF signals with full unit awareness (via pint)
-- HDF5-backed collections for memory-efficient handling of large measurement datasets
-- FRF estimation from time-domain data via the pyFRF library
-- Signal processing utilities (resolution change, domain span change, interpolation)
-- SHM damage-detection metrics (CFDAC, FDAC, RVAC, GAC, SCI, DRQ, AIGAC, FRFRMS, FRFSF, FRFSM)
-- Synthetic FRF generation via modal superposition
-- Data augmentation (Gaussian noise) and PyTorch dataset integration for machine learning pipelines
+The intended workflow is:
+
+1. Acquire or simulate vibrational measurements (time-series or FRFs).
+2. Assemble them into a `timeseries_collection` or `frf_collection`, which writes every measurement array to an HDF5 file on disk as it is added.
+3. Pre-process the collection in-place (resample, change span, augment with noise, convert to FRF) — all operations stream through the HDF5 file without materialising the full dataset in memory.
+4. Call `.torch_dataset()` to obtain a `HDF5Dataset` (`torch.utils.data.Dataset`) that lazy-loads individual samples on demand during training.
+
+Signal processing, metrics, simulation, and plotting are secondary capabilities that support building and validating those collections. They are not the end goal.
+
+### What this means in practice
+
+- **Collections are the primary data structure**, not individual signals. Individual `frf` and `timeseries` objects exist to be assembled into collections.
+- **HDF5 is the persistence layer.** Collections always have a backing `.h5` file. The file is created on construction and stays open. Never design around keeping large arrays in Python memory.
+- **Labels are first-class.** Every signal in a collection can carry a numeric label (e.g. damage state index) that is stored alongside the data in the HDF5 file and surfaced as the `y` in PyTorch `(x, y)` batches.
+- **Disk I/O throughput matters.** Batch operations on collections (`change_freq_span`, `AddGaussianNoise`, etc.) are designed to be parallelisable (multiprocessing infrastructure is scaffolded but currently sequential — do not remove the commented `Pool` blocks).
+
+## Secondary Capabilities
+
+- Structured signal containers (`frf`, `timeseries`) with full unit awareness via pint
+- FRF estimation from time-domain data (pyFRF: H1, H2, Hv, vector, ODS estimators)
+- Signal processing utilities: resolution change, domain span change, interpolation
+- SHM damage-detection metrics: CFDAC, FDAC, RVAC, GAC, SCI, DRQ, AIGAC, FRFRMS, FRFSF, FRFSM, M2L
+- Synthetic FRF and time-series generation via modal superposition
+- Data augmentation: Gaussian noise injection (`AddGaussianNoise`) via audiomentations
 
 ## Repository Structure
 
