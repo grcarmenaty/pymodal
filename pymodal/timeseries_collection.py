@@ -1,20 +1,13 @@
-from pymodal import (
-    _signal_collection,
-    timeseries,
-    timeseries_collection,
-)
+from pymodal import _signal_collection, timeseries
 from pathlib import Path
 import numpy as np
 from copy import deepcopy
-from multiprocessing import cpu_count
 import h5py
 from warnings import catch_warnings, filterwarnings
 import matplotlib.pyplot as plt
 from typing import Optional
 from audiomentations import Compose, AddGaussianNoise
 import random
-
-num_processes = cpu_count()
 
 
 def change_time_span(var):
@@ -158,9 +151,6 @@ class timeseries_collection(_signal_collection):
         del self.measurements
         for var in vars:
             working_instance = change_time_span(var)
-        # with Pool(num_processes) as pool:
-        #     working_instance = pool.map(change_time_span, vars)
-        # working_instance = working_instance[0]
         attributes_to_match = deepcopy(self.attributes)
         attributes_to_match.remove("measurements")
         attributes_to_match.remove("name")
@@ -196,9 +186,6 @@ class timeseries_collection(_signal_collection):
         del self.measurements
         for var in vars:
             working_instance = change_sampling_rate(var)
-        # with Pool(num_processes) as pool:
-        #     working_instance = pool.map(change_sampling_rate, vars)
-        # working_instance = working_instance[0]
         attributes_to_match = deepcopy(self.attributes)
         attributes_to_match.remove("measurements")
         attributes_to_match.remove("name")
@@ -334,7 +321,7 @@ class timeseries_collection(_signal_collection):
 
     def to_FRF(
         self,
-        excitation: timeseries_collection,
+        excitation: "_signal_collection",
         FRF_type: str = "H1",
         resp_delay: int = 0,
         new_path: Optional[Path] = None,
@@ -468,7 +455,7 @@ class timeseries_collection(_signal_collection):
         """
         if sample is None:
             sample = 1.0
-        if type(sample) is float:
+        if isinstance(sample, float):
             n = int(np.floor(len(self) * sample))
             sample = random.sample(self.name, n)
         working_instance = deepcopy(self.collection_class)

@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Optional
 import numpy.typing as npt
-from pymodal import _signal, timeseries
+from pymodal import _signal
 from pyFRF import FRF
 from pint import UnitRegistry
 from matplotlib import pyplot as plt
@@ -217,7 +217,7 @@ class timeseries(_signal):
         xlabel = f"Time ({ureg.second:~P})" if xlabel is None else xlabel
         if ax is None:
             fig, ax = plt.subplots()
-        ax.xaxis.set_units(ureg.hertz)
+        ax.xaxis.set_units(ureg.second)
         ax, img = super().plot(
             ax=ax,
             fontname=fontname,
@@ -243,7 +243,7 @@ class timeseries(_signal):
 
     def to_FRF(
         self,
-        excitation: timeseries,
+        excitation: "_signal",
         FRF_type: str = "H1",
         resp_delay: int = 0,
     ):
@@ -282,6 +282,10 @@ class timeseries(_signal):
         elif self.measurements.check(""):
             resp_type = "e"
             form = "receptance"
+        else:
+            raise ValueError(
+                f"Unrecognized response units: {self.measurements_units}."
+            )
         # Get excitation type from excitation units.
         if excitation.measurements.check("[force]"):
             exc_type = "f"
@@ -293,6 +297,10 @@ class timeseries(_signal):
             exc_type = "a"
         elif excitation.measurements.check(""):
             exc_type = "e"
+        else:
+            raise ValueError(
+                f"Unrecognized excitation units: {excitation.measurements_units}."
+            )
         with catch_warnings():
             filterwarnings(
                 "ignore",

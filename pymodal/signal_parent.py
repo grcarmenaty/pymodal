@@ -93,7 +93,7 @@ class _signal:
                 measurements_units = ureg.parse_expression("newton")
             else:
                 measurements_units = ureg.parse_expression("millimeter/second**2")
-        elif type(measurements_units) is str:
+        elif isinstance(measurements_units, str):
             measurements_units = ureg.parse_expression(measurements_units)
         self.measurements_units = measurements_units
         if not isinstance(measurements, Quantity):
@@ -198,7 +198,7 @@ class _signal:
         # Assign space units to coordinates.
         if space_units is None:
             space_units = ureg.parse_expression("millimeter")
-        elif type(space_units) is str:
+        elif isinstance(space_units, str):
             space_units = ureg.parse_expression(space_units)
         self.space_units = space_units
         self.coordinates = self.coordinates * self.space_units
@@ -237,89 +237,52 @@ class _signal:
         # Make sure domain parameters are coherent, calculate the missing domain
         # parameters
         self.domain_start = (
-            domain_start.magnitude
-            if type(domain_start) == type(measurements)
-            else domain_start
+            domain_start.magnitude if isinstance(domain_start, Quantity) else domain_start
         )
         self.domain_end = (
-            domain_end.magnitude
-            if type(domain_end) == type(measurements)
-            else domain_end
+            domain_end.magnitude if isinstance(domain_end, Quantity) else domain_end
         )
         self.domain_span = (
-            domain_span.magnitude
-            if type(domain_span) == type(measurements)
-            else domain_span
+            domain_span.magnitude if isinstance(domain_span, Quantity) else domain_span
         )
         self.domain_resolution = (
             domain_resolution.magnitude
-            if type(domain_resolution) == type(measurements)
+            if isinstance(domain_resolution, Quantity)
             else domain_resolution
         )
         if self.domain_span is None:
-            if self.domain_end is None:  # max, span are None, rate is defined
+            if self.domain_end is None:  # end and span are None, resolution must be set
                 if self.domain_resolution is None:
                     raise ValueError("Insufficient temporal domain parameters.")
                 self.domain_span = (self.samples - 1) * self.domain_resolution
                 self.domain_end = self.domain_start + self.domain_span
-            else:
+            else:  # end is defined, span is None
                 self.domain_span = self.domain_end - self.domain_start
                 if self.domain_resolution is None:
                     self.domain_resolution = self.domain_span / (self.samples - 1)
-        else:  # max is defined, span is not, rate not considered
-            self.domain_span = self.domain_end - self.domain_start
-            if self.domain_resolution is None:  # span, rate are None, max is defined
+                else:
+                    calculated_resolution = self.domain_span / (self.samples - 1)
+                    if not np.allclose(self.domain_resolution, calculated_resolution):
+                        raise ValueError(
+                            "The temporal domain parameters introduced are inconsistent."
+                        )
+        else:  # span is defined
+            if self.domain_end is None:
+                self.domain_end = self.domain_start + self.domain_span
+            else:
+                calculated_end = self.domain_start + self.domain_span
+                if not np.allclose(self.domain_end, calculated_end):
+                    raise ValueError(
+                        "The temporal domain parameters introduced are inconsistent."
+                    )
+            if self.domain_resolution is None:
                 self.domain_resolution = self.domain_span / (self.samples - 1)
-            else:  # span is None, max and rate are defined
+            else:
                 calculated_resolution = self.domain_span / (self.samples - 1)
                 if not np.allclose(self.domain_resolution, calculated_resolution):
                     raise ValueError(
                         "The temporal domain parameters introduced are inconsistent."
                     )
-                else:
-                    if self.domain_end is None:  # max is None, span is defined.
-                        self.domain_end = self.domain_start + self.domain_span
-                        if (
-                            self.domain_resolution is None
-                        ):  # max and rate are None, span is defined
-                            self.domain_resolution = self.domain_span / (
-                                self.samples - 1
-                            )
-                        else:  # span is None, max and rate are defined
-                            calculated_resolution = self.domain_span / (
-                                self.samples - 1
-                            )
-                            if not np.allclose(
-                                self.domain_resolution, calculated_resolution
-                            ):
-                                raise ValueError(
-                                    "The temporal domain parameters introduced are"
-                                    " inconsistent."
-                                )
-                    else:  # max and span are defined
-                        calculated_end = self.domain_start + self.domain_span
-                        if not np.allclose(self.domain_end, calculated_end):
-                            raise ValueError(
-                                "The temporal domain parameters introduced are"
-                                " inconsistent."
-                            )
-                        if (
-                            self.domain_resolution is None
-                        ):  # rate is None, max and span are defined
-                            self.domain_resolution = self.domain_span / (
-                                self.samples - 1
-                            )
-                        else:  # everything is defined
-                            calculated_resolution = self.domain_span / (
-                                self.samples - 1
-                            )
-                            if not np.allclose(
-                                self.domain_resolution, calculated_resolution
-                            ):
-                                raise ValueError(
-                                    "The temporal domain parameters introduced are"
-                                    " inconsistent."
-                                )
         for attribute in [
             "domain_end",
             "domain_start",
@@ -327,7 +290,7 @@ class _signal:
             "domain_resolution",
         ]:
             current_value = getattr(self, attribute)
-            if str(type(current_value)) == "<class 'pint.util.Quantity'>":
+            if isinstance(current_value, Quantity):
                 setattr(self, attribute, current_value.magnitude)
         # Build the domain array and make sure it is coherent with the measurements.
         self.domain_array = np.arange(
@@ -344,7 +307,7 @@ class _signal:
         )
         if domain_units is None:
             domain_units = ureg.parse_expression("seconds")
-        elif type(domain_units) is str:
+        elif isinstance(domain_units, str):
             domain_units = ureg.parse_expression(domain_units)
         self.domain_units = domain_units
         self.domain_end = self.domain_end * self.domain_units
@@ -431,13 +394,13 @@ class _signal:
         """
         self_copy = deepcopy(self)  # Make a deepcopy of self to work on it.
         # Make sure key is a list of slices. If it isn't, turn it into one.
-        if type(key) is int:
+        if isinstance(key, int):
             key = slice(key, key + 1)
-        if type(key) is slice:
+        if isinstance(key, slice):
             key = [key]
         key = list(key)
         for i, index in enumerate(key):
-            if type(index) is int:
+            if isinstance(index, int):
                 key[i] = slice(index, index + 1)
         # If only one key is provided, it is assumed to refer to an output selection,
         # unless the system type is supposed to have only one input, in which case it
@@ -462,7 +425,9 @@ class _signal:
             self_copy.orientations = self.orientations[:, key[0], key[1]]
         else:
             raise ValueError("Too many keys provided.")
-        self.dof = max(self.measurements.shape[1], self.measurements.shape[2])
+        self_copy.dof = max(
+            self_copy.measurements.shape[1], self_copy.measurements.shape[2]
+        )
         return self_copy
 
     def change_domain_resolution(self, new_resolution: Quantity):

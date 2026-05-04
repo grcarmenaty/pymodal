@@ -2,7 +2,6 @@ import numpy as np
 from pymodal import _signal, HDF5Dataset
 import h5py
 from pathlib import Path
-from multiprocessing import cpu_count
 import pint
 import os
 import inspect
@@ -87,9 +86,7 @@ def get_attributes(obj):
     return attributes
 
 
-num_processes = cpu_count()
-
-
+# Check if specified attributes match
 def attributes_match(instance1, instance2, attributes_to_match):
     """Return True if all listed attributes are equal between two objects.
 
@@ -150,21 +147,11 @@ def parallel_attributes_match(instances, attributes_to_match):
     """
     first_instance = instances[0]
     remaining_instances = instances[1:]
-    results = []
-    for instance in remaining_instances:
-        results.append(worker((first_instance, instance, attributes_to_match)))
-    # with Pool(num_processes) as pool:
-    #     results = pool.map(
-    #         worker,
-    #         [
-    #             (first_instance, instance, attributes_to_match)
-    #             for instance in remaining_instances
-    #         ],
-    #     )
-
-    if np.all(results):
-        return True
-    return False
+    results = [
+        worker((first_instance, instance, attributes_to_match))
+        for instance in remaining_instances
+    ]
+    return bool(np.all(results))
 
 
 class _signal_collection:
@@ -220,9 +207,6 @@ class _signal_collection:
             (array.magnitude, f"measurements/{self.name[i]}/data", self.path)
             for i, array in enumerate([exp.measurements for exp in exp_list])
         ]
-        # save_array(array_info[0])
-        # with Pool(num_processes) as pool:
-        #     pool.map(save_array, array_info[1:])
         for array in array_info:
             save_array(array)
         exp_list = exp_list[0]
@@ -277,9 +261,9 @@ class _signal_collection:
         -------
         self
         """
-        if type(key) is str:
+        if isinstance(key, str):
             key = [key]
-        if type(key) is set or type(key) is list:
+        if isinstance(key, (set, list)):
             self.name = list(key)
             self.measurements = list(
                 [self.file[f"measurements/{name}/data"] for name in self.name]
@@ -288,16 +272,16 @@ class _signal_collection:
                 self.labels = list(
                     [self.file[f"measurements/{name}/label"] for name in self.name]
                 )
-            except Exception as __:  # noqa:F841
+            except Exception:
                 pass
         else:
-            if type(key) is int:
+            if isinstance(key, int):
                 key = slice(key, key + 1)
-            if type(key) is slice:
+            if isinstance(key, slice):
                 key = [key]
             key = list(key)
             for i, index in enumerate(key):
-                if type(index) is int:
+                if isinstance(index, int):
                     key[i] = slice(index, index + 1)
             # If only one key is provided, it is assumed to refer to an output
             # selection, unless the system type is supposed to have only one

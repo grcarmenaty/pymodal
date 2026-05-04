@@ -2,13 +2,10 @@ from pymodal import _signal_collection, frf
 from pathlib import Path
 import numpy as np
 from copy import deepcopy
-from multiprocessing import cpu_count
 import h5py
 from warnings import catch_warnings, filterwarnings
 import matplotlib.pyplot as plt
 from typing import Optional
-
-num_processes = cpu_count()
 
 
 def change_freq_span(var):
@@ -152,9 +149,6 @@ class frf_collection(_signal_collection):
         del self.measurements
         for var in vars:
             working_instance = change_freq_span(var)
-        # with Pool(num_processes) as pool:
-        #     working_instance = pool.map(change_freq_span, vars)
-        # working_instance = working_instance[0]
         attributes_to_match = deepcopy(self.attributes)
         attributes_to_match.remove("measurements")
         attributes_to_match.remove("name")
@@ -190,9 +184,6 @@ class frf_collection(_signal_collection):
         del self.measurements
         for var in vars:
             working_instance = change_freq_resolution(var)
-        # with Pool(num_processes) as pool:
-        #     working_instance = pool.map(change_freq_resolution, vars)
-        # working_instance = working_instance[0]
         attributes_to_match = deepcopy(self.attributes)
         attributes_to_match.remove("measurements")
         attributes_to_match.remove("name")
@@ -283,7 +274,7 @@ class frf_collection(_signal_collection):
             top_ylim=top_ylim,
             grid=grid,
         )
-        if type(ax) is list:
+        if isinstance(ax, list):
             old_bottom_ylim = []
             old_top_ylim = []
             for ax_n in ax:
@@ -326,17 +317,27 @@ class frf_collection(_signal_collection):
                     top_ylim=top_ylim,
                     grid=grid,
                 )
-                if type(ax) is list:
-                    for ax_n in ax:
+                if isinstance(ax, list):
+                    for j, ax_n in enumerate(ax):
                         new_bottom_ylim, new_top_ylim = ax_n.get_ylim()
-                        if new_bottom_ylim > old_bottom_ylim:
-                            ax_n.set_ylim(bottom=old_bottom_ylim)
+                        if new_bottom_ylim > old_bottom_ylim[j]:
+                            ax_n.set_ylim(bottom=old_bottom_ylim[j])
                         else:
-                            old_bottom_ylim = new_bottom_ylim
-                        if new_top_ylim < old_top_ylim:
-                            ax_n.set_ylim(top=old_top_ylim)
+                            old_bottom_ylim[j] = new_bottom_ylim
+                        if new_top_ylim < old_top_ylim[j]:
+                            ax_n.set_ylim(top=old_top_ylim[j])
                         else:
-                            old_top_ylim = new_top_ylim
+                            old_top_ylim[j] = new_top_ylim
+                else:
+                    new_bottom_ylim, new_top_ylim = ax.get_ylim()
+                    if new_bottom_ylim > old_bottom_ylim:
+                        ax.set_ylim(bottom=old_bottom_ylim)
+                    else:
+                        old_bottom_ylim = new_bottom_ylim
+                    if new_top_ylim < old_top_ylim:
+                        ax.set_ylim(top=old_top_ylim)
+                    else:
+                        old_top_ylim = new_top_ylim
         return ax, img
 
 
