@@ -18,6 +18,20 @@ num_processes = cpu_count()
 
 
 def change_time_span(var):
+    """Worker that applies ``timeseries.change_time_span`` to a single element and
+    writes the result back to the HDF5 file.
+
+    Parameters
+    ----------
+    var : tuple
+        ``(collection, i, new_min_time, new_max_time)`` where ``i`` is the
+        zero-based index of the signal to process.
+
+    Returns
+    -------
+    timeseries
+        Modified instance with ``measurements`` deleted (data already in HDF5).
+    """
     collection, i, new_min_time, new_max_time = var
     working_instance = deepcopy(collection.collection_class)
     for attribute in collection.attributes:
@@ -50,6 +64,20 @@ def change_time_span(var):
 
 
 def change_sampling_rate(var):
+    """Worker that applies ``timeseries.change_sampling_rate`` to a single element
+    and writes the result back to the HDF5 file.
+
+    Parameters
+    ----------
+    var : tuple
+        ``(collection, i, new_sampling_rate)`` where ``i`` is the zero-based index
+        of the signal to process.
+
+    Returns
+    -------
+    timeseries
+        Modified instance with ``measurements`` deleted (data already in HDF5).
+    """
     collection, i, new_sampling_rate = var
     working_instance = deepcopy(collection.collection_class)
     for attribute in collection.attributes:
@@ -80,16 +108,48 @@ def change_sampling_rate(var):
 
 
 class timeseries_collection(_signal_collection):
+    """HDF5-backed collection of :class:`timeseries` objects.
+
+    Inherits all storage and selection behaviour from :class:`_signal_collection`
+    and adds time-domain batch operations, overlay plotting, batch FRF estimation,
+    and Gaussian noise augmentation.
+    """
+
     def __init__(
         self,
         exp_list: list[timeseries],
         labels: Optional[list[float]] = None,
         path: Optional[Path] = None,
     ):
+        """Create a collection from a list of :class:`timeseries` instances.
+
+        Parameters
+        ----------
+        exp_list : list of timeseries
+            Time-series objects to store. All must share the same non-measurement
+            attributes.
+        labels : list of float, optional
+            Numeric label for each signal (e.g. damage state).
+        path : Path or str, optional
+            Path for the backing HDF5 file. Auto-generated if None.
+        """
         super().__init__(exp_list=exp_list, labels=labels, path=path)
         del exp_list
 
     def change_time_span(self, new_min_time=None, new_max_time=None):
+        """Apply :meth:`timeseries.change_time_span` to every signal in the collection.
+
+        Parameters
+        ----------
+        new_min_time : float, optional
+            New start time. Unchanged if None.
+        new_max_time : float, optional
+            New end time. Unchanged if None.
+
+        Returns
+        -------
+        self
+        """
         vars = []
         for i in range(len(self)):
             vars.append((self, i, new_min_time, new_max_time))
@@ -117,6 +177,17 @@ class timeseries_collection(_signal_collection):
         return self
 
     def change_sampling_rate(self, new_sampling_rate):
+        """Apply :meth:`timeseries.change_sampling_rate` to every signal in the collection.
+
+        Parameters
+        ----------
+        new_sampling_rate : float
+            Target sampling rate (inverse of the time step).
+
+        Returns
+        -------
+        self
+        """
         vars = []
         for i in range(len(self)):
             vars.append((self, i, new_sampling_rate))
@@ -164,6 +235,24 @@ class timeseries_collection(_signal_collection):
         top_ylim: float = None,
         grid: bool = True,
     ):
+        """Overlay all time-series in the collection on a single plot using a rainbow
+        colormap.
+
+        Each signal is rendered using :meth:`timeseries.plot`. Y-axis limits are
+        expanded progressively to accommodate every curve.
+
+        Parameters
+        ----------
+        ax : plt.Axes, optional
+            Axes to draw on. Created automatically if None.
+        color : matplotlib colormap, optional
+            Colormap used to generate one colour per signal, default ``plt.cm.rainbow``.
+
+        Returns
+        -------
+        ax : plt.Axes
+        img : list of Line2D
+        """
         color = iter(color(np.linspace(0, 1, len(self))))
         working_instance = deepcopy(self.collection_class)
         for attribute in self.attributes:
@@ -250,6 +339,27 @@ class timeseries_collection(_signal_collection):
         resp_delay: int = 0,
         new_path: Optional[Path] = None,
     ):
+        """Compute FRFs for every signal in the collection and return an
+        :class:`frf_collection`.
+
+        Parameters
+        ----------
+        excitation : timeseries_collection
+            Matching collection of excitation signals. Must have the same length as
+            ``self`` and be indexed in the same order.
+        FRF_type : str, optional
+            Estimator type passed to :meth:`timeseries.to_FRF`. One of
+            ``"H1"``, ``"H2"``, ``"Hv"``, ``"vector"``, ``"ODS"``. Default ``"H1"``.
+        resp_delay : int, optional
+            Response delay in samples passed to :meth:`timeseries.to_FRF`, default 0.
+        new_path : Path or str, optional
+            HDF5 path for the resulting :class:`frf_collection`. Auto-generated if None.
+
+        Returns
+        -------
+        frf_collection
+            Collection of computed FRFs, preserving the labels from ``self``.
+        """
         working_instance = deepcopy(self.collection_class)
         for attribute in self.attributes:
             if attribute == "name":
@@ -333,6 +443,27 @@ class timeseries_collection(_signal_collection):
     def AddGaussianNoise(
         self, min_amplitude=0.001, max_amplitude=0.015, sample: Optional[float] = None
     ):
+        """Augment the collection by adding Gaussian noise to selected signals.
+
+        A noisy copy of each selected signal is appended to the collection with
+        the suffix ``_augmented`` on its name. Uses the ``audiomentations`` library.
+
+        Parameters
+        ----------
+        min_amplitude : float, optional
+            Minimum noise amplitude relative to the signal, default 0.001.
+        max_amplitude : float, optional
+            Maximum noise amplitude relative to the signal, default 0.015.
+        sample : None, float, or list of str, optional
+            Which signals to augment.
+            - ``None`` or ``1.0``: all signals.
+            - float in (0, 1): random proportion of the collection.
+            - list of str: specific signal names.
+
+        Returns
+        -------
+        self
+        """
         if sample is None:
             sample = 1.0
         if type(sample) is float:

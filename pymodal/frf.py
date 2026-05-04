@@ -165,6 +165,61 @@ class frf(_signal):
         top_ylim: float = None,
         grid: bool = True,
     ):
+        """Plot the FRF in one of several formats.
+
+        Parameters
+        ----------
+        format : str, optional
+            One of ``"mod"``, ``"phase"``, ``"mod-phase"``, ``"real"``,
+            ``"imag"``, ``"real-imag"``. Default is ``"mod"``.
+            ``"mod"`` uses a logarithmic y scale. ``"phase"`` and the phase
+            panel of ``"mod-phase"`` use π-based y tick labels.
+            Dual-panel formats (``"mod-phase"``, ``"real-imag"``) require
+            ``ax`` to be a list of two Axes or None.
+        ax : plt.Axes or list of plt.Axes, optional
+            Axes to draw on. Created automatically if None.
+        fontname : str, optional
+            Font family for all text, default "DejaVu Serif".
+        fontsize : float, optional
+            Font size for tick labels and axis labels, default 12.
+        title : str, optional
+            Plot title; defaults to ``self.name``.
+        title_size : float, optional
+            Font size for the title, default 12.
+        major_y_locator : int, optional
+            Number of major divisions on the y axis, default 4.
+        minor_y_locator : int, optional
+            Number of minor divisions per major division on the y axis, default 4.
+        major_x_locator : int, optional
+            Number of major divisions on the x axis, default 4.
+        minor_x_locator : int, optional
+            Number of minor divisions per major division on the x axis, default 4.
+        color : str, optional
+            Line colour, default "blue".
+        linestyle : str, optional
+            Matplotlib line style string, default "-".
+        ylabel : str, optional
+            Y-axis label; derived from format and units if None.
+        xlabel : str, optional
+            X-axis label; defaults to frequency with SI unit symbol.
+        decimals_y : int, optional
+            Decimal places shown on y tick labels, default 2.
+        decimals_x : int, optional
+            Decimal places shown on x tick labels, default 2.
+        bottom_ylim : float, optional
+            Lower y-axis limit.
+        top_ylim : float, optional
+            Upper y-axis limit.
+        grid : bool, optional
+            Whether to draw a grid, default True.
+
+        Returns
+        -------
+        ax : plt.Axes or list of plt.Axes
+            Single axes for single-panel formats, list of two for dual-panel formats.
+        img : list
+            List of Line2D objects from matplotlib.
+        """
         assert format in ["mod-phase", "mod", "phase", "real", "imag", "real-imag"]
         xlabel = f"Frequency ({ureg.hertz:~P})" if xlabel is None else xlabel
         measurements_backup = deepcopy(self.measurements)

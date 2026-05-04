@@ -23,6 +23,21 @@ class HDF5Dataset(data.Dataset):
     """
 
     def __init__(self, file_path, load_data=False, data_cache_size=3, transform=None):
+        """Initialise the dataset from a single HDF5 file.
+
+        Parameters
+        ----------
+        file_path : str or Path
+            Path to the HDF5 file produced by :class:`_signal_collection`.
+        load_data : bool, optional
+            If True all data is loaded into RAM immediately. Leave False for lazy
+            loading when the dataset does not fit in memory. Default False.
+        data_cache_size : int, optional
+            Maximum number of HDF5 files kept in the in-memory cache simultaneously.
+            Default 3.
+        transform : callable, optional
+            PyTorch transform applied to every data sample in ``__getitem__``.
+        """
         super().__init__()
         self.data_info = []
         self.data_cache = {}
@@ -35,6 +50,19 @@ class HDF5Dataset(data.Dataset):
         self._add_data_infos(str(p.resolve()), load_data)
 
     def __getitem__(self, index):
+        """Return the ``(data, label)`` pair at ``index`` as PyTorch tensors.
+
+        Parameters
+        ----------
+        index : int
+            Index into the list of ``"data"`` datasets.
+
+        Returns
+        -------
+        tuple of (torch.Tensor, torch.Tensor)
+            ``(data, label)`` where data has the shape of the stored measurement
+            array and label is a scalar tensor.
+        """
         # get data
         x = self.get_data("data", index)
         if self.transform:
@@ -48,9 +76,20 @@ class HDF5Dataset(data.Dataset):
         return (x, y)
 
     def __len__(self):
+        """Return the total number of data samples in the dataset."""
         return len(self.get_data_infos("data"))
 
     def _add_data_infos(self, file_path, load_data):
+        """Scan the HDF5 file and populate ``self.data_info`` with metadata for every
+        dataset found under ``/measurements/{name}/{type}``.
+
+        Parameters
+        ----------
+        file_path : str
+            Absolute path to the HDF5 file.
+        load_data : bool
+            If True, immediately load each dataset into the cache.
+        """
         with h5py.File(file_path) as h5_file:
             # Walk through all groups, extracting datasets
             for _, group in h5_file.items():

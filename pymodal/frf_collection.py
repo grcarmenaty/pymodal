@@ -12,6 +12,21 @@ num_processes = cpu_count()
 
 
 def change_freq_span(var):
+    """Worker that applies ``frf.change_freq_span`` to a single element of a
+    collection and writes the result back to the HDF5 file.
+
+    Parameters
+    ----------
+    var : tuple
+        ``(collection, i, new_min_freq, new_max_freq)`` where ``i`` is the
+        zero-based index of the signal to process.
+
+    Returns
+    -------
+    frf
+        Modified instance with ``measurements`` deleted (data already written
+        to HDF5).
+    """
     collection, i, new_min_freq, new_max_freq = var
     working_instance = deepcopy(collection.collection_class)
     for attribute in collection.attributes:
@@ -44,6 +59,21 @@ def change_freq_span(var):
 
 
 def change_freq_resolution(var):
+    """Worker that applies ``frf.change_freq_resolution`` to a single element of a
+    collection and writes the result back to the HDF5 file.
+
+    Parameters
+    ----------
+    var : tuple
+        ``(collection, i, freq_resolution)`` where ``i`` is the zero-based index
+        of the signal to process.
+
+    Returns
+    -------
+    frf
+        Modified instance with ``measurements`` deleted (data already written
+        to HDF5).
+    """
     collection, i, freq_resolution = var
     working_instance = deepcopy(collection.collection_class)
     for attribute in collection.attributes:
@@ -74,16 +104,46 @@ def change_freq_resolution(var):
 
 
 class frf_collection(_signal_collection):
+    """HDF5-backed collection of :class:`frf` objects.
+
+    Inherits all storage and selection behaviour from :class:`_signal_collection`
+    and adds frequency-domain batch operations and overlay plotting.
+    """
+
     def __init__(
         self,
         exp_list: list[frf],
         labels: Optional[list[int]] = None,
         path: Optional[Path] = None,
     ):
+        """Create a collection from a list of :class:`frf` instances.
+
+        Parameters
+        ----------
+        exp_list : list of frf
+            FRF objects to store. All must share the same non-measurement attributes.
+        labels : list of int, optional
+            Integer label for each FRF (e.g. damage state index).
+        path : Path or str, optional
+            Path for the backing HDF5 file. Auto-generated if None.
+        """
         super().__init__(exp_list=exp_list, labels=labels, path=path)
         del exp_list
 
     def change_freq_span(self, new_min_freq=None, new_max_freq=None):
+        """Apply :meth:`frf.change_freq_span` to every FRF in the collection.
+
+        Parameters
+        ----------
+        new_min_freq : float, optional
+            New minimum frequency. Unchanged if None.
+        new_max_freq : float, optional
+            New maximum frequency. Unchanged if None.
+
+        Returns
+        -------
+        self
+        """
         vars = []
         for i in range(len(self)):
             vars.append((self, i, new_min_freq, new_max_freq))
@@ -111,6 +171,17 @@ class frf_collection(_signal_collection):
         return self
 
     def change_freq_resolution(self, freq_resolution):
+        """Apply :meth:`frf.change_freq_resolution` to every FRF in the collection.
+
+        Parameters
+        ----------
+        freq_resolution : float
+            Target frequency resolution in the same units as ``self.freq_units``.
+
+        Returns
+        -------
+        self
+        """
         vars = []
         for i in range(len(self)):
             vars.append((self, i, freq_resolution))
@@ -159,6 +230,26 @@ class frf_collection(_signal_collection):
         top_ylim: float = None,
         grid: bool = True,
     ):
+        """Overlay all FRFs in the collection on a single plot using a rainbow colormap.
+
+        Each FRF is rendered using :meth:`frf.plot`. Y-axis limits are expanded
+        progressively to accommodate every curve. Accepts the same parameters as
+        :meth:`frf.plot` except ``color``, which is a matplotlib colormap.
+
+        Parameters
+        ----------
+        format : str, optional
+            Plot format passed to :meth:`frf.plot`, default ``"mod"``.
+        ax : plt.Axes or list of plt.Axes, optional
+            Axes to draw on. Created automatically if None.
+        color : matplotlib colormap, optional
+            Colormap used to generate one colour per FRF, default ``plt.cm.rainbow``.
+
+        Returns
+        -------
+        ax : plt.Axes or list of plt.Axes
+        img : list of Line2D
+        """
         color = iter(color(np.linspace(0, 1, len(self))))
         working_instance = deepcopy(self.collection_class)
         for attribute in self.attributes:

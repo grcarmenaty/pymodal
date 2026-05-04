@@ -163,6 +163,57 @@ class timeseries(_signal):
         top_ylim: float = None,
         grid: bool = True,
     ):
+        """Plot the time-domain signal with time on the x axis.
+
+        Delegates to ``_signal.plot`` after setting a default xlabel of
+        ``"Time (s)"``. All parameters behave identically to the parent method.
+
+        Parameters
+        ----------
+        ax : plt.Axes, optional
+            Axes to draw on. A new figure is created if None.
+        fontname : str, optional
+            Font family for all text, default "DejaVu Serif".
+        fontsize : float, optional
+            Font size for tick labels and axis labels, default 12.
+        title : str, optional
+            Plot title; defaults to ``self.name``.
+        title_size : float, optional
+            Font size for the title, default 12.
+        major_y_locator : int, optional
+            Number of major divisions on the y axis, default 4.
+        minor_y_locator : int, optional
+            Number of minor divisions per major division on the y axis, default 4.
+        major_x_locator : int, optional
+            Number of major divisions on the x axis, default 4.
+        minor_x_locator : int, optional
+            Number of minor divisions per major division on the x axis, default 4.
+        color : str, optional
+            Line colour, default "blue".
+        linestyle : str, optional
+            Matplotlib line style string, default "-".
+        ylabel : str, optional
+            Y-axis label; defaults to "Amplitude (<units>)".
+        xlabel : str, optional
+            X-axis label; defaults to "Time (s)".
+        decimals_y : int, optional
+            Decimal places shown on y tick labels, default 2.
+        decimals_x : int, optional
+            Decimal places shown on x tick labels, default 2.
+        bottom_ylim : float, optional
+            Lower y-axis limit; auto-computed with 12.5 % margin if None.
+        top_ylim : float, optional
+            Upper y-axis limit; auto-computed with 12.5 % margin if None.
+        grid : bool, optional
+            Whether to draw a grid, default True.
+
+        Returns
+        -------
+        ax : plt.Axes
+            The axes on which the signal was plotted.
+        img : list
+            List of Line2D objects returned by matplotlib.
+        """
         xlabel = f"Time ({ureg.second:~P})" if xlabel is None else xlabel
         if ax is None:
             fig, ax = plt.subplots()

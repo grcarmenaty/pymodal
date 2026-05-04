@@ -408,6 +408,27 @@ class _signal:
             return False
 
     def __getitem__(self, key: tuple[slice]):
+        """Return a deep copy of this signal sliced to the given output/input subset.
+
+        A single key slices the output axis for SIMO/MIMO methods and the input axis
+        for MISO/excitation methods. Two keys slice outputs then inputs (MIMO only).
+        Integer keys are promoted to unit-length slices so the array remains 3-D.
+
+        Parameters
+        ----------
+        key : int, slice, or tuple of (int | slice)
+            One or two index/slice values selecting outputs and/or inputs.
+
+        Returns
+        -------
+        _signal
+            Deep copy with measurements and coordinates restricted to the selection.
+
+        Raises
+        ------
+        ValueError
+            If more than two keys are provided.
+        """
         self_copy = deepcopy(self)  # Make a deepcopy of self to work on it.
         # Make sure key is a list of slices. If it isn't, turn it into one.
         if type(key) is int:
@@ -560,6 +581,60 @@ class _signal:
         grid: bool = True,
         log: bool = False,
     ):
+        """Plot the signal using a preformatted line plot.
+
+        All measurement channels are flattened into a 2-D array and plotted on the
+        same axes. Labels and title default to the signal name and unit strings
+        derived from the pint Quantity attributes.
+
+        Parameters
+        ----------
+        ax : plt.Axes, optional
+            Axes to draw on. A new figure is created if None.
+        fontname : str, optional
+            Font family for all text, default "DejaVu Serif".
+        fontsize : float, optional
+            Font size for tick labels and axis labels, default 12.
+        title : str, optional
+            Plot title; defaults to ``self.name``.
+        title_size : float, optional
+            Font size for the title, default 12.
+        major_y_locator : int, optional
+            Number of major divisions on the y axis, default 4.
+        minor_y_locator : int, optional
+            Number of minor divisions per major division on the y axis, default 4.
+        major_x_locator : int, optional
+            Number of major divisions on the x axis, default 4.
+        minor_x_locator : int, optional
+            Number of minor divisions per major division on the x axis, default 4.
+        color : str, optional
+            Line colour, default "blue".
+        linestyle : str, optional
+            Matplotlib line style string, default "-".
+        ylabel : str, optional
+            Y-axis label; defaults to "Amplitude (<units>)".
+        xlabel : str, optional
+            X-axis label.
+        decimals_y : int, optional
+            Decimal places shown on y tick labels, default 2.
+        decimals_x : int, optional
+            Decimal places shown on x tick labels, default 2.
+        bottom_ylim : float, optional
+            Lower y-axis limit; auto-computed with 12.5 % margin if None.
+        top_ylim : float, optional
+            Upper y-axis limit; auto-computed with 12.5 % margin if None.
+        grid : bool, optional
+            Whether to draw a grid, default True.
+        log : bool, optional
+            Use logarithmic y scale, default False.
+
+        Returns
+        -------
+        ax : plt.Axes
+            The axes on which the signal was plotted.
+        img : list
+            List of Line2D objects returned by matplotlib.
+        """
         title = self.name if title is None else title
         ylabel = (
             f"Amplitude ({self.measurements_units.u:~P})" if ylabel is None else ylabel
