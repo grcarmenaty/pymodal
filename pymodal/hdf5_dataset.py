@@ -8,27 +8,44 @@ from torch.utils import data
 
 
 class HDF5Dataset(data.Dataset):
-    """PyTorch Dataset wrapper over a single HDF5 file written by
+    """PyTorch Dataset wrapper over one or more HDF5 files written by
     :class:`_signal_collection`.
 
-    Expects the HDF5 structure ``measurements/{name}/data`` and optionally
-    ``measurements/{name}/label``. Supports lazy loading with an LRU file-level
-    cache (``data_cache_size`` files kept in memory simultaneously).
+    ``file_path`` can be either a single ``.h5``/``.hdf5`` file or a directory.
+    When a directory is given, every HDF5 file found in it (and, if
+    ``recursive=True``, in all subdirectories) is included.  All files must
+    share the same HDF5 structure: ``measurements/{name}/data`` and optionally
+    ``measurements/{name}/label``.
+
+    Supports lazy loading with an LRU file-level cache (``data_cache_size``
+    files kept in memory simultaneously).
     """
 
-    def __init__(self, file_path, load_data=False, data_cache_size=3, transform=None):
-        """Initialise the dataset from a single HDF5 file.
+    def __init__(
+        self,
+        file_path,
+        recursive=False,
+        load_data=False,
+        data_cache_size=3,
+        transform=None,
+    ):
+        """Initialise the dataset from a file or a directory of HDF5 files.
 
         Parameters
         ----------
         file_path : str or Path
-            Path to the HDF5 file produced by :class:`_signal_collection`.
+            Path to a single HDF5 file **or** a directory containing HDF5
+            files produced by :class:`_signal_collection`.
+        recursive : bool, optional
+            When ``file_path`` is a directory, also search all subdirectories
+            for HDF5 files.  Ignored when ``file_path`` is a file.
+            Default False.
         load_data : bool, optional
-            If True all data is loaded into RAM immediately. Leave False for lazy
-            loading when the dataset does not fit in memory. Default False.
+            If True all data is loaded into RAM immediately. Leave False for
+            lazy loading when the dataset does not fit in memory. Default False.
         data_cache_size : int, optional
-            Maximum number of HDF5 files kept in the in-memory cache simultaneously.
-            Default 3.
+            Maximum number of HDF5 files kept in the in-memory cache
+            simultaneously. Default 3.
         transform : callable, optional
             PyTorch transform applied to every data sample in ``__getitem__``.
         """
@@ -38,10 +55,14 @@ class HDF5Dataset(data.Dataset):
         self.data_cache_size = data_cache_size
         self.transform = transform
 
-        # Search for all h5 files
         p = Path(file_path)
-
-        self._add_data_infos(str(p.resolve()), load_data)
+        if p.is_dir():
+            search = p.rglob if recursive else p.glob
+            h5_files = sorted(search("*.h5")) + sorted(search("*.hdf5"))
+            for f in h5_files:
+                self._add_data_infos(str(f.resolve()), load_data)
+        else:
+            self._add_data_infos(str(p.resolve()), load_data)
 
     def __getitem__(self, index):
         """Return the ``(data, label)`` pair at ``index`` as PyTorch tensors.
