@@ -88,20 +88,19 @@ class HDF5Dataset(data.Dataset):
     def _add_data_infos(self, file_path, load_data):
         """Scan the HDF5 file and register metadata for every dataset."""
         with h5py.File(file_path, "r") as h5_file:
-            for _, group in h5_file.items():
-                for gname, signal_group in group.items():
-                    for dname, ds in signal_group.items():
-                        entry = {
-                            "file_path": file_path,
-                            "name": gname,
-                            "type": dname,
-                            "shape": ds.shape,
-                            "hdf5_path": f"measurements/{gname}/{dname}",
-                        }
-                        if load_data:
-                            key = (file_path, gname, dname)
-                            self.ram_cache[key] = ds[()]
-                        self.data_info.append(entry)
+            for gname, signal_group in h5_file["measurements"].items():
+                for dname, ds in signal_group.items():
+                    entry = {
+                        "file_path": file_path,
+                        "name": gname,
+                        "type": dname,
+                        "shape": ds.shape,
+                        "hdf5_path": f"measurements/{gname}/{dname}",
+                    }
+                    if load_data:
+                        key = (file_path, gname, dname)
+                        self.ram_cache[key] = ds[()]
+                    self.data_info.append(entry)
 
     def get_data_infos(self, type):
         """Return metadata entries for datasets of the given type."""

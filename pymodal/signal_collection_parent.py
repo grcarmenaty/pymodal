@@ -417,6 +417,41 @@ class _signal_collection:
         self.dataset = HDF5Dataset(self.path)
         return self
 
+    def split(self, train_frac=0.70, val_frac=0.15, test_frac=0.15, seed=42):
+        """Create a stratified train/val/test split and store the indices.
+
+        Indices are stored as ``self.train_indices``, ``self.val_indices``,
+        and ``self.test_indices``.  Each class is represented proportionally
+        in every subset.
+
+        Returns
+        -------
+        tuple of (list, list, list)
+            ``(train_indices, val_indices, test_indices)``
+        """
+        assert abs(train_frac + val_frac + test_frac - 1.0) < 1e-9, \
+            "train_frac + val_frac + test_frac must equal 1.0"
+        rng = np.random.default_rng(seed)
+        labels_list = self.labels if self.labels is not None else []
+        label_groups: dict = {}
+        for i, lbl in enumerate(labels_list):
+            key = int(lbl[()] if hasattr(lbl, "__getitem__") else lbl)
+            label_groups.setdefault(key, []).append(i)
+        train_idx, val_idx, test_idx = [], [], []
+        for key in sorted(label_groups):
+            arr = np.array(label_groups[key])
+            rng.shuffle(arr)
+            n = len(arr)
+            n_train = int(round(n * train_frac))
+            n_val = int(round(n * val_frac))
+            train_idx.extend(arr[:n_train].tolist())
+            val_idx.extend(arr[n_train:n_train + n_val].tolist())
+            test_idx.extend(arr[n_train + n_val:].tolist())
+        self.train_indices = train_idx
+        self.val_indices = val_idx
+        self.test_indices = test_idx
+        return train_idx, val_idx, test_idx
+
     def open(self):
         """Reopen the HDF5 file and refresh the ``measurements`` handle list.
 
