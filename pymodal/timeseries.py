@@ -20,59 +20,50 @@ class timeseries(_signal):
         time_start: Optional[float] = 0,
         time_end: Optional[float] = None,
         time_span: Optional[float] = None,
-        sampling_rate: Optional[float] = None,
+        time_step: Optional[float] = None,
         measurements_units: Optional[str] = None,
         time_units: Optional[str] = None,
         space_units: Optional[str] = None,
         method: str = "SIMO",
         name: Optional[str] = None,
     ):
-        """Class designed to store all vibrational temporal information measured from
-        a three-dimensional body, be it inputs or outputs, along with the spatial
-        information related to each of the aforementioned measurements.
+        """Store vibrational time-domain measurements from a three-dimensional body.
 
         Parameters
         ----------
         measurements : numpy array of floats
-            A numpy array of up to three dimensions where the first one contains the
-            measurements as they evolve through time, and the rest are
-            related to the system's degrees of freedom and the obtention method.
+            Up to three-dimensional array where the first dimension contains the
+            measurements as they evolve through time, and the remaining dimensions
+            correspond to degrees of freedom and the measurement method.
         coordinates : numpy array of floats, optional
-            A two-dimensional array containing the spatial coordinates of the degrees of
-            freedom of the measurements contained within the instance of this class,
-            repeating as needed if measurements were taken for more than one orientation
-            on the same spatial coordinates, by default None.
+            Spatial coordinates of the measurement DOF, by default None.
         orientations : numpy array of floats, optional
-            A two dimensional array containing a unit vector representing the direction
-            in which the measurement taken at a given coordinate was recorded, by
-            default None.
+            Unit vectors representing the measurement direction at each coordinate,
+            by default None.
         dof : float, optional
-            How many degrees of freedom have been measured and are stored within the
-            instance of this class, by default None.
+            Number of measured degrees of freedom, by default None.
         time_start : float, optional
-            Starting time value, by default 0.
+            Starting time value in seconds, by default 0.
         time_end : float, optional
-            Maximum time value, by default None.
+            Maximum time value in seconds, by default None.
         time_span : float, optional
-            Total time duration, by default None.
-        sampling_rate : float, optional
-            How many time passes between the event of recording a data point and the
-            recording of the next one, by default None.
+            Total duration in seconds, by default None.
+        time_step : float, optional
+            Time between consecutive samples in seconds (Δt = 1 / fs).
+            ``sampling_rate`` (in Hz) is derived as 1 / time_step.
+            By default None.
         measurements_units : string, optional
-            Units used for the measurements stored within the instance of this class,
-            they are assumed to be Newtons, millimeters and seconds; taking "Newton" as
-            the default for an excitation and "millimeter / second ** 2" as default for
-            any output measurement, by default None.
+            Units for the stored measurements. Defaults to "newton" for excitation
+            signals and "millimeter / second ** 2" for responses.
+        time_units : string, optional
+            Units for the time axis, by default None (seconds).
         space_units : string, optional
-            Units used for the spatial coordinates of the degrees of freedom, by
-            default "millimeter".
+            Units for spatial coordinates, by default "millimeter".
         method : string, optional
-            Whether the method used to get the measurements is Multiple Input Single
-            Output (MISO), Single Input Multiple Output (SIMO), Multiple Input Multiple
-            Output (MIMO), or a recording of the excitation inputs, by default "SIMO"
+            Measurement configuration: "SIMO", "MISO", "MIMO", or "excitation".
+            By default "SIMO".
         name : string, optional
-            An identifying name for the measurements stored in this instance of the
-            signal class.
+            Identifying label for this signal.
         """
         super().__init__(
             measurements=measurements,
@@ -82,7 +73,7 @@ class timeseries(_signal):
             domain_start=time_start,
             domain_end=time_end,
             domain_span=time_span,
-            domain_resolution=sampling_rate,
+            domain_resolution=time_step,
             measurements_units=measurements_units,
             domain_units=time_units,
             space_units=space_units,
@@ -92,55 +83,47 @@ class timeseries(_signal):
         self.time_start = self.domain_start
         self.time_end = self.domain_end
         self.time_span = self.domain_span
-        self.sampling_rate = self.domain_resolution
+        self.time_step = self.domain_resolution
+        # sampling_rate is the sampling frequency in Hz (= 1 / time_step).
+        self.sampling_rate = (1.0 / self.time_step) if self.time_step is not None else None
         self.time_units = self.domain_units
         self.time_array = self.domain_array
 
     def change_time_span(
         self, new_min_time: Optional[float] = None, new_max_time: Optional[float] = None
     ):
-        """Either extend or cut the measured data according to new maximum and minimum
-        time values.
+        """Crop or extend the signal to new time limits.
 
         Parameters
         ----------
         new_min_time : float, optional
-            The new desired minimum time. If negative, time will be added before the
-            initial time with all measurements set to 0, and the new time origin will be
-            set as the new 0, by default None.
+            New start time. Negative values prepend zeros. By default None.
         new_max_time : float, optional
-            The new desired maximum time. If greater than the previous max time, time
-            will be added after the previous max time with all measurements set to 0,
-            by default None.
+            New end time. Values beyond the current end append zeros. By default None.
 
         Returns
         -------
-        timeseries class object
-            A hard copy of the class instance with the modifications pertinent to the
-            method applied: the new time array without the values that fall outside
-            the given range, and extended as necessary to comply with the given range,
-            with the corresponding measurements values.
+        timeseries
+            Deep copy with the modified time axis and measurement array.
         """
         return super().change_domain_span(
             new_min_domain=new_min_time, new_max_domain=new_max_time
         )
 
     def change_sampling_rate(self, new_sampling_rate: float):
-        """Change the sampling rate and interpolate as needed to return an object with
-        values coherent with the desired sampling rate.
+        """Resample the signal to a new sampling frequency.
 
         Parameters
         ----------
         new_sampling_rate : float
-            The desired sampling rate.
+            Desired sampling frequency in Hz (fs = 1 / Δt).
 
         Returns
         -------
-        timeseries class object
-            A hard copy of the class instance with the modifications pertinent to the
-            method applied: all values coherent with the desired new sampling rate.
+        timeseries
+            Deep copy with data interpolated to the new sampling frequency.
         """
-        return super().change_domain_resolution(new_resolution=new_sampling_rate)
+        return super().change_domain_resolution(new_resolution=1.0 / new_sampling_rate)
 
     def plot(
         self,
@@ -163,10 +146,56 @@ class timeseries(_signal):
         top_ylim: float = None,
         grid: bool = True,
     ):
+        """Plot the time-domain signal with time on the x axis.
+
+        Parameters
+        ----------
+        ax : plt.Axes, optional
+            Axes to draw on. A new figure is created if None.
+        fontname : str, optional
+            Font family for all text, default "DejaVu Serif".
+        fontsize : float, optional
+            Font size for tick labels and axis labels, default 12.
+        title : str, optional
+            Plot title; defaults to ``self.name``.
+        title_size : float, optional
+            Font size for the title, default 12.
+        major_y_locator : int, optional
+            Number of major divisions on the y axis, default 4.
+        minor_y_locator : int, optional
+            Number of minor divisions per major division on the y axis, default 4.
+        major_x_locator : int, optional
+            Number of major divisions on the x axis, default 4.
+        minor_x_locator : int, optional
+            Number of minor divisions per major division on the x axis, default 4.
+        color : str, optional
+            Line colour, default "blue".
+        linestyle : str, optional
+            Matplotlib line style string, default "-".
+        ylabel : str, optional
+            Y-axis label; defaults to "Amplitude (<units>)".
+        xlabel : str, optional
+            X-axis label; defaults to "Time (s)".
+        decimals_y : int, optional
+            Decimal places shown on y tick labels, default 2.
+        decimals_x : int, optional
+            Decimal places shown on x tick labels, default 2.
+        bottom_ylim : float, optional
+            Lower y-axis limit; auto-computed with 12.5 % margin if None.
+        top_ylim : float, optional
+            Upper y-axis limit; auto-computed with 12.5 % margin if None.
+        grid : bool, optional
+            Whether to draw a grid, default True.
+
+        Returns
+        -------
+        ax : plt.Axes
+        img : list of Line2D
+        """
         xlabel = f"Time ({ureg.second:~P})" if xlabel is None else xlabel
         if ax is None:
             fig, ax = plt.subplots()
-        ax.xaxis.set_units(ureg.hertz)
+        ax.xaxis.set_units(ureg.second)
         ax, img = super().plot(
             ax=ax,
             fontname=fontname,
@@ -192,33 +221,29 @@ class timeseries(_signal):
 
     def to_FRF(
         self,
-        excitation: "timeseries",
+        excitation: "_signal",
         FRF_type: str = "H1",
         resp_delay: int = 0,
     ):
-        """Computes the FRF from the measured data and an excitation, which must be
-        provided as a timeseries object also.
+        """Compute the FRF between this response and the given excitation.
 
         Parameters
         ----------
         excitation : timeseries
-            A timeseries time object containing the excitation data for the output
-            stored within this instance of the timeseries class.
+            Excitation signal (``method="excitation"``).
         FRF_type : str, optional
-            The FRF estimator to be used, possible values are: "H1", "H2", "Hv",
-            "vector", "ODS", by default "H1".
+            Estimator: "H1", "H2", "Hv", "vector", or "ODS". Default "H1".
         resp_delay : int, optional
-            Response time delay with respect to the excitation, in seconds, by default
-            0.
+            Response time delay with respect to the excitation, in samples. Default 0.
 
         Returns
         -------
-        frf class object
-            The FRF resulting from the given inputs and outputs.
+        frf
+            Computed frequency response function.
         """
         assert excitation.method == "excitation"
         assert self.space_units == excitation.space_units
-        # Get response type and desired FRF form from units.
+        # Derive response type and FRF form from measurement units.
         if self.measurements.check("[length]"):
             resp_type = "d"
             form = "receptance"
@@ -231,7 +256,11 @@ class timeseries(_signal):
         elif self.measurements.check(""):
             resp_type = "e"
             form = "receptance"
-        # Get excitation type from excitation units.
+        else:
+            raise ValueError(
+                f"Unrecognized response units: {self.measurements_units}."
+            )
+        # Derive excitation type from excitation units.
         if excitation.measurements.check("[force]"):
             exc_type = "f"
         elif excitation.measurements.check("[length]"):
@@ -242,6 +271,11 @@ class timeseries(_signal):
             exc_type = "a"
         elif excitation.measurements.check(""):
             exc_type = "e"
+        else:
+            raise ValueError(
+                f"Unrecognized excitation units: {excitation.measurements_units}."
+            )
+        fs = int(round(self.sampling_rate.magnitude))
         with catch_warnings():
             filterwarnings(
                 "ignore",
@@ -251,55 +285,41 @@ class timeseries(_signal):
             if self.method == "excitation":
                 raise ValueError("Use this method only with responses.")
             elif self.method == "SIMO":
-                # If there's a single input and multiple outputs, then for every output,
-                # an FRF will be calculated with the provided single input excitation.
                 assert excitation.dof == 1
-                # assert excitations coordinates-orientation pair are in
-                # self coordinates-orientations pairs list
                 exc = excitation.measurements[:, 0, 0].magnitude
                 frf_amp = []
                 for i in range(self.dof):
                     resp = self.measurements[:, i, 0].magnitude
                     frf_amp.append(
                         FRF(
-                            sampling_freq=self.sampling_rate,
+                            sampling_freq=fs,
                             exc=exc,
                             resp=resp,
                             exc_type=exc_type,
                             resp_type=resp_type,
-                            exc_window="None",
-                            resp_window="None",
+                            window="none",
                             resp_delay=resp_delay,
                             noverlap=0,
                         ).get_FRF(type=FRF_type, form=form)
                     )
                 frf_amp = np.array(frf_amp).reshape((-1, self.dof, 1))
             elif self.method == "MISO":
-                # If there's a single output and multiple inputs, then for every input,
-                # an FRF will be calculated with the provided single output measurement.
-                # assert self coordinates-orientation pair are in excitation
-                # coordinates-orientations pairs list
                 frf_amp = []
                 for i in range(self.dof):
                     exc = excitation.measurements[:, 0, i].magnitude
                     resp = self.measurements[:, 0, i].magnitude
                     frf_amp.append(
                         FRF(
-                            sampling_freq=self.sampling_rate,
+                            sampling_freq=fs,
                             exc=exc,
                             resp=resp,
                             exc_type=exc_type,
                             resp_type=resp_type,
-                            exc_window="None",
-                            resp_window="None",
+                            window="none",
                         ).get_FRF(type=FRF_type, form=form)
                     )
                 frf_amp = np.array(frf_amp).reshape((-1, 1, self.dof))
             elif self.method == "MIMO":
-                # If the system has multiple inputs and outputs, compute an FRF for each
-                # output and it's corresponding input.
-                # assert excitations coordinates-orientation pairs are in
-                # self coordinates-orientations pairs list, in the same order.
                 outer_frf_amp = []
                 for i in range(self.dof):
                     inner_frf = []
@@ -308,13 +328,12 @@ class timeseries(_signal):
                         resp = self.measurements[:, i, j].magnitude
                         inner_frf.append(
                             FRF(
-                                sampling_freq=self.sampling_rate,
+                                sampling_freq=fs,
                                 exc=exc,
                                 resp=resp,
                                 exc_type=exc_type,
                                 resp_type=resp_type,
-                                exc_window="None",
-                                resp_window="None",
+                                window="none",
                             ).get_FRF(type=FRF_type, form=form)
                         )
                     outer_frf_amp.append(np.array(inner_frf))
@@ -355,7 +374,7 @@ if __name__ == "__main__":
     print(frf_test.measurements.shape)
     assert np.allclose(time, test_object.time_array.magnitude)
     print(test_object.change_time_span(new_max_time=20).measurements.shape)
-    print(test_object.change_sampling_rate(new_sampling_rate=0.2).measurements.shape)
+    print(test_object.change_sampling_rate(new_sampling_rate=5.0).measurements.shape)
     print(test_object.measurements.dimensionality)
     print(test_object[0:2].measurements.shape)
     print(test_object.measurements.shape)

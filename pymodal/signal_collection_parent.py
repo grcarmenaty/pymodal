@@ -2,7 +2,6 @@ import numpy as np
 from pymodal import _signal, HDF5Dataset
 import h5py
 from pathlib import Path
-from multiprocessing import cpu_count
 import pint
 import os
 import inspect
@@ -16,7 +15,19 @@ os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 
 
 def save_array(array_info):
+    """Write a single numpy array to an HDF5 dataset, replacing it if it exists.
+
+    Parameters
+    ----------
+    array_info : tuple
+        ``(array, dataset_name, file_name)`` where ``dataset_name`` is the full
+        HDF5 path (e.g. ``"measurements/signal_0/data"``) and ``file_name`` is
+        the path to the HDF5 file.
+    """
     array, dataset_name, file_name = array_info
+    # Downcast complex128 → complex64 to halve storage and GPU transfer cost.
+    if np.iscomplexobj(array) and array.dtype == np.complex128:
+        array = array.astype(np.complex64)
     with h5py.File(file_name, "a") as hf:
         if dataset_name in hf:
             del hf[dataset_name]
@@ -24,6 +35,19 @@ def save_array(array_info):
 
 
 def add_suffix(strings):
+    """Return a copy of ``strings`` where duplicate values are made unique by
+    appending ``_<n>`` suffixes.
+
+    Parameters
+    ----------
+    strings : list of str
+        Input list, possibly containing duplicates.
+
+    Returns
+    -------
+    list of str
+        List of the same length with all values unique.
+    """
     counter = {}
     result = []
 
@@ -46,6 +70,18 @@ def add_suffix(strings):
 
 
 def get_attributes(obj):
+    """Return a list of public, non-method attribute names of ``obj``.
+
+    Parameters
+    ----------
+    obj : object
+        Any Python object.
+
+    Returns
+    -------
+    list of str
+        Names of attributes that do not start with ``__`` and are not methods.
+    """
     attributes = []
     for name, value in inspect.getmembers(obj):
         if not name.startswith("__") and not inspect.ismethod(value):
@@ -53,11 +89,24 @@ def get_attributes(obj):
     return attributes
 
 
-num_processes = cpu_count()
-
-
 # Check if specified attributes match
 def attributes_match(instance1, instance2, attributes_to_match):
+    """Return True if all listed attributes are equal between two objects.
+
+    numpy arrays are compared with ``np.array_equal``; pint Quantities by
+    comparing their magnitudes; everything else with ``==``.
+
+    Parameters
+    ----------
+    instance1, instance2 : object
+        Objects to compare.
+    attributes_to_match : list of str
+        Attribute names to check.
+
+    Returns
+    -------
+    bool
+    """
     for attribute in attributes_to_match:
         value1 = getattr(instance1, attribute)
         value2 = getattr(instance2, attribute)
@@ -75,37 +124,73 @@ def attributes_match(instance1, instance2, attributes_to_match):
 
 
 def worker(pair):
+    """Unpack a ``(instance1, instance2, attributes_to_match)`` tuple and call
+    ``attributes_match``. Used as a multiprocessing worker target."""
     instance1, instance2, attributes_to_match = pair
     return attributes_match(instance1, instance2, attributes_to_match)
 
 
 def parallel_attributes_match(instances, attributes_to_match):
+    """Check that all instances in ``instances`` share the same attribute values
+    as the first element, for each attribute in ``attributes_to_match``.
+
+    Currently runs sequentially (multiprocessing pool is commented out).
+
+    Parameters
+    ----------
+    instances : list of _signal
+        All signals intended for the same collection.
+    attributes_to_match : list of str
+        Attribute names that must be identical across all signals.
+
+    Returns
+    -------
+    bool
+        True only if every instance matches the first one on all listed attributes.
+    """
     first_instance = instances[0]
     remaining_instances = instances[1:]
-    results = []
-    for instance in remaining_instances:
-        results.append(worker((first_instance, instance, attributes_to_match)))
-    # with Pool(num_processes) as pool:
-    #     results = pool.map(
-    #         worker,
-    #         [
-    #             (first_instance, instance, attributes_to_match)
-    #             for instance in remaining_instances
-    #         ],
-    #     )
-
-    if np.all(results):
-        return True
-    return False
+    results = [
+        worker((first_instance, instance, attributes_to_match))
+        for instance in remaining_instances
+    ]
+    return bool(np.all(results))
 
 
 class _signal_collection:
+    """HDF5-backed container for a list of signals that share all non-measurement
+    attributes (coordinates, units, method, domain parameters, etc.).
+
+    Measurements are written to an HDF5 file under ``measurements/{name}/data``.
+    The file is kept open for the lifetime of the collection; call ``close()``
+    to release it.  All batch operations (``change_*``, ``plot``) return ``self``
+    for method chaining.
+    """
+
     def __init__(
         self,
         exp_list: list[_signal],
         labels: Optional[list[float]] = None,
         path: Optional[Path] = None,
     ):
+        """Initialise the collection from a list of compatible signals.
+
+        Parameters
+        ----------
+        exp_list : list of _signal
+            Signals to store. All must have identical non-measurement attributes.
+        labels : list of float, optional
+            Numeric label for each signal (e.g. damage state). Must have the same
+            length as ``exp_list`` if provided.
+        path : Path or str, optional
+            Path of the HDF5 file to create. A timestamp-based filename is used
+            if None. Any existing file at that path is deleted first.
+
+        Raises
+        ------
+        AssertionError
+            If any two signals differ in a non-measurement attribute.
+        """
         if path is None:
             path = f"{int(time.time()*1000)}.h5"
         self.path = Path(path)
@@ -125,9 +210,6 @@ class _signal_collection:
             (array.magnitude, f"measurements/{self.name[i]}/data", self.path)
             for i, array in enumerate([exp.measurements for exp in exp_list])
         ]
-        # save_array(array_info[0])
-        # with Pool(num_processes) as pool:
-        #     pool.map(save_array, array_info[1:])
         for array in array_info:
             save_array(array)
         exp_list = exp_list[0]
@@ -159,12 +241,32 @@ class _signal_collection:
             self.labels = labels
 
     def __len__(self):
+        """Return the number of signals currently selected in the collection."""
         return len(self.name)
 
     def __getitem__(self, key: tuple[slice]):
-        if type(key) is str:
+        """Select a subset of signals or spatial degrees of freedom in-place.
+
+        String or list/set of strings
+            Restrict the active selection to the named signals.
+        int or slice
+            Restrict the active selection to a contiguous range of signals.
+        One slice applied spatially
+            Slice the output (SIMO/MIMO) or input (MISO/excitation) axis of every
+            measurement in the HDF5 file.
+        Two slices applied spatially
+            Slice both the output and input axes (MIMO).
+
+        Spatial slicing modifies the HDF5 datasets in-place and updates
+        ``coordinates``, ``orientations``, and ``dof``.
+
+        Returns
+        -------
+        self
+        """
+        if isinstance(key, str):
             key = [key]
-        if type(key) is set or type(key) is list:
+        if isinstance(key, (set, list)):
             self.name = list(key)
             self.measurements = list(
                 [self.file[f"measurements/{name}/data"] for name in self.name]
@@ -173,16 +275,16 @@ class _signal_collection:
                 self.labels = list(
                     [self.file[f"measurements/{name}/label"] for name in self.name]
                 )
-            except Exception as __:  # noqa:F841
+            except Exception:
                 pass
         else:
-            if type(key) is int:
+            if isinstance(key, int):
                 key = slice(key, key + 1)
-            if type(key) is slice:
+            if isinstance(key, slice):
                 key = [key]
             key = list(key)
             for i, index in enumerate(key):
-                if type(index) is int:
+                if isinstance(index, int):
                     key[i] = slice(index, index + 1)
             # If only one key is provided, it is assumed to refer to an output
             # selection, unless the system type is supposed to have only one
@@ -237,17 +339,51 @@ class _signal_collection:
         return self
 
     def select_all(self):
+        """Reset the active selection to include every signal stored in the HDF5 file.
+
+        Returns
+        -------
+        self
+        """
         self = self[
             list(element[0] for element in list(list(self.file.items())[0][1].items()))
         ]
         return self
 
     def close(self, keep: bool = False):
+        """Close the HDF5 file handle and optionally delete the file.
+
+        Parameters
+        ----------
+        keep : bool, optional
+            If False (default) the HDF5 file is deleted after closing.
+            Pass True to retain the file on disk (e.g. before calling
+            ``torch_dataset()``).
+        """
         self.file.close()
         if not keep:
             self.path.unlink()
 
     def append(self, signal: _signal, label=None):
+        """Add a signal to the collection.
+
+        Parameters
+        ----------
+        signal : _signal
+            Signal to add. Its non-measurement attributes must match those of the
+            existing collection members.
+        label : float, optional
+            Numeric label for this signal.
+
+        Returns
+        -------
+        self
+
+        Raises
+        ------
+        AssertionError
+            If ``signal`` has incompatible attributes.
+        """
         attributes_to_match = deepcopy(self.attributes)
         attributes_to_match.remove("measurements")
         attributes_to_match.remove("name")
@@ -257,19 +393,40 @@ class _signal_collection:
         self.file[f"measurements/{self.name[-1]}/data"] = signal.measurements
         self.measurements.append(self.file[f"measurements/{self.name[-1]}/data"])
         if label is not None:
-            try:
-                self.file[f"measurements/{self.name[-1]}/label"] = label
-                self.labels.append(self.file[f"measurements/{self.name[-1]}/label"])
-            except Exception as __:  # noqa:F841
-                pass
+            self.file[f"measurements/{self.name[-1]}/label"] = label
+            if self.labels is None:
+                self.labels = []
+            self.labels.append(self.file[f"measurements/{self.name[-1]}/label"])
         return self
 
     def torch_dataset(self):
+        """Convert the collection to a PyTorch ``HDF5Dataset`` and store it in
+        ``self.dataset``.
+
+        The HDF5 file is closed with ``keep=True`` before wrapping, so the file
+        remains on disk. Call ``open()`` to reacquire the file handle afterwards.
+
+        Returns
+        -------
+        self
+        """
         self.close(keep=True)
+        self.measurements = None
+        if self.labels is not None:
+            self.labels = None
         self.dataset = HDF5Dataset(self.path)
         return self
 
     def open(self):
+        """Reopen the HDF5 file and refresh the ``measurements`` handle list.
+
+        Use this after ``torch_dataset()`` or any external operation that closed
+        the file.
+
+        Returns
+        -------
+        self
+        """
         self.file = h5py.File(self.path, "a")
         self.measurements = list(
             [self.file[f"measurements/{name}/data"] for name in self.name]

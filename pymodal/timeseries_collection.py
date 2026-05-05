@@ -1,12 +1,7 @@
-from pymodal import (
-    _signal_collection,
-    timeseries,
-    timeseries_collection,
-)
+from pymodal import _signal_collection, timeseries
 from pathlib import Path
 import numpy as np
 from copy import deepcopy
-from multiprocessing import cpu_count
 import h5py
 from warnings import catch_warnings, filterwarnings
 import matplotlib.pyplot as plt
@@ -14,10 +9,22 @@ from typing import Optional
 from audiomentations import Compose, AddGaussianNoise
 import random
 
-num_processes = cpu_count()
-
 
 def change_time_span(var):
+    """Worker that applies ``timeseries.change_time_span`` to a single element and
+    writes the result back to the HDF5 file.
+
+    Parameters
+    ----------
+    var : tuple
+        ``(collection, i, new_min_time, new_max_time)`` where ``i`` is the
+        zero-based index of the signal to process.
+
+    Returns
+    -------
+    timeseries
+        Modified instance with ``measurements`` deleted (data already in HDF5).
+    """
     collection, i, new_min_time, new_max_time = var
     working_instance = deepcopy(collection.collection_class)
     for attribute in collection.attributes:
@@ -50,6 +57,20 @@ def change_time_span(var):
 
 
 def change_sampling_rate(var):
+    """Worker that applies ``timeseries.change_sampling_rate`` to a single element
+    and writes the result back to the HDF5 file.
+
+    Parameters
+    ----------
+    var : tuple
+        ``(collection, i, new_sampling_rate)`` where ``i`` is the zero-based index
+        of the signal to process.
+
+    Returns
+    -------
+    timeseries
+        Modified instance with ``measurements`` deleted (data already in HDF5).
+    """
     collection, i, new_sampling_rate = var
     working_instance = deepcopy(collection.collection_class)
     for attribute in collection.attributes:
@@ -80,16 +101,48 @@ def change_sampling_rate(var):
 
 
 class timeseries_collection(_signal_collection):
+    """HDF5-backed collection of :class:`timeseries` objects.
+
+    Inherits all storage and selection behaviour from :class:`_signal_collection`
+    and adds time-domain batch operations, overlay plotting, batch FRF estimation,
+    and Gaussian noise augmentation.
+    """
+
     def __init__(
         self,
         exp_list: list[timeseries],
         labels: Optional[list[float]] = None,
         path: Optional[Path] = None,
     ):
+        """Create a collection from a list of :class:`timeseries` instances.
+
+        Parameters
+        ----------
+        exp_list : list of timeseries
+            Time-series objects to store. All must share the same non-measurement
+            attributes.
+        labels : list of float, optional
+            Numeric label for each signal (e.g. damage state).
+        path : Path or str, optional
+            Path for the backing HDF5 file. Auto-generated if None.
+        """
         super().__init__(exp_list=exp_list, labels=labels, path=path)
         del exp_list
 
     def change_time_span(self, new_min_time=None, new_max_time=None):
+        """Apply :meth:`timeseries.change_time_span` to every signal in the collection.
+
+        Parameters
+        ----------
+        new_min_time : float, optional
+            New start time. Unchanged if None.
+        new_max_time : float, optional
+            New end time. Unchanged if None.
+
+        Returns
+        -------
+        self
+        """
         vars = []
         for i in range(len(self)):
             vars.append((self, i, new_min_time, new_max_time))
@@ -98,9 +151,6 @@ class timeseries_collection(_signal_collection):
         del self.measurements
         for var in vars:
             working_instance = change_time_span(var)
-        # with Pool(num_processes) as pool:
-        #     working_instance = pool.map(change_time_span, vars)
-        # working_instance = working_instance[0]
         attributes_to_match = deepcopy(self.attributes)
         attributes_to_match.remove("measurements")
         attributes_to_match.remove("name")
@@ -117,6 +167,17 @@ class timeseries_collection(_signal_collection):
         return self
 
     def change_sampling_rate(self, new_sampling_rate):
+        """Apply :meth:`timeseries.change_sampling_rate` to every signal in the collection.
+
+        Parameters
+        ----------
+        new_sampling_rate : float
+            Target sampling frequency in Hz (fs = 1 / Δt).
+
+        Returns
+        -------
+        self
+        """
         vars = []
         for i in range(len(self)):
             vars.append((self, i, new_sampling_rate))
@@ -125,9 +186,6 @@ class timeseries_collection(_signal_collection):
         del self.measurements
         for var in vars:
             working_instance = change_sampling_rate(var)
-        # with Pool(num_processes) as pool:
-        #     working_instance = pool.map(change_sampling_rate, vars)
-        # working_instance = working_instance[0]
         attributes_to_match = deepcopy(self.attributes)
         attributes_to_match.remove("measurements")
         attributes_to_match.remove("name")
@@ -164,6 +222,24 @@ class timeseries_collection(_signal_collection):
         top_ylim: float = None,
         grid: bool = True,
     ):
+        """Overlay all time-series in the collection on a single plot using a rainbow
+        colormap.
+
+        Each signal is rendered using :meth:`timeseries.plot`. Y-axis limits are
+        expanded progressively to accommodate every curve.
+
+        Parameters
+        ----------
+        ax : plt.Axes, optional
+            Axes to draw on. Created automatically if None.
+        color : matplotlib colormap, optional
+            Colormap used to generate one colour per signal, default ``plt.cm.rainbow``.
+
+        Returns
+        -------
+        ax : plt.Axes
+        img : list of Line2D
+        """
         color = iter(color(np.linspace(0, 1, len(self))))
         working_instance = deepcopy(self.collection_class)
         for attribute in self.attributes:
@@ -245,11 +321,32 @@ class timeseries_collection(_signal_collection):
 
     def to_FRF(
         self,
-        excitation: timeseries_collection,
+        excitation: "_signal_collection",
         FRF_type: str = "H1",
         resp_delay: int = 0,
         new_path: Optional[Path] = None,
     ):
+        """Compute FRFs for every signal in the collection and return an
+        :class:`frf_collection`.
+
+        Parameters
+        ----------
+        excitation : timeseries_collection
+            Matching collection of excitation signals. Must have the same length as
+            ``self`` and be indexed in the same order.
+        FRF_type : str, optional
+            Estimator type passed to :meth:`timeseries.to_FRF`. One of
+            ``"H1"``, ``"H2"``, ``"Hv"``, ``"vector"``, ``"ODS"``. Default ``"H1"``.
+        resp_delay : int, optional
+            Response delay in samples passed to :meth:`timeseries.to_FRF`, default 0.
+        new_path : Path or str, optional
+            HDF5 path for the resulting :class:`frf_collection`. Auto-generated if None.
+
+        Returns
+        -------
+        frf_collection
+            Collection of computed FRFs, preserving the labels from ``self``.
+        """
         working_instance = deepcopy(self.collection_class)
         for attribute in self.attributes:
             if attribute == "name":
@@ -278,6 +375,8 @@ class timeseries_collection(_signal_collection):
 
         if self.labels is not None:
             labels = [label[()] for label in self.labels]
+        else:
+            labels = None
         frf_collection_instance = frf_collection(
             [
                 working_instance.to_FRF(
@@ -286,7 +385,7 @@ class timeseries_collection(_signal_collection):
                     resp_delay=resp_delay,
                 )
             ],
-            labels=[labels[0]],
+            labels=[labels[0]] if labels is not None else None,
             path=new_path,
         )
         for i, name in enumerate(self.name):
@@ -326,16 +425,37 @@ class timeseries_collection(_signal_collection):
                         FRF_type=FRF_type,
                         resp_delay=resp_delay,
                     ),
-                    labels[i],
+                    labels[i] if labels is not None else None,
                 )
         return frf_collection_instance
 
     def AddGaussianNoise(
         self, min_amplitude=0.001, max_amplitude=0.015, sample: Optional[float] = None
     ):
+        """Augment the collection by adding Gaussian noise to selected signals.
+
+        A noisy copy of each selected signal is appended to the collection with
+        the suffix ``_augmented`` on its name. Uses the ``audiomentations`` library.
+
+        Parameters
+        ----------
+        min_amplitude : float, optional
+            Minimum noise amplitude relative to the signal, default 0.001.
+        max_amplitude : float, optional
+            Maximum noise amplitude relative to the signal, default 0.015.
+        sample : None, float, or list of str, optional
+            Which signals to augment.
+            - ``None`` or ``1.0``: all signals.
+            - float in (0, 1): random proportion of the collection.
+            - list of str: specific signal names.
+
+        Returns
+        -------
+        self
+        """
         if sample is None:
             sample = 1.0
-        if type(sample) is float:
+        if isinstance(sample, float):
             n = int(np.floor(len(self) * sample))
             sample = random.sample(self.name, n)
         working_instance = deepcopy(self.collection_class)
@@ -360,11 +480,8 @@ class timeseries_collection(_signal_collection):
                         )
                 working_instance.name = f"{name}_augmented"
                 working_instance.measurements = augmented_samples
-                try:
-                    self.append(working_instance, self.labels[i])
-                except Exception as __:  # noqa:F841
-                    pass
-                    self.append(working_instance)
+                label = self.labels[i] if self.labels is not None else None
+                self.append(working_instance, label)
         return self
 
 
@@ -409,7 +526,7 @@ if __name__ == "__main__":
     test_collection.open()
     print(test_collection.append(test_object_3, 2).measurements)
     print(test_collection.change_time_span(new_max_time=20).measurements)
-    print(test_collection.change_sampling_rate(new_sampling_rate=0.2).measurements)
+    print(test_collection.change_sampling_rate(new_sampling_rate=5.0).measurements)
     print(
         test_collection[
             ["Vibrational data", "Vibrational data_1", "Vibrational data_2"]
