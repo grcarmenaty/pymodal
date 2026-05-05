@@ -1,3 +1,5 @@
+__version__ = "0.1.1"
+
 from .utils import (  # noqa F401
     change_domain_resolution,
     change_domain_span,
