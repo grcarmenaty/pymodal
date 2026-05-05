@@ -137,6 +137,34 @@ class frf_collection(_signal_collection):
         del working_instance
         return self
 
+    def cfdac_collection(self, reference, path=None):
+        from pymodal.indicator_collection import IndicatorCollection, compute_cfdac
+
+        if path is None:
+            import time
+            path = f"{int(time.time() * 1000)}_cfdac.h5"
+
+        with catch_warnings():
+            filterwarnings("ignore")
+            H_ref = reference.measurements.magnitude
+        H_ref_2d = H_ref[:, :, 0] if H_ref.ndim == 3 else H_ref
+
+        matrices = []
+        for i in range(len(self)):
+            H_test = np.array(self.measurements[i][()])
+            H_test_2d = H_test[:, :, 0] if H_test.ndim == 3 else H_test
+            matrices.append(compute_cfdac(H_test_2d, H_ref_2d))
+
+        labels = [float(ds[()]) for ds in self.labels] if self.labels else [0.0] * len(self)
+
+        return IndicatorCollection(
+            path=path,
+            matrices=matrices,
+            labels=labels,
+            names=list(self.name),
+            references=[reference],
+        )
+
     def plot(
         self,
         format: str = "mod",
