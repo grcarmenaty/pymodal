@@ -418,22 +418,11 @@ class _signal_collection:
         return self
 
     def split(self, train_frac=0.70, val_frac=0.15, test_frac=0.15, seed=42):
-        """Create a stratified train / val / test split and store the indices.
+        """Create a stratified train/val/test split and store the indices.
 
-        Indices for each subset are stored as ``self.train_indices``,
-        ``self.val_indices``, and ``self.test_indices``.  Stratification
-        ensures each class is represented proportionally in every subset.
-
-        Parameters
-        ----------
-        train_frac : float, optional
-            Fraction for training, default 0.70.
-        val_frac : float, optional
-            Fraction for validation, default 0.15.
-        test_frac : float, optional
-            Fraction for testing, default 0.15.
-        seed : int, optional
-            Random seed for reproducibility, default 42.
+        Indices are stored as ``self.train_indices``, ``self.val_indices``,
+        and ``self.test_indices``.  Each class is represented proportionally
+        in every subset.
 
         Returns
         -------

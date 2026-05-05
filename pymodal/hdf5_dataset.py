@@ -88,8 +88,7 @@ class HDF5Dataset(data.Dataset):
     def _add_data_infos(self, file_path, load_data):
         """Scan the HDF5 file and register metadata for every dataset."""
         with h5py.File(file_path, "r") as h5_file:
-            measurements = h5_file.get("measurements", {})
-            for gname, signal_group in measurements.items():
+            for gname, signal_group in h5_file["measurements"].items():
                 for dname, ds in signal_group.items():
                     entry = {
                         "file_path": file_path,

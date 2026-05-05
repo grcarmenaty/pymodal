@@ -4,3 +4,4 @@ matplotlib
 pandas
 pint
 pyFRF
+ansys-mapdl-core
