@@ -10,7 +10,6 @@ from pymodal import lineplot
 
 
 ureg = UnitRegistry()
-ureg.setup_matplotlib(True)
 
 
 # IT IS VERY IMPORTANT THAT ANY CHILD CLASS TAKES EXACTLY THE SAME ARGUMENTS IN THE SAME
@@ -606,7 +605,6 @@ class _signal:
         )
         if ax is None:
             ax, img = plt.subplots()
-        ax.yaxis.set_units(self.measurements_units)
         ax, img = lineplot(
             y=np.reshape(self.measurements, (len(self), -1)),
             x=self.domain_array,

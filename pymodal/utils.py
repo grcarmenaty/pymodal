@@ -354,35 +354,31 @@ def lineplot(
     mpl.rcParams["mathtext.it"] = fontname + ":italic"
     mpl.rcParams["mathtext.bf"] = fontname + ":bold"
 
-    ureg = UnitRegistry()
-    ureg.setup_matplotlib(True)
-
-    if not isinstance(y, Quantity):
-        y = y * ureg("")
+    y_vals = y.magnitude if isinstance(y, Quantity) else np.asarray(y)
     if x is None:
-        x = np.arange(y.shape[0])
-    if not isinstance(x, Quantity):
-        x = x * ureg("")
+        x_vals = np.arange(y_vals.shape[0], dtype=float)
+    else:
+        x_vals = x.magnitude if isinstance(x, Quantity) else np.asarray(x)
     if ax is None:  # If this is not a subplot of a greater figure:
         __, ax = plt.subplots()
     # Set limits for x axis between the minimum and maximum domain array values.
-    ax.set_xlim(left=x.m[0], right=x.m[-1])
+    ax.set_xlim(left=x_vals[0], right=x_vals[-1])
     # Calculate major and minor ticks locators and labels for the x axis
-    x_span = x.m[-1] - x.m[0]
+    x_span = x_vals[-1] - x_vals[0]
     x_step = x_span / major_x_locator
-    x_ticks_labels = np.arange(x.m[0], x.m[-1] + x_step / 2, x_step)
+    x_ticks_labels = np.arange(x_vals[0], x_vals[-1] + x_step / 2, x_step)
     ax.set_xticks([tick for tick in x_ticks_labels])
     ax.set_xticklabels([f"{label:.{decimals_x}f}" for label in x_ticks_labels])
     for label in ax.get_xticklabels():
         label.set_fontname(fontname)
         label.set_fontsize(fontsize)
     x_minor_step = x_span / (major_x_locator * minor_x_locator)
-    x_minor_ticks = np.arange(x.m[0], x.m[-1] + x_minor_step / 2, x_minor_step)
+    x_minor_ticks = np.arange(x_vals[0], x_vals[-1] + x_minor_step / 2, x_minor_step)
     ax.set_xticks([tick for tick in x_minor_ticks], minor=True)
     if log:  # If y is logarithmic, y ticks and labels are straightforward
         ax.set_yscale("log")
-        top = np.nanmax(y.m)
-        bottom = np.nanmin(y.m)
+        top = np.nanmax(y_vals)
+        bottom = np.nanmin(y_vals)
         top_ylim = 10 ** np.ceil(np.log10(top))
         bottom_ylim = 10 ** np.floor(np.log10(bottom))
         ax.set_ylim(top=top_ylim, bottom=bottom_ylim)
@@ -390,8 +386,8 @@ def lineplot(
         # Set limits for y axis between the minimum and maximum data values with 12.5%
         # margin unless otherwise specified.
         if bottom_ylim is None or top_ylim is None:
-            top = np.nanmax(y.m)
-            bottom = np.nanmin(y.m)
+            top = np.nanmax(y_vals)
+            bottom = np.nanmin(y_vals)
             span = np.abs(top - bottom)
             bottom_ylim = bottom - 0.125 * span if bottom_ylim is None else bottom_ylim
             top_ylim = top + 0.125 * span if top_ylim is None else top_ylim
@@ -432,7 +428,7 @@ def lineplot(
     )
     if grid:
         ax.grid(color="grey", linestyle=":", linewidth=1)
-    img = ax.plot(x.m, y.m, color=color, linewidth=0.5, linestyle=linestyle)
+    img = ax.plot(x_vals, y_vals, color=color, linewidth=0.5, linestyle=linestyle)
     for label in ax.get_yticklabels():
         label.set_fontname(fontname)
         label.set_fontsize(fontsize)

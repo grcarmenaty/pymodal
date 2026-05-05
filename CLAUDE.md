@@ -141,7 +141,7 @@ Tests pass on Python 3.9+. The CI workflow tests Python 3.9 and 3.10 on ubuntu, 
 ## Development Notes
 
 - Python ≥ 3.9 required. Use `Optional[X]` from `typing` for optional type hints — **not** `X | None` (which requires Python 3.10+).
-- The active development branch is `master` (formerly `signal`). The old `master` is preserved as `legacy`.
+- The active development branch is `master`. The old `signal` branch has been deleted. The original pre-rewrite codebase is preserved as `legacy`.
 - Multiprocessing is scaffolded in collection classes (commented-out `Pool` calls) but currently runs sequentially. Do not remove the commented blocks — they document the intended parallelism.
 - `HDF5_USE_FILE_LOCKING=FALSE` is set as an environment variable in `signal_collection_parent.py` to prevent HDF5 file locking issues on some filesystems.
 
