@@ -377,8 +377,11 @@ def lineplot(
     ax.set_xticks([tick for tick in x_minor_ticks], minor=True)
     if log:  # If y is logarithmic, y ticks and labels are straightforward
         ax.set_yscale("log")
-        top = np.nanmax(y_vals)
-        bottom = np.nanmin(y_vals)
+        pos_vals = y_vals[np.isfinite(y_vals) & (y_vals > 0)]
+        if pos_vals.size == 0:
+            pos_vals = np.array([1e-10])
+        top = np.nanmax(pos_vals)
+        bottom = np.nanmin(pos_vals)
         top_ylim = 10 ** np.ceil(np.log10(top))
         bottom_ylim = 10 ** np.floor(np.log10(bottom))
         ax.set_ylim(top=top_ylim, bottom=bottom_ylim)
