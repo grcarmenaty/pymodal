@@ -375,15 +375,18 @@ class _collection:
         Accepts a single int, slice, str, list of strs, or set of strs.
         Returns ``self`` after mutating the active selection.
         """
+        all_stored = {
+            k for k in self.file["measurements"].keys() if k != "_axes"
+        }
         if isinstance(key, str):
-            if key not in self.name:
+            if key not in all_stored:
                 raise KeyError(key)
             self.name = [key]
         elif isinstance(key, (list, set, tuple)) and all(
             isinstance(k, str) for k in key
         ):
             for k in key:
-                if k not in self.name:
+                if k not in all_stored:
                     raise KeyError(k)
             self.name = list(key)
         elif isinstance(key, int):

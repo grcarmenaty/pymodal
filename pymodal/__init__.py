@@ -1,4 +1,5 @@
-__version__ = "0.1.1"
+__version__ = "0.2.0"
+
 from .utils import (  # noqa F401
     change_domain_resolution,
     change_domain_span,
@@ -28,13 +29,13 @@ from .utils import (  # noqa F401
     plot_control_chart,
 )
 from .hdf5_dataset import HDF5Dataset
-from .signal_parent import _signal
+from .collection_parent import _collection
+from .collection_0d import _collection_0d
+from .collection_1d import _collection_1d
+from .collection_2d import _collection_2d
+from .collection_3d import _collection_3d
 from .timeseries import timeseries
 from .frf import frf
-from .signal_collection_parent import _signal_collection
-from .timeseries_collection import timeseries_collection
-from .frf_collection import frf_collection
-from .indicator_collection import IndicatorCollection
 
 __all__ = [
     "change_domain_resolution",
@@ -64,11 +65,11 @@ __all__ = [
     "modal_superposition",
     "plot_control_chart",
     "HDF5Dataset",
-    "_signal",
+    "_collection",
+    "_collection_0d",
+    "_collection_1d",
+    "_collection_2d",
+    "_collection_3d",
     "timeseries",
     "frf",
-    "_signal_collection",
-    "timeseries_collection",
-    "frf_collection",
-    "IndicatorCollection",
 ]

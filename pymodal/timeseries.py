@@ -1,380 +1,362 @@
-import numpy as np
-from typing import Optional
-import numpy.typing as npt
-from pymodal import _signal
-from pyFRF import FRF
-from pint import UnitRegistry
-from matplotlib import pyplot as plt
+"""Time-series collection.
+
+A :class:`timeseries` is a 1-D collection (:class:`pymodal.collection_1d._collection_1d`)
+whose single domain axis is time. The constructor accepts either a single
+measurement array (yielding a 1-item collection) or a list of arrays (a
+multi-item collection), so the same class plays the role formerly held by
+``timeseries`` and ``timeseries_collection`` together.
+
+Items are shaped ``(n_samples, n_outputs, n_inputs)`` and channel/DOF
+metadata is preserved at every level.
+"""
+
+from __future__ import annotations
+
+from copy import deepcopy
+from typing import Optional, Union
 from warnings import catch_warnings, filterwarnings
+
+import matplotlib.pyplot as plt
+import numpy as np
+from pint import UnitRegistry
+
+from pymodal.collection_1d import _collection_1d
+
 
 ureg = UnitRegistry()
 
 
-class timeseries(_signal):
+class timeseries(_collection_1d):
+    """Collection of time-domain signals.
+
+    Parameters
+    ----------
+    measurements : numpy.ndarray or list of numpy.ndarray
+        Single signal (3-D ``(n_samples, n_outputs, n_inputs)``) or list of
+        such arrays sharing identical shape.
+    coordinates, orientations : numpy.ndarray, optional
+    dof : int, optional
+    time_start, time_end, time_span, time_step : float, optional
+        Provide enough of these to define the time axis (or pass
+        ``time_array`` directly).
+    time_array : numpy.ndarray, optional
+        Explicit time axis (1-D).
+    measurements_units : str, optional
+        Default depends on ``method``: ``"newton"`` for ``"excitation"``,
+        ``"meter / second ** 2"`` otherwise.
+    time_units : str, optional
+        Default ``"second"``.
+    space_units : str, optional
+        Default ``"millimeter"``.
+    method : str, optional
+        ``"SIMO"`` (default), ``"MISO"``, ``"MIMO"``, ``"excitation"``.
+    name, names : str or list of str, optional
+    labels : list of float, optional
+    references, reference_index_maps : dict, optional
+    path : Path or str, optional
+    """
+
+    _default_units = "second"
+
     def __init__(
         self,
-        measurements: npt.NDArray[np.complex64],
-        coordinates: npt.NDArray[np.float64] = None,
-        orientations: npt.NDArray[np.float64] = None,
-        dof: Optional[float] = None,
-        time_start: Optional[float] = 0,
+        measurements,
+        coordinates: Optional[np.ndarray] = None,
+        orientations: Optional[np.ndarray] = None,
+        dof: Optional[int] = None,
+        time_start: Optional[float] = None,
         time_end: Optional[float] = None,
         time_span: Optional[float] = None,
         time_step: Optional[float] = None,
+        time_array: Optional[np.ndarray] = None,
         measurements_units: Optional[str] = None,
-        time_units: Optional[str] = None,
-        space_units: Optional[str] = None,
+        time_units: Optional[str] = "second",
+        space_units: Optional[str] = "millimeter",
         method: str = "SIMO",
         name: Optional[str] = None,
+        names: Optional[list[str]] = None,
+        labels: Optional[list[float]] = None,
+        references: Optional[dict] = None,
+        reference_index_maps: Optional[dict] = None,
+        path=None,
     ):
-        """Store vibrational time-domain measurements from a three-dimensional body.
+        items = self._normalise_items(measurements)
+        if names is None and name is not None:
+            names = [name] * len(items)
 
-        Parameters
-        ----------
-        measurements : numpy array of floats
-            Up to three-dimensional array where the first dimension contains the
-            measurements as they evolve through time, and the remaining dimensions
-            correspond to degrees of freedom and the measurement method.
-        coordinates : numpy array of floats, optional
-            Spatial coordinates of the measurement DOF, by default None.
-        orientations : numpy array of floats, optional
-            Unit vectors representing the measurement direction at each coordinate,
-            by default None.
-        dof : float, optional
-            Number of measured degrees of freedom, by default None.
-        time_start : float, optional
-            Starting time value in seconds, by default 0.
-        time_end : float, optional
-            Maximum time value in seconds, by default None.
-        time_span : float, optional
-            Total duration in seconds, by default None.
-        time_step : float, optional
-            Time between consecutive samples in seconds (Δt = 1 / fs).
-            ``sampling_rate`` (in Hz) is derived as 1 / time_step.
-            By default None.
-        measurements_units : string, optional
-            Units for the stored measurements. Defaults to "newton" for excitation
-            signals and "millimeter / second ** 2" for responses.
-        time_units : string, optional
-            Units for the time axis, by default None (seconds).
-        space_units : string, optional
-            Units for spatial coordinates, by default "millimeter".
-        method : string, optional
-            Measurement configuration: "SIMO", "MISO", "MIMO", or "excitation".
-            By default "SIMO".
-        name : string, optional
-            Identifying label for this signal.
-        """
+        if measurements_units is None:
+            measurements_units = (
+                "newton" if method == "excitation" else "meter / second ** 2"
+            )
+
+        if time_array is None and time_span is not None and time_step is None:
+            time_step = time_span / (items[0].shape[0] - 1)
+        if time_array is None and time_end is not None and time_step is None:
+            start = time_start if time_start is not None else 0.0
+            time_step = (time_end - start) / (items[0].shape[0] - 1)
+
         super().__init__(
-            measurements=measurements,
+            items=items,
+            domain_array=time_array,
+            domain_start=time_start,
+            domain_end=time_end,
+            domain_resolution=time_step,
+            domain_units=time_units,
             coordinates=coordinates,
             orientations=orientations,
             dof=dof,
-            domain_start=time_start,
-            domain_end=time_end,
-            domain_span=time_span,
-            domain_resolution=time_step,
-            measurements_units=measurements_units,
-            domain_units=time_units,
-            space_units=space_units,
             method=method,
-            name=name,
+            space_units=space_units,
+            measurements_units=measurements_units,
+            names=names,
+            labels=labels,
+            references=references,
+            reference_index_maps=reference_index_maps,
+            path=path,
         )
-        self.time_start = self.domain_start
-        self.time_end = self.domain_end
-        self.time_span = self.domain_span
-        self.time_step = self.domain_resolution
-        # sampling_rate is the sampling frequency in Hz (= 1 / time_step).
-        self.sampling_rate = (1.0 / self.time_step) if self.time_step is not None else None
-        self.time_units = self.domain_units
-        self.time_array = self.domain_array
+
+    @staticmethod
+    def _normalise_items(measurements) -> list[np.ndarray]:
+        if isinstance(measurements, list):
+            return [np.asarray(a) for a in measurements]
+        return [np.asarray(measurements)]
+
+    # ── time aliases ──────────────────────────────────────────────────────────
+
+    @property
+    def time_array(self) -> np.ndarray:
+        return self.domain_array
+
+    @property
+    def time_units(self) -> str:
+        return self.domain_units_str
+
+    @property
+    def time_start(self) -> float:
+        return self.domain_start
+
+    @property
+    def time_end(self) -> float:
+        return self.domain_end
+
+    @property
+    def time_span(self) -> float:
+        return self.domain_span
+
+    @property
+    def time_step(self) -> float:
+        return self.domain_resolution
+
+    @property
+    def sampling_rate(self) -> float:
+        """Sampling frequency in Hz (1 / time_step)."""
+        return 1.0 / self.domain_resolution if self.domain_resolution else 0.0
+
+    # ── time edition aliases ─────────────────────────────────────────────────
 
     def change_time_span(
-        self, new_min_time: Optional[float] = None, new_max_time: Optional[float] = None
-    ):
-        """Crop or extend the signal to new time limits.
+        self,
+        new_min_time: Optional[float] = None,
+        new_max_time: Optional[float] = None,
+    ) -> "timeseries":
+        """Crop or extend every signal along the time axis."""
+        return self.change_domain_span(new_min=new_min_time, new_max=new_max_time)
 
-        Parameters
-        ----------
-        new_min_time : float, optional
-            New start time. Negative values prepend zeros. By default None.
-        new_max_time : float, optional
-            New end time. Values beyond the current end append zeros. By default None.
+    def change_sampling_rate(self, new_sampling_rate: float) -> "timeseries":
+        """Resample every signal to ``new_sampling_rate`` (Hz)."""
+        return self.change_domain_resolution(new_resolution=1.0 / new_sampling_rate)
 
-        Returns
-        -------
-        timeseries
-            Deep copy with the modified time axis and measurement array.
-        """
-        return super().change_domain_span(
-            new_min_domain=new_min_time, new_max_domain=new_max_time
-        )
-
-    def change_sampling_rate(self, new_sampling_rate: float):
-        """Resample the signal to a new sampling frequency.
-
-        Parameters
-        ----------
-        new_sampling_rate : float
-            Desired sampling frequency in Hz (fs = 1 / Δt).
-
-        Returns
-        -------
-        timeseries
-            Deep copy with data interpolated to the new sampling frequency.
-        """
-        return super().change_domain_resolution(new_resolution=1.0 / new_sampling_rate)
+    # ── plotting ──────────────────────────────────────────────────────────────
 
     def plot(
         self,
-        ax: plt.Axes = None,
-        fontname: str = "DejaVu Serif",
-        fontsize: float = 12,
-        title: str = None,
-        title_size: float = 12,
-        major_y_locator: int = 4,
-        minor_y_locator: int = 4,
-        major_x_locator: int = 4,
-        minor_x_locator: int = 4,
+        ax: Optional[plt.Axes] = None,
+        index: int = 0,
         color: str = "blue",
-        linestyle: str = "-",
-        ylabel: str = None,
-        xlabel: str = None,
-        decimals_y: int = 2,
-        decimals_x: int = 2,
-        bottom_ylim: float = None,
-        top_ylim: float = None,
-        grid: bool = True,
+        title: Optional[str] = None,
+        xlabel: Optional[str] = None,
+        ylabel: Optional[str] = None,
     ):
-        """Plot the time-domain signal with time on the x axis.
-
-        Parameters
-        ----------
-        ax : plt.Axes, optional
-            Axes to draw on. A new figure is created if None.
-        fontname : str, optional
-            Font family for all text, default "DejaVu Serif".
-        fontsize : float, optional
-            Font size for tick labels and axis labels, default 12.
-        title : str, optional
-            Plot title; defaults to ``self.name``.
-        title_size : float, optional
-            Font size for the title, default 12.
-        major_y_locator : int, optional
-            Number of major divisions on the y axis, default 4.
-        minor_y_locator : int, optional
-            Number of minor divisions per major division on the y axis, default 4.
-        major_x_locator : int, optional
-            Number of major divisions on the x axis, default 4.
-        minor_x_locator : int, optional
-            Number of minor divisions per major division on the x axis, default 4.
-        color : str, optional
-            Line colour, default "blue".
-        linestyle : str, optional
-            Matplotlib line style string, default "-".
-        ylabel : str, optional
-            Y-axis label; defaults to "Amplitude (<units>)".
-        xlabel : str, optional
-            X-axis label; defaults to "Time (s)".
-        decimals_y : int, optional
-            Decimal places shown on y tick labels, default 2.
-        decimals_x : int, optional
-            Decimal places shown on x tick labels, default 2.
-        bottom_ylim : float, optional
-            Lower y-axis limit; auto-computed with 12.5 % margin if None.
-        top_ylim : float, optional
-            Upper y-axis limit; auto-computed with 12.5 % margin if None.
-        grid : bool, optional
-            Whether to draw a grid, default True.
-
-        Returns
-        -------
-        ax : plt.Axes
-        img : list of Line2D
-        """
-        xlabel = f"Time ({ureg.second:~P})" if xlabel is None else xlabel
+        """Plot one item of the collection in the time domain."""
+        data = self.measurements[index][()]
+        flat = data.reshape(data.shape[0], -1)
         if ax is None:
-            fig, ax = plt.subplots()
-        ax.xaxis.set_units(ureg.second)
-        ax, img = super().plot(
-            ax=ax,
-            fontname=fontname,
-            fontsize=fontsize,
-            title=title,
-            title_size=title_size,
-            major_y_locator=major_y_locator,
-            minor_y_locator=minor_y_locator,
-            major_x_locator=major_x_locator,
-            minor_x_locator=minor_x_locator,
-            color=color,
-            linestyle=linestyle,
-            ylabel=ylabel,
-            xlabel=xlabel,
-            decimals_y=decimals_y,
-            decimals_x=decimals_x,
-            bottom_ylim=bottom_ylim,
-            top_ylim=top_ylim,
-            grid=grid,
-            log=False,
-        )
-        return ax, img
+            _, ax = plt.subplots()
+        ax.plot(self.time_array, flat, color=color)
+        ax.set_xlabel(xlabel or f"Time ({self.time_units})")
+        ax.set_ylabel(ylabel or f"Amplitude ({self.measurements_units})")
+        if title is not None:
+            ax.set_title(title)
+        elif self.name:
+            ax.set_title(self.name[index])
+        return ax
+
+    # ── FRF computation ──────────────────────────────────────────────────────
 
     def to_FRF(
         self,
-        excitation: "_signal",
+        excitation: "timeseries",
         FRF_type: str = "H1",
         resp_delay: int = 0,
+        path=None,
     ):
-        """Compute the FRF between this response and the given excitation.
+        """Compute FRFs for every item and return a :class:`pymodal.frf`.
+
+        The resulting collection registers two references:
+
+        - ``input``  → ``excitation``
+        - ``output`` → ``self``
 
         Parameters
         ----------
         excitation : timeseries
-            Excitation signal (``method="excitation"``).
-        FRF_type : str, optional
-            Estimator: "H1", "H2", "Hv", "vector", or "ODS". Default "H1".
-        resp_delay : int, optional
-            Response time delay with respect to the excitation, in samples. Default 0.
-
-        Returns
-        -------
-        frf
-            Computed frequency response function.
+            Excitation collection (``method="excitation"``); same length as
+            ``self`` and indexed in matching order.
+        FRF_type : str
+            One of ``"H1"``, ``"H2"``, ``"Hv"``, ``"vector"``, ``"ODS"``.
+        resp_delay : int
+            Response delay (samples) passed to the FRF estimator.
+        path : Path or str, optional
         """
-        assert excitation.method == "excitation"
-        assert self.space_units == excitation.space_units
-        # Derive response type and FRF form from measurement units.
-        if self.measurements.check("[length]"):
-            resp_type = "d"
-            form = "receptance"
-        elif self.measurements.check("[length] / [time]"):
-            resp_type = "v"
-            form = "mobility"
-        elif self.measurements.check("[length] / [time]**2"):
-            resp_type = "a"
-            form = "accelerance"
-        elif self.measurements.check(""):
-            resp_type = "e"
-            form = "receptance"
-        else:
+        from pyFRF import FRF as _PyFRF
+        from pymodal.frf import frf as _frf_cls
+
+        if excitation.method != "excitation":
+            raise ValueError("excitation.method must be 'excitation'.")
+        if len(self) != len(excitation):
             raise ValueError(
-                f"Unrecognized response units: {self.measurements_units}."
+                f"timeseries collection length {len(self)} != excitation length "
+                f"{len(excitation)}."
             )
-        # Derive excitation type from excitation units.
-        if excitation.measurements.check("[force]"):
+
+        resp_dim = ureg.parse_expression(self.measurements_units).dimensionality
+        if resp_dim == ureg.parse_expression("meter").dimensionality:
+            resp_type, form = "d", "receptance"
+        elif resp_dim == ureg.parse_expression("meter/second").dimensionality:
+            resp_type, form = "v", "mobility"
+        elif resp_dim == ureg.parse_expression("meter/second**2").dimensionality:
+            resp_type, form = "a", "accelerance"
+        else:
+            resp_type, form = "e", "receptance"
+
+        exc_dim = ureg.parse_expression(excitation.measurements_units).dimensionality
+        if exc_dim == ureg.parse_expression("newton").dimensionality:
             exc_type = "f"
-        elif excitation.measurements.check("[length]"):
+        elif exc_dim == ureg.parse_expression("meter").dimensionality:
             exc_type = "d"
-        elif excitation.measurements.check("[length] / [time]"):
+        elif exc_dim == ureg.parse_expression("meter/second").dimensionality:
             exc_type = "v"
-        elif excitation.measurements.check("[length] / [time]**2"):
+        elif exc_dim == ureg.parse_expression("meter/second**2").dimensionality:
             exc_type = "a"
-        elif excitation.measurements.check(""):
-            exc_type = "e"
         else:
-            raise ValueError(
-                f"Unrecognized excitation units: {excitation.measurements_units}."
-            )
-        fs = int(round(self.sampling_rate.magnitude))
-        with catch_warnings():
-            filterwarnings(
-                "ignore",
-                message="The unit of the quantity is stripped when downcasting"
-                " to ndarray.",
-            )
-            if self.method == "excitation":
-                raise ValueError("Use this method only with responses.")
-            elif self.method == "SIMO":
-                assert excitation.dof == 1
-                exc = excitation.measurements[:, 0, 0].magnitude
-                frf_amp = []
-                for i in range(self.dof):
-                    resp = self.measurements[:, i, 0].magnitude
-                    frf_amp.append(
-                        FRF(
-                            sampling_freq=fs,
-                            exc=exc,
-                            resp=resp,
-                            exc_type=exc_type,
-                            resp_type=resp_type,
-                            window="none",
-                            resp_delay=resp_delay,
-                            noverlap=0,
+            exc_type = "e"
+
+        fs = int(round(self.sampling_rate))
+
+        frfs: list[np.ndarray] = []
+        for i in range(len(self)):
+            resp_arr = self.measurements[i][()]   # (n_t, n_out, n_in)
+            exc_arr = excitation.measurements[i][()]   # (n_t, 1, n_dof_exc)
+            frf_amp_list = []
+            if self.method == "SIMO":
+                exc = exc_arr[:, 0, 0]
+                for j in range(self.n_outputs):
+                    resp = resp_arr[:, j, 0]
+                    frf_amp_list.append(
+                        _PyFRF(
+                            sampling_freq=fs, exc=exc, resp=resp,
+                            exc_type=exc_type, resp_type=resp_type,
+                            window="none", resp_delay=resp_delay, noverlap=0,
                         ).get_FRF(type=FRF_type, form=form)
                     )
-                frf_amp = np.array(frf_amp).reshape((-1, self.dof, 1))
+                frf_amp = np.array(frf_amp_list).reshape((-1, self.n_outputs, 1))
             elif self.method == "MISO":
-                frf_amp = []
-                for i in range(self.dof):
-                    exc = excitation.measurements[:, 0, i].magnitude
-                    resp = self.measurements[:, 0, i].magnitude
-                    frf_amp.append(
-                        FRF(
-                            sampling_freq=fs,
-                            exc=exc,
-                            resp=resp,
-                            exc_type=exc_type,
-                            resp_type=resp_type,
-                            window="none",
+                for j in range(self.n_inputs):
+                    exc = exc_arr[:, 0, j]
+                    resp = resp_arr[:, 0, j]
+                    frf_amp_list.append(
+                        _PyFRF(
+                            sampling_freq=fs, exc=exc, resp=resp,
+                            exc_type=exc_type, resp_type=resp_type, window="none",
                         ).get_FRF(type=FRF_type, form=form)
                     )
-                frf_amp = np.array(frf_amp).reshape((-1, 1, self.dof))
+                frf_amp = np.array(frf_amp_list).reshape((-1, 1, self.n_inputs))
             elif self.method == "MIMO":
-                outer_frf_amp = []
-                for i in range(self.dof):
-                    inner_frf = []
-                    for j in range(self.dof):
-                        exc = excitation.measurements[:, 0, i].magnitude
-                        resp = self.measurements[:, i, j].magnitude
-                        inner_frf.append(
-                            FRF(
-                                sampling_freq=fs,
-                                exc=exc,
-                                resp=resp,
-                                exc_type=exc_type,
-                                resp_type=resp_type,
-                                window="none",
+                outer = []
+                for j in range(self.n_outputs):
+                    inner = []
+                    for k in range(self.n_inputs):
+                        exc = exc_arr[:, 0, k]
+                        resp = resp_arr[:, j, k]
+                        inner.append(
+                            _PyFRF(
+                                sampling_freq=fs, exc=exc, resp=resp,
+                                exc_type=exc_type, resp_type=resp_type, window="none",
                             ).get_FRF(type=FRF_type, form=form)
                         )
-                    outer_frf_amp.append(np.array(inner_frf))
-                frf_amp = np.array(outer_frf_amp).reshape((-1, self.dof, self.dof))
-        excitation_units = ureg.parse_expression(str(excitation.measurements_units))
-        measurements_units = ureg.parse_expression(str(self.measurements_units))
-        from pymodal import frf
+                    outer.append(np.array(inner))
+                frf_amp = np.array(outer).reshape((-1, self.n_outputs, self.n_inputs))
+            else:
+                raise ValueError(f"Unsupported method '{self.method}' for to_FRF.")
+            frfs.append(frf_amp)
 
-        return frf(
-            measurements=frf_amp,
+        labels = [lbl[()] for lbl in self.labels] if self.labels is not None else None
+
+        return _frf_cls(
+            measurements=frfs,
             coordinates=self.coordinates,
             orientations=self.orientations,
             dof=self.dof,
-            freq_resolution=1 / self.time_span,
-            measurements_units=measurements_units / excitation_units,
+            freq_resolution=1.0 / self.time_span if self.time_span else 1.0,
+            measurements_units=f"({self.measurements_units}) / ({excitation.measurements_units})",
             space_units=self.space_units,
             method=self.method,
+            names=list(self.name),
+            labels=labels,
+            references={"input": excitation, "output": self},
+            reference_index_maps={
+                "input": list(range(len(self))),
+                "output": list(range(len(self))),
+            },
+            path=path,
         )
 
+    # ── augmentation ──────────────────────────────────────────────────────────
 
-if __name__ == "__main__":
+    def AddGaussianNoise(
+        self,
+        min_amplitude: float = 0.001,
+        max_amplitude: float = 0.015,
+        sample: Optional[Union[float, list[str]]] = None,
+    ) -> "timeseries":
+        """Append Gaussian-noise-augmented copies of selected items.
 
-    time = np.arange(0, 30 + 0.05, 0.1)
-    signal = np.sin(1 * time)
-    signal = np.vstack((signal, np.sin(2 * time)))
-    signal = np.vstack((signal, np.sin(3 * time)))
-    signal = np.vstack((signal, np.sin(4 * time)))
-    signal = np.vstack((signal, np.sin(5 * time)))
-    signal = signal.reshape((time.shape[0], -1))
-    test_object = timeseries(signal, time_end=30)
-    test_object.plot()
-    plt.show()
-    print(test_object.measurements.shape)
-    excitation_test = timeseries(np.sin(1 * time), time_end=30, method="excitation")
-    frf_test = test_object.to_FRF(excitation_test)
-    frf_test.plot()
-    plt.show()
-    print(frf_test.measurements.shape)
-    assert np.allclose(time, test_object.time_array.magnitude)
-    print(test_object.change_time_span(new_max_time=20).measurements.shape)
-    print(test_object.change_sampling_rate(new_sampling_rate=5.0).measurements.shape)
-    print(test_object.measurements.dimensionality)
-    print(test_object[0:2].measurements.shape)
-    print(test_object.measurements.shape)
+        Each augmented copy is appended with the suffix ``_augmented``.
+        """
+        import random
+        from audiomentations import Compose, AddGaussianNoise as _AGN
+
+        if sample is None:
+            sample = 1.0
+        if isinstance(sample, float):
+            n = int(np.floor(len(self) * sample))
+            sample = random.sample(self.name, n)
+
+        augmenter = Compose([
+            _AGN(min_amplitude=min_amplitude, max_amplitude=max_amplitude, p=1.0),
+        ])
+        sr = self.sampling_rate
+        for i, name in enumerate(list(self.name)):
+            if name in sample:
+                arr = self.measurements[i][()]
+                aug = np.empty_like(arr, dtype=float)
+                for j in range(arr.shape[1]):
+                    for k in range(arr.shape[2]):
+                        aug[:, j, k] = augmenter(
+                            samples=arr[:, j, k].astype(np.float32), sample_rate=sr
+                        )
+                label = (
+                    self.labels[i][()] if self.labels is not None else None
+                )
+                self.append(aug, name=f"{name}_augmented", label=label)
+        return self
