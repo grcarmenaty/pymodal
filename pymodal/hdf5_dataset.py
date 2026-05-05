@@ -86,10 +86,20 @@ class HDF5Dataset(data.Dataset):
         return len(self.get_data_infos("data"))
 
     def _add_data_infos(self, file_path, load_data):
-        """Scan the HDF5 file and register metadata for every dataset."""
+        """Scan the HDF5 file and register metadata for every item dataset.
+
+        Skips the ``_axes`` group (collection-level domain axes) and any non-group
+        children of ``/measurements/`` so the dataset only enumerates real items.
+        """
         with h5py.File(file_path, "r") as h5_file:
             for gname, signal_group in h5_file["measurements"].items():
+                if gname == "_axes":
+                    continue
+                if not isinstance(signal_group, h5py.Group):
+                    continue
                 for dname, ds in signal_group.items():
+                    if not isinstance(ds, h5py.Dataset):
+                        continue
                     entry = {
                         "file_path": file_path,
                         "name": gname,
