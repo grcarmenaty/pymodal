@@ -143,6 +143,301 @@ class frf(_signal):
         """
         return super().change_domain_resolution(new_resolution=new_resolution)
 
+    # ── SHM indicator helpers ──────────────────────────────────────────────────
+
+    def _as_matrix(self) -> np.ndarray:
+        """Return measurements as a (n_dof, n_freq) complex numpy array.
+
+        Collapses the output and input dimensions into a single DOF axis so that
+        the array matches the convention expected by all SHM indicator functions
+        in :mod:`pymodal.utils` (rows = DOFs, columns = frequency lines).
+        """
+        mag = self.measurements.magnitude  # (n_freq, n_dof, n_inputs)
+        return mag.reshape(mag.shape[0], -1).T  # (n_dof, n_freq)
+
+    def cfdac(self, reference: "frf") -> np.ndarray:
+        """Complex Frequency Domain Assurance Criterion matrix vs a reference FRF.
+
+        Parameters
+        ----------
+        reference : frf
+            Pristine / reference FRF with the same DOF layout.
+
+        Returns
+        -------
+        numpy.ndarray, shape (n_dof, n_dof)
+            Complex CFDAC matrix.
+        """
+        from pymodal import utils
+        return utils.value_CFDAC(reference._as_matrix(), self._as_matrix())
+
+    def cfdac_a(self, reference: "frf") -> np.ndarray:
+        """CFDAC alternative formulation matrix vs a reference FRF.
+
+        Returns
+        -------
+        numpy.ndarray, shape (n_dof, n_dof)
+        """
+        from pymodal import utils
+        return utils.value_CFDAC_A(reference._as_matrix(), self._as_matrix())
+
+    def fdac(self, reference: "frf") -> np.ndarray:
+        """Frequency Domain Assurance Criterion matrix vs a reference FRF.
+
+        Returns
+        -------
+        numpy.ndarray, shape (n_dof, n_dof), real-valued.
+        """
+        from pymodal import utils
+        return utils.value_FDAC(reference._as_matrix(), self._as_matrix())
+
+    def rvac(self, reference: "frf") -> np.ndarray:
+        """Response Vector Assurance Criterion per DOF vs a reference FRF.
+
+        Returns
+        -------
+        numpy.ndarray, shape (n_dof,), real-valued in [0, 1].
+        """
+        from pymodal import utils
+        return utils.value_RVAC(reference._as_matrix(), self._as_matrix())
+
+    def rvac_2d(self, reference: "frf") -> np.ndarray:
+        """Curvature-based RVAC (second finite difference) per DOF vs a reference FRF.
+
+        Returns
+        -------
+        numpy.ndarray, shape (n_dof,), real-valued.
+        """
+        from pymodal import utils
+        return utils.value_RVAC_2d(reference._as_matrix(), self._as_matrix())
+
+    def gac(self, reference: "frf") -> np.ndarray:
+        """Global Assurance Criterion per DOF vs a reference FRF.
+
+        Returns
+        -------
+        numpy.ndarray, shape (n_dof,), real-valued.
+        """
+        from pymodal import utils
+        return utils.value_GAC(reference._as_matrix(), self._as_matrix())
+
+    def frfrms(self, reference: "frf") -> float:
+        """FRF RMS metric (log-scale) vs a reference FRF.
+
+        Returns
+        -------
+        float
+        """
+        from pymodal import utils
+        return utils.FRFRMS(reference._as_matrix(), self._as_matrix())
+
+    def frfsf(self, reference: "frf") -> float:
+        """FRF Scale Factor vs a reference FRF.
+
+        Returns
+        -------
+        float
+        """
+        from pymodal import utils
+        return utils.FRFSF(reference._as_matrix(), self._as_matrix())
+
+    def frfsm(self, reference: "frf", std: float = 6.0) -> float:
+        """FRF Similarity Measure vs a reference FRF.
+
+        Parameters
+        ----------
+        reference : frf
+        std : float, optional
+            Gaussian width parameter in dB (default 6 dB).
+
+        Returns
+        -------
+        float
+        """
+        from pymodal import utils
+        return utils.FRFSM(reference._as_matrix(), self._as_matrix(), std)
+
+    def ods_diff(self, reference: "frf") -> float:
+        """Summed absolute Operating Deflection Shape difference vs a reference FRF.
+
+        Returns
+        -------
+        float
+        """
+        from pymodal import utils
+        return utils.ODS_diff(reference._as_matrix(), self._as_matrix())
+
+    def r2_imag(self, reference: "frf") -> float:
+        """Coefficient of determination (R²) of the imaginary part vs a reference FRF.
+
+        Returns
+        -------
+        float
+        """
+        from pymodal import utils
+        return utils.r2_imag(reference._as_matrix(), self._as_matrix())
+
+    def sci(self, reference: "frf") -> float:
+        """Structural Change Indicator vs a reference FRF.
+
+        Uses |CFDAC| (real-valued) for the Pearson correlation in SCI.
+        CFDAC(ref, ref) is the pristine baseline; CFDAC(ref, self) is the altered state.
+
+        Returns
+        -------
+        float — 0 when identical to reference, grows with structural change.
+        """
+        import warnings
+        from pymodal import utils
+        ref_H = reference._as_matrix()
+        cfdac_ref = np.abs(utils.value_CFDAC(ref_H, ref_H))
+        cfdac_alt = np.abs(utils.value_CFDAC(ref_H, self._as_matrix()))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            result = utils.SCI(cfdac_ref, cfdac_alt)
+        return float(np.nan_to_num(result))
+
+    def unsigned_sci(self, reference: "frf") -> float:
+        """Unsigned Structural Change Indicator vs a reference FRF.
+
+        Returns
+        -------
+        float
+        """
+        import warnings
+        from pymodal import utils
+        ref_H = reference._as_matrix()
+        cfdac_ref = np.abs(utils.value_CFDAC(ref_H, ref_H))
+        cfdac_alt = np.abs(utils.value_CFDAC(ref_H, self._as_matrix()))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            result = utils.unsigned_SCI(cfdac_ref, cfdac_alt)
+        return float(np.nan_to_num(result))
+
+    def drq(self, reference: "frf") -> float:
+        """Damage Residual Quantifier vs a reference FRF.
+
+        Returns
+        -------
+        float
+        """
+        from pymodal import utils
+        return float(utils.DRQ(utils.value_RVAC(reference._as_matrix(), self._as_matrix())))
+
+    def aigac(self, reference: "frf") -> float:
+        """Average Index from the Global Assurance Criterion vs a reference FRF.
+
+        Returns
+        -------
+        float
+        """
+        from pymodal import utils
+        return float(utils.AIGAC(utils.value_GAC(reference._as_matrix(), self._as_matrix())))
+
+    def m2l(self, reference: "frf") -> np.ndarray:
+        """Mode-to-Location indicator vector vs a reference FRF.
+
+        Returns
+        -------
+        numpy.ndarray, shape (n_dof,), real-valued.
+        """
+        from pymodal import utils
+        cfdac_mat = np.abs(utils.value_CFDAC(reference._as_matrix(), self._as_matrix()))
+        return utils.M2L(cfdac_mat)
+
+    def waterfall(
+        self,
+        ax=None,
+        format: str = "mod",
+        colormap=None,
+        alpha: float = 0.7,
+        xlabel: Optional[str] = None,
+        ylabel: Optional[str] = None,
+        zlabel: Optional[str] = None,
+        fontname: str = "DejaVu Serif",
+        fontsize: float = 12,
+        title: Optional[str] = None,
+    ):
+        """3-D waterfall plot stacking each DOF of this FRF along the y axis.
+
+        Parameters
+        ----------
+        ax : mpl_toolkits.mplot3d.Axes3D, optional
+            3-D axes to draw on. Created automatically if None.
+        format : str, optional
+            ``"mod"`` (default), ``"real"``, or ``"imag"``.
+        colormap : matplotlib colormap, optional
+            Colour map for the DOF ribbons. Defaults to ``plt.cm.rainbow``.
+        alpha : float, optional
+            Ribbon opacity, default 0.7.
+        xlabel, ylabel, zlabel : str, optional
+            Axis labels; sensible defaults are provided.
+        fontname : str, optional
+            Font family, default ``"DejaVu Serif"``.
+        fontsize : float, optional
+            Font size for axis labels, default 12.
+        title : str, optional
+            Plot title.
+
+        Returns
+        -------
+        ax : mpl_toolkits.mplot3d.Axes3D
+        """
+        from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+
+        if format not in ("mod", "real", "imag"):
+            raise ValueError(f"Unknown format '{format}'. Use 'mod', 'real', or 'imag'.")
+
+        mag = self.measurements.magnitude  # (n_freq, n_dof, n_inputs)
+        n_freq = mag.shape[0]
+        data = mag.reshape(n_freq, -1)  # (n_freq, n_dof)
+        freqs = self.freq_array.magnitude
+
+        if format == "mod":
+            z_data = np.abs(data)
+        elif format == "real":
+            z_data = data.real
+        else:
+            z_data = data.imag
+
+        n_dof = data.shape[1]
+        if colormap is None:
+            colormap = plt.cm.rainbow
+        colors = colormap(np.linspace(0, 1, n_dof))
+
+        if ax is None:
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection="3d")
+
+        for i in range(n_dof):
+            z = z_data[:, i]
+            xs = np.concatenate([[freqs[0]], freqs, [freqs[-1]]])
+            zs = np.concatenate([[0.0], z.astype(float), [0.0]])
+            verts = [(xs[k], float(i), zs[k]) for k in range(len(xs))]
+            poly = Poly3DCollection([verts], alpha=alpha)
+            poly.set_facecolor(colors[i])
+            poly.set_edgecolor(colors[i])
+            ax.add_collection3d(poly)
+
+        ax.set_xlim(freqs[0], freqs[-1])
+        ax.set_ylim(-0.5, n_dof - 0.5)
+        z_max = float(np.max(z_data))
+        ax.set_zlim(0.0, z_max * 1.125 if z_max > 0 else 1.0)
+
+        ax.set_xlabel(
+            f"Frequency ({ureg.hertz:~P})" if xlabel is None else xlabel,
+            fontsize=fontsize,
+        )
+        ax.set_ylabel("DOF index" if ylabel is None else ylabel, fontsize=fontsize)
+        ax.set_zlabel(
+            f"Amplitude ({self.measurements_units.u:~P})" if zlabel is None else zlabel,
+            fontsize=fontsize,
+        )
+        if title is not None:
+            ax.set_title(title, fontsize=fontsize)
+
+        return ax
+
     def plot(
         self,
         format: str = "mod",
