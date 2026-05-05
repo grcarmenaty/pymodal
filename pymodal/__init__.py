@@ -36,6 +36,28 @@ from .collection_2d import _collection_2d
 from .collection_3d import _collection_3d
 from .timeseries import timeseries
 from .frf import frf
+from .indicators_0d import (
+    sci_collection,
+    unsigned_sci_collection,
+    drq_collection,
+    aigac_collection,
+    frfrms_collection,
+    frfsf_collection,
+    frfsm_collection,
+    ods_diff_collection,
+    r2_imag_collection,
+)
+from .indicators_1d import (
+    rvac_collection,
+    rvac_2d_collection,
+    gac_collection,
+    m2l_collection,
+)
+from .indicators_2d import (
+    cfdac_collection,
+    cfdac_a_collection,
+    fdac_collection,
+)
 
 __all__ = [
     "change_domain_resolution",
@@ -72,4 +94,20 @@ __all__ = [
     "_collection_3d",
     "timeseries",
     "frf",
+    "sci_collection",
+    "unsigned_sci_collection",
+    "drq_collection",
+    "aigac_collection",
+    "frfrms_collection",
+    "frfsf_collection",
+    "frfsm_collection",
+    "ods_diff_collection",
+    "r2_imag_collection",
+    "rvac_collection",
+    "rvac_2d_collection",
+    "gac_collection",
+    "m2l_collection",
+    "cfdac_collection",
+    "cfdac_a_collection",
+    "fdac_collection",
 ]
