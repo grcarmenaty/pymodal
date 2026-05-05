@@ -1,0 +1,118 @@
+# Code_Aster harmonic FRF for the Los Alamos 3-storey benchmark
+#
+# This is a template: ``frf_extract.py`` substitutes the placeholders below
+# with concrete values before submitting the job.  Placeholders use plain
+# ``str.format`` syntax with double-braced literals where curly braces must
+# survive untouched.
+#
+# Required substitutions
+# ----------------------
+# {input_node}    integer mesh-node id at which the unit harmonic force is
+#                 applied
+# {output_node}   integer mesh-node id at which the response is read
+# {input_dir}     'DX', 'DY' or 'DZ' - direction of the input force
+# {output_dir}    'DX', 'DY' or 'DZ' - direction of the output reading
+# {f_min}         lower frequency bound, Hz
+# {f_max}         upper frequency bound, Hz
+# {f_step}        frequency resolution, Hz
+# {n_modes}       number of modes used in the modal projection
+# {damping}       uniform modal damping ratio (e.g. 0.005 for 0.5 %)
+# {young}         Young's modulus, Pa
+# {poisson}       Poisson's ratio
+# {density}       density, kg/m^3
+# {fixed_group}   name of the face group fixed in 3 DOFs (the base plate)
+DEBUT(LANG='EN')
+
+mesh = LIRE_MAILLAGE(UNITE=20, FORMAT='MED')
+
+# Tag the user-selected nodes as named groups so the rest of the deck can
+# reference them by name regardless of the underlying node id.
+mesh = DEFI_GROUP(reuse=mesh,
+                  MAILLAGE=mesh,
+                  CREA_GROUP_NO=(_F(NOM='input_pt',  NOEUD='N{input_node}'),
+                                  _F(NOM='output_pt', NOEUD='N{output_node}')))
+
+model = AFFE_MODELE(MAILLAGE=mesh,
+                    AFFE=_F(TOUT='OUI',
+                             PHENOMENE='MECANIQUE',
+                             MODELISATION='3D'))
+
+mat = DEFI_MATERIAU(ELAS=_F(E={young}, NU={poisson}, RHO={density}))
+chmat = AFFE_MATERIAU(MAILLAGE=mesh, AFFE=_F(TOUT='OUI', MATER=mat))
+
+clim = AFFE_CHAR_MECA(MODELE=model,
+                       DDL_IMPO=_F(GROUP_MA='{fixed_group}',
+                                    DX=0.0, DY=0.0, DZ=0.0))
+
+force = AFFE_CHAR_MECA(MODELE=model,
+                        FORCE_NODALE=_F(GROUP_NO='input_pt',
+                                         {input_dir}=1.0))
+
+# --- Assemble matrices -----------------------------------------------------
+ASSEMBLAGE(MODELE=model,
+            CHAM_MATER=chmat,
+            CHARGE=clim,
+            NUME_DDL=CO('numddl'),
+            MATR_ASSE=(_F(MATRICE=CO('K'), OPTION='RIGI_MECA'),
+                        _F(MATRICE=CO('M'), OPTION='MASS_MECA')))
+
+# --- Modes ------------------------------------------------------------------
+modes = CALC_MODES(MATR_RIGI=K,
+                    MATR_MASS=M,
+                    OPTION='PLUS_PETITE',
+                    CALC_FREQ=_F(NMAX_FREQ={n_modes}),
+                    NORM_MODE=_F(NORME='MASS_GENE'))
+
+# --- Modal projection -------------------------------------------------------
+basemod = DEFI_BASE_MODALE(RITZ=_F(MODE_MECA=modes, NMAX_MODE={n_modes}),
+                            NUME_REF=numddl)
+
+mgen = PROJ_MATR_BASE(BASE=basemod,
+                       NUME_DDL_GENE=CO('nudgen'),
+                       MATR_ASSE=M)
+kgen = PROJ_MATR_BASE(BASE=basemod,
+                       NUME_DDL_GENE=nudgen,
+                       MATR_ASSE=K)
+
+vfrc = CALC_VECT_ELEM(OPTION='CHAR_MECA', CHARGE=force)
+vass = ASSE_VECTEUR(VECT_ELEM=vfrc, NUME_DDL=numddl)
+vgen = PROJ_VECT_BASE(BASE=basemod,
+                       NUME_DDL_GENE=nudgen,
+                       VECT_ASSE=vass,
+                       TYPE_VECT='FORC')
+
+# --- Frequency list and harmonic response ----------------------------------
+listfreq = DEFI_LIST_REEL(DEBUT={f_min},
+                           INTERVALLE=_F(JUSQU_A={f_max}, PAS={f_step}))
+
+respgen = DYNA_VIBRA(TYPE_CALCUL='HARM',
+                      BASE_CALCUL='GENE',
+                      MATR_MASS=mgen,
+                      MATR_RIGI=kgen,
+                      LIST_FREQ=listfreq,
+                      AMOR_MODAL=_F(AMOR_REDUIT={damping}),
+                      EXCIT=_F(VECT_ASSE_GENE=vgen, COEF_MULT=1.0))
+
+# Recover physical displacements at every frequency
+resp = REST_GENE_PHYS(RESU_GENE=respgen,
+                       NOM_CHAM='DEPL',
+                       LIST_FREQ=listfreq)
+
+# Extract complex displacement at the output node, in the requested direction
+out = POST_RELEVE_T(ACTION=_F(OPERATION='EXTRACTION',
+                               INTITULE='frf',
+                               RESULTAT=resp,
+                               NOM_CHAM='DEPL',
+                               GROUP_NO='output_pt',
+                               TOUT_ORDRE='OUI',
+                               NOM_CMP=('{output_dir}',)))
+
+# Dump as a CSV-style text file readable by frf_extract.py
+IMPR_TABLE(TABLE=out,
+            UNITE=8,
+            FORMAT='TABLEAU',
+            SEPARATEUR=',',
+            FORMAT_R='1PE17.10',
+            FORMAT_C='1PE17.10')
+
+FIN()
