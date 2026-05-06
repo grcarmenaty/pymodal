@@ -71,7 +71,7 @@ class BuildingGeometry:
     col_lx: float = P.COL_LX
     col_ly: float = P.COL_LY
     inter_storey_gap: float = P.INTER_STOREY_GAP
-    column_inset: float = P.COLUMN_INSET
+    column_gap: float = P.COLUMN_GAP
     n_stories: int = P.N_STORIES
     young: float = P.ALU_E
     poisson: float = P.ALU_NU
@@ -99,18 +99,41 @@ class BuildingGeometry:
         """Mid-thickness z of plate index ``k`` (0 = base, n_stories = roof)."""
         return k * self.storey_height + self.plate_lz / 2.0
 
-    def column_centres(self) -> np.ndarray:
-        """``(4, 2)`` array of column-centre ``(x, y)`` in plate coordinates,
-        ordered ``(low-x low-y, high-x low-y, low-x high-y, high-x high-y)``
-        to match :func:`params.column_positions`."""
-        x_lo = self.column_inset + self.col_lx / 2.0
-        y_lo = self.column_inset + self.col_ly / 2.0
-        x_hi = self.plate_lx - self.column_inset - self.col_lx / 2.0
-        y_hi = self.plate_ly - self.column_inset - self.col_ly / 2.0
-        return np.array([(x_lo, y_lo),
-                          (x_hi, y_lo),
-                          (x_lo, y_hi),
-                          (x_hi, y_hi)])
+    def column_box_centres(self) -> np.ndarray:
+        """``(4, 2)`` array of the **column box geometric centres** in
+        plate-local coordinates. Used for visualisation and for placing the
+        column volumes in Salome.
+
+        Columns sit externally to the plate footprint along ``Y``: two on the
+        ``-Y`` side, two on the ``+Y`` side. Order:
+        ``(low-x -Y, high-x -Y, low-x +Y, high-x +Y)``.
+        """
+        x_lo_centre = self.col_lx / 2.0
+        x_hi_centre = self.plate_lx - self.col_lx / 2.0
+        y_neg = -self.col_ly / 2.0 - self.column_gap
+        y_pos = self.plate_ly + self.col_ly / 2.0 + self.column_gap
+        return np.array([(x_lo_centre, y_neg),
+                          (x_hi_centre, y_neg),
+                          (x_lo_centre, y_pos),
+                          (x_hi_centre, y_pos)])
+
+    def column_attachment_points(self) -> np.ndarray:
+        """``(4, 2)`` array of the **plate-side screw centroids** for each
+        column, in plate-local coordinates.
+
+        These are the effective points where each column transmits force to
+        the plate (the centroid of its two screws on the plate's side face).
+        Used by :func:`stiffness_matrix` for the kinematic transformation
+        from plate DOFs to column-end displacements.
+
+        Same ordering as :meth:`column_box_centres`.
+        """
+        x_lo_centre = self.col_lx / 2.0
+        x_hi_centre = self.plate_lx - self.col_lx / 2.0
+        return np.array([(x_lo_centre, 0.0),
+                          (x_hi_centre, 0.0),
+                          (x_lo_centre, self.plate_ly),
+                          (x_hi_centre, self.plate_ly)])
 
     @property
     def n_dof(self) -> int:
@@ -188,7 +211,9 @@ def stiffness_matrix(geom: BuildingGeometry) -> np.ndarray:
     n_dof = geom.n_dof
     K = np.zeros((n_dof, n_dof))
     cx, cy = geom.plate_centroid
-    centres = geom.column_centres()
+    # Use the plate-side screw centroids as the kinematic attachment points;
+    # this is where each column actually transmits force to the plate.
+    centres = geom.column_attachment_points()
     kx, ky = _column_lateral_stiffnesses(geom)
 
     for s in range(n):                    # 0-indexed storey, 0 = bottom

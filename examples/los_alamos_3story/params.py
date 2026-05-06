@@ -11,19 +11,25 @@ Layout convention
 -----------------
 The structure has ``N_STORIES`` stories and therefore ``N_STORIES + 1`` floor
 plates, indexed from ``0`` (base plate, fixed to ground) to ``N_STORIES``
-(roof plate). Four columns rise at the corners of every storey. Following the
-project specification:
+(roof plate). Four columns rise at the **outside** of the four corners of
+every storey, with their thin direction (``COL_LY``) aligned with the
+rail/motion axis ``Y``. Column-plate connections follow the project
+specification:
 
-* every column joins each adjacent plate by reaching half the plate's
-  thickness, so two columns meet at the mid-thickness of each intermediate
-  plate;
-* the columns at the base storey reach through the full thickness of the
-  base plate (their bottom face sits on the ground);
-* the columns at the top storey reach through the full thickness of the roof
-  plate (their top face is flush with the roof).
-
-Each column-plate junction is bolted with one screw (a small cylinder) running
-parallel to the column axis through the column section and the adjacent plate.
+* every column terminates at the **mid-thickness** of the two plates it
+  joins (z-axis), so the column's z-extent is from ``mid-plate(s)`` to
+  ``mid-plate(s+1)`` for storey ``s``;
+* the columns sit **externally** to the plate footprint along the ``Y``
+  direction with a small gap ``COLUMN_GAP``: two columns on the ``-Y`` side
+  (low-y corners) and two on the ``+Y`` side (high-y corners);
+* the column's biggest face is the ``COL_LX × column_height`` face (since
+  ``COL_LX > COL_LY``); each column-plate junction is bolted with **two**
+  screws drilling **perpendicular** to that biggest face (along the ``Y``
+  axis), passing through the column thickness, across the gap, and into
+  the **side** of the floor plate by ``SCREW_PLATE_DEPTH``;
+* the column and plate volumes do NOT touch (the gap separates them) - the
+  *only* solid bridge is each pair of screws, which is solid-fused to both
+  the column and the plate.
 """
 
 from __future__ import annotations
@@ -36,12 +42,15 @@ PLATE_LY: float = 0.305      # m, plate side along y
 PLATE_LZ: float = 0.0254     # m, plate thickness (vertical)
 
 # ---------------------------------------------------------------------------
-# Columns
+# Columns (external to plates, screwed to plate sides)
 # ---------------------------------------------------------------------------
-COL_LX: float = 0.0254       # m, column cross-section along x
-COL_LY: float = 0.0064       # m, column cross-section along y (thin direction)
-INTER_STOREY_GAP: float = 0.1524   # m, vertical clearance between two plates
-COLUMN_INSET: float = 0.0127       # m, column outer-face offset from plate edge
+COL_LX: float = 0.0254       # m, column wide cross-section dimension (along x)
+COL_LY: float = 0.0064       # m, column thin cross-section dimension (along y)
+INTER_STOREY_GAP: float = 0.1524    # m, vertical clearance between two plates
+COLUMN_GAP: float = 0.0005   # m, horizontal (y) gap between column inner face
+                             # and plate side face. Small gap so column and
+                             # plate volumes never touch directly; the only
+                             # solid bond is via the screws.
 
 # ---------------------------------------------------------------------------
 # Layout
@@ -49,12 +58,26 @@ COLUMN_INSET: float = 0.0127       # m, column outer-face offset from plate edge
 N_STORIES: int = 3           # 3-storey building => 4 plates total
 
 # ---------------------------------------------------------------------------
-# Screws (two per column-plate junction, offset along the column wide axis)
+# Screws (two per column-plate junction; drill perpendicular to the column's
+# biggest face - i.e. along the Y axis - passing through the column's wide
+# face and into the plate's side face. Screws are spaced symmetrically
+# along the column's wide cross-section axis X)
 # ---------------------------------------------------------------------------
-SCREW_DIAMETER: float = 0.005   # m, screw shank diameter
-SCREW_OFFSET_FRAC: float = 0.30 # screw offset from column centre, as a
-                                # fraction of (col_lx / 2). Two screws sit
-                                # symmetrically at +/- this offset along x.
+SCREW_DIAMETER: float = 0.005     # m, screw shank diameter
+SCREW_OFFSET_FRAC: float = 0.30   # screw offset from column centre, as a
+                                  # fraction of (COL_LX / 2). Two screws sit
+                                  # symmetrically at +/- this offset along X.
+SCREW_PLATE_DEPTH: float = 0.012  # m, depth of penetration into the plate
+                                  # side. Total screw length is
+                                  # COL_LY + COLUMN_GAP + SCREW_PLATE_DEPTH.
+SCREW_Z_OFFSET_FRAC: float = 0.25 # vertical offset of the screw centre from
+                                  # the plate's mid-thickness, as a fraction
+                                  # of PLATE_LZ. The lower segment's top
+                                  # screws are placed at
+                                  # plate_z_centre - SCREW_Z_OFFSET_FRAC*PLATE_LZ
+                                  # and the upper segment's bottom screws at
+                                  # plate_z_centre + SCREW_Z_OFFSET_FRAC*PLATE_LZ
+                                  # so the two pairs do not coincide.
 
 # ---------------------------------------------------------------------------
 # Base rails: the bottom face of the base plate is constrained so that only
@@ -86,7 +109,7 @@ N_MODES: int = 60            # number of modes used for modal projection
 
 
 # ---------------------------------------------------------------------------
-# Derived helpers (kept as functions to remain reactive to overrides)
+# Derived helpers (functions so they remain reactive to overrides)
 # ---------------------------------------------------------------------------
 def storey_height() -> float:
     """Vertical pitch between two consecutive plate bottoms."""
@@ -98,30 +121,42 @@ def plate_z_bottom(k: int) -> float:
     return k * storey_height()
 
 
+def plate_z_centre(k: int) -> float:
+    """Z-coordinate of the mid-thickness of plate index ``k``."""
+    return plate_z_bottom(k) + PLATE_LZ / 2.0
+
+
 def total_height() -> float:
     """Total height of the building from the ground to the top of the roof."""
     return plate_z_bottom(N_STORIES) + PLATE_LZ
 
 
 def column_positions():
-    """``(x, y)`` of the lower-x / lower-y corner of each of the four columns,
-    common to every storey."""
+    """Return the ``(x0, y0)`` lower corner of each column box, in
+    plate-local coordinates. Columns sit **externally** to the plate
+    footprint along ``Y``.
+
+    Order: ``(low-x -Y, high-x -Y, low-x +Y, high-x +Y)`` to match
+    :func:`reduced_model.BuildingGeometry.column_box_centres`.
+    """
+    x_low  = 0.0
+    x_high = PLATE_LX - COL_LX
+    y_neg  = -COL_LY - COLUMN_GAP                # column on -Y side: outer face at y_neg
+    y_pos  = PLATE_LY + COLUMN_GAP               # column on +Y side: inner face at y_pos
     return (
-        (COLUMN_INSET, COLUMN_INSET),
-        (PLATE_LX - COLUMN_INSET - COL_LX, COLUMN_INSET),
-        (COLUMN_INSET, PLATE_LY - COLUMN_INSET - COL_LY),
-        (PLATE_LX - COLUMN_INSET - COL_LX, PLATE_LY - COLUMN_INSET - COL_LY),
+        (x_low,  y_neg),
+        (x_high, y_neg),
+        (x_low,  y_pos),
+        (x_high, y_pos),
     )
 
 
 def column_z_extent(storey_index: int):
-    """``(z_start, z_end)`` of the column belonging to storey ``storey_index``
-    (0-based, so ``0`` is the bottom storey, ``N_STORIES - 1`` the top).
+    """``(z_start, z_end)`` of the column belonging to storey ``storey_index``.
 
-    Every column - including those at the bottom and top storey - terminates
-    at the **mid-thickness** of the plate it joins, so column lengths are
-    identical for every storey.
+    Every column terminates at the **mid-thickness** of the two plates it
+    joins, so column lengths are identical for every storey.
     """
-    z_start = plate_z_bottom(storey_index)     + PLATE_LZ / 2.0
-    z_end   = plate_z_bottom(storey_index + 1) + PLATE_LZ / 2.0
+    z_start = plate_z_centre(storey_index)
+    z_end   = plate_z_centre(storey_index + 1)
     return z_start, z_end
