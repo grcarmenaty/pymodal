@@ -20,11 +20,16 @@ Geometry layout follows :mod:`params`:
   ``(PLATE_LX, PLATE_LY, PLATE_LZ)``, stacked along ``z`` with an inter-storey
   clearance of ``INTER_STOREY_GAP``;
 * every column is a parallelepiped of cross-section ``(COL_LX, COL_LY)``
-  rising along ``z``. Intermediate columns penetrate half the thickness of the
-  plates they meet; columns of the bottom and top storeys span the full
-  thickness of the base / roof plate respectively;
-* every column-plate junction is bolted with one cylindrical screw of
-  diameter ``SCREW_DIAMETER`` aligned with the column axis.
+  rising along ``z`` and terminates at the **mid-thickness** of every plate
+  it joins (including the base and roof), so two columns meet inside every
+  intermediate plate and base / top columns end at mid base / roof plate;
+* every column-plate junction is bolted with **two** cylindrical screws of
+  diameter ``SCREW_DIAMETER`` aligned with the column axis, offset
+  symmetrically along the column wide direction (x) by
+  ``SCREW_OFFSET_FRAC * COL_LX / 2``;
+* the bottom face of the base plate is exported as the ``base_rails`` face
+  group so the Code_Aster command file can lock all DOFs except translation
+  along ``RAIL_DIRECTION``.
 
 The columns, plates, and screws are fused into a single solid, which is then
 meshed with NETGEN 1D-2D-3D using a target edge length of ``MESH_SIZE``.
@@ -78,7 +83,7 @@ for storey in range(P.N_STORIES):
 
 
 # ---------------------------------------------------------------------------
-# 3. Screws (one cylinder per column-plate junction)
+# 3. Screws (two cylinders per column-plate junction, offset along x)
 # ---------------------------------------------------------------------------
 def _make_screw(cx, cy, z_centre, length, diameter):
     """Cylinder along +z centred at (cx, cy, z_centre)."""
@@ -87,26 +92,24 @@ def _make_screw(cx, cy, z_centre, length, diameter):
     return geompy.MakeCylinder(base, axis, diameter / 2.0, length)
 
 
+def _junction_screws(cx, cy, z_centre):
+    """Two screws straddling the column centre along x."""
+    dx = P.SCREW_OFFSET_FRAC * P.COL_LX / 2.0
+    return [_make_screw(cx - dx, cy, z_centre,
+                          length=2.0 * P.PLATE_LZ, diameter=P.SCREW_DIAMETER),
+            _make_screw(cx + dx, cy, z_centre,
+                          length=2.0 * P.PLATE_LZ, diameter=P.SCREW_DIAMETER)]
+
+
 screws = []
-for storey in range(P.N_STORIES):
-    for c, (x0, y0) in enumerate(P.column_positions()):
+# Every plate (base + N_STORIES floor plates) is bolted to every corner column
+# that meets it. Each junction = 2 screws.
+for plate_idx in range(P.N_STORIES + 1):
+    z_centre = P.plate_z_bottom(plate_idx) + P.PLATE_LZ / 2.0
+    for x0, y0 in P.column_positions():
         cx = x0 + P.COL_LX / 2.0
         cy = y0 + P.COL_LY / 2.0
-        # bottom junction of this column
-        if storey == 0:
-            z_centre = P.plate_z_bottom(0) + P.PLATE_LZ / 2.0
-        else:
-            z_centre = P.plate_z_bottom(storey) + P.PLATE_LZ / 2.0
-        screws.append(_make_screw(cx, cy, z_centre,
-                                   length=2.0 * P.PLATE_LZ,
-                                   diameter=P.SCREW_DIAMETER))
-        # top junction is the bottom junction of the next storey, except for
-        # the top storey which needs an explicit screw at the roof plate
-        if storey == P.N_STORIES - 1:
-            z_top = P.plate_z_bottom(storey + 1) + P.PLATE_LZ / 2.0
-            screws.append(_make_screw(cx, cy, z_top,
-                                       length=2.0 * P.PLATE_LZ,
-                                       diameter=P.SCREW_DIAMETER))
+        screws.extend(_junction_screws(cx, cy, z_centre))
 
 for i, s in enumerate(screws):
     geompy.addToStudy(s, "screw_%03d" % i)
@@ -121,13 +124,16 @@ geompy.addToStudy(building, "los_alamos_building")
 
 
 # ---------------------------------------------------------------------------
-# 5. Boundary-condition group: bottom face of base plate
+# 5. Boundary-condition group: bottom face of base plate (the rails)
 # ---------------------------------------------------------------------------
+# The bottom face becomes the ``base_rails`` group. Code_Aster locks every
+# DOF on that face except translation along ``params.RAIL_DIRECTION`` so the
+# structure rolls on rails along the columns' thin side.
 base_centre = geompy.MakeVertex(P.PLATE_LX / 2.0, P.PLATE_LY / 2.0, 0.0)
 base_face = geompy.GetFaceNearPoint(building, base_centre)
 base_group = geompy.CreateGroup(building, geompy.ShapeType["FACE"])
 geompy.UnionList(base_group, [base_face])
-geompy.addToStudyInFather(building, base_group, "base_fixed")
+geompy.addToStudyInFather(building, base_group, "base_rails")
 
 
 # ---------------------------------------------------------------------------
@@ -147,7 +153,7 @@ ok = mesh.Compute()
 if not ok:
     raise RuntimeError("NETGEN failed to mesh the fused building geometry")
 
-mesh.GroupOnGeom(base_group, "base_fixed", SMESH.FACE)
+mesh.GroupOnGeom(base_group, "base_rails", SMESH.FACE)
 
 
 # ---------------------------------------------------------------------------
@@ -163,7 +169,7 @@ nodes = {int(nid): list(mesh.GetNodeXYZ(nid)) for nid in node_ids}
 with open(os.path.join(_HERE, "nodes.json"), "w") as fp:
     json.dump(nodes, fp)
 
-groups = {"fixed_face_group": "base_fixed"}
+groups = {"rails_face_group": "base_rails", "rail_direction": P.RAIL_DIRECTION}
 with open(os.path.join(_HERE, "groups.json"), "w") as fp:
     json.dump(groups, fp, indent=2)
 

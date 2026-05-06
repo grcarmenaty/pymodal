@@ -58,6 +58,14 @@ from .indicators_2d import (
     cfdac_a_collection,
     fdac_collection,
 )
+from .scenarios import (
+    Scenario,
+    ParameterVariation,
+    sample,
+    build_frf_collection,
+    load_nodes_json,
+    closest_node,
+)
 
 __all__ = [
     "change_domain_resolution",
@@ -110,4 +118,10 @@ __all__ = [
     "cfdac_collection",
     "cfdac_a_collection",
     "fdac_collection",
+    "Scenario",
+    "ParameterVariation",
+    "sample",
+    "build_frf_collection",
+    "load_nodes_json",
+    "closest_node",
 ]

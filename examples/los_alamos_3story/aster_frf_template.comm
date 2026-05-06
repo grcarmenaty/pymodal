@@ -20,7 +20,11 @@
 # {young}         Young's modulus, Pa
 # {poisson}       Poisson's ratio
 # {density}       density, kg/m^3
-# {fixed_group}   name of the face group fixed in 3 DOFs (the base plate)
+# {rails_group}   face group of the base plate's bottom face. Every DOF on
+#                 it is locked except the rail direction (e.g. DY) so the
+#                 building rolls on rails along the columns' thin side.
+# {locked_dofs}   pre-rendered Aster pairs locking the two non-rail
+#                 translational DOFs, e.g. ``DX=0.0, DZ=0.0``.
 DEBUT(LANG='EN')
 
 mesh = LIRE_MAILLAGE(UNITE=20, FORMAT='MED')
@@ -41,8 +45,8 @@ mat = DEFI_MATERIAU(ELAS=_F(E={young}, NU={poisson}, RHO={density}))
 chmat = AFFE_MATERIAU(MAILLAGE=mesh, AFFE=_F(TOUT='OUI', MATER=mat))
 
 clim = AFFE_CHAR_MECA(MODELE=model,
-                       DDL_IMPO=_F(GROUP_MA='{fixed_group}',
-                                    DX=0.0, DY=0.0, DZ=0.0))
+                       DDL_IMPO=_F(GROUP_MA='{rails_group}',
+                                    {locked_dofs}))
 
 force = AFFE_CHAR_MECA(MODELE=model,
                         FORCE_NODALE=_F(GROUP_NO='input_pt',

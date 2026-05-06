@@ -217,7 +217,10 @@ def extract_frf(
     node_ids, coords = _load_nodes(nodes_json)
     with open(groups_json) as fp:
         groups = json.load(fp)
-    fixed_group = groups["fixed_face_group"]
+    rails_group = groups["rails_face_group"]
+    rail_dir = "D" + groups.get("rail_direction", P.RAIL_DIRECTION).upper()
+    locked = [d for d in ("DX", "DY", "DZ") if d != rail_dir]
+    locked_dofs = ", ".join(f"{d}=0.0" for d in locked)
 
     # Normalise inputs to lists of equal length
     def _as_list(x):
@@ -267,7 +270,7 @@ def extract_frf(
                 f_min=f_min, f_max=f_max, f_step=f_step,
                 n_modes=n_modes, damping=damping,
                 young=young, poisson=poisson, density=density,
-                fixed_group=fixed_group,
+                rails_group=rails_group, locked_dofs=locked_dofs,
             ))
         med_in_local = os.path.join(case_dir, "building.med")
         shutil.copyfile(med_path, med_in_local)

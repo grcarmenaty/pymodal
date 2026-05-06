@@ -49,9 +49,19 @@ COLUMN_INSET: float = 0.0127       # m, column outer-face offset from plate edge
 N_STORIES: int = 3           # 3-storey building => 4 plates total
 
 # ---------------------------------------------------------------------------
-# Screws (one per column-plate junction)
+# Screws (two per column-plate junction, offset along the column wide axis)
 # ---------------------------------------------------------------------------
 SCREW_DIAMETER: float = 0.005   # m, screw shank diameter
+SCREW_OFFSET_FRAC: float = 0.30 # screw offset from column centre, as a
+                                # fraction of (col_lx / 2). Two screws sit
+                                # symmetrically at +/- this offset along x.
+
+# ---------------------------------------------------------------------------
+# Base rails: the bottom face of the base plate is constrained so that only
+# translation along ``RAIL_DIRECTION`` is free (rolls on rails). This makes
+# the building move along the columns' thin side - the soft direction.
+# ---------------------------------------------------------------------------
+RAIL_DIRECTION: str = 'Y'       # the only free DOF on the base; X and Z fixed
 
 # ---------------------------------------------------------------------------
 # Material (6061-T6 aluminium)
@@ -106,13 +116,12 @@ def column_positions():
 
 def column_z_extent(storey_index: int):
     """``(z_start, z_end)`` of the column belonging to storey ``storey_index``
-    (0-based, so ``0`` is the bottom storey, ``N_STORIES - 1`` the top)."""
-    if storey_index == 0:
-        z_start = plate_z_bottom(0)                      # full thickness at base
-    else:
-        z_start = plate_z_bottom(storey_index) + PLATE_LZ / 2.0
-    if storey_index == N_STORIES - 1:
-        z_end = plate_z_bottom(storey_index + 1) + PLATE_LZ   # full thickness at top
-    else:
-        z_end = plate_z_bottom(storey_index + 1) + PLATE_LZ / 2.0
+    (0-based, so ``0`` is the bottom storey, ``N_STORIES - 1`` the top).
+
+    Every column - including those at the bottom and top storey - terminates
+    at the **mid-thickness** of the plate it joins, so column lengths are
+    identical for every storey.
+    """
+    z_start = plate_z_bottom(storey_index)     + PLATE_LZ / 2.0
+    z_end   = plate_z_bottom(storey_index + 1) + PLATE_LZ / 2.0
     return z_start, z_end
