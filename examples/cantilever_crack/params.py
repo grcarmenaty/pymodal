@@ -49,7 +49,13 @@ F_STEP: float = 0.5          # 1399 freq points; resolves sub-Hz peak shifts
 # ---------------------------------------------------------------------------
 # Excitation / sensor layout
 # ---------------------------------------------------------------------------
-SHAKER_FRAC: float = 0.05    # x / L of the shaker, transverse direction (z)
+SHAKER_FRAC: float = 0.95    # x / L of the shaker, transverse direction (z).
+                             # Placed near the free tip where every bending
+                             # mode has a non-zero ordinate, so all four
+                             # resonances appear in the FRF magnitude. A
+                             # shaker near the fixed end barely excites
+                             # mode 1 (the modal node sits there), which
+                             # made small cracks invisible.
 SENSOR_FRACS: Tuple[float, ...] = (
     0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00,
 )  # ten accelerometers along the beam, transverse direction
