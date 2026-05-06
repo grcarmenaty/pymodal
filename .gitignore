@@ -13,6 +13,10 @@ examples/**/nodes.json
 examples/**/groups.json
 examples/**/__pycache__/
 
+# Auto-generated collection HDF5 files at repo root
+# (collection_parent.py uses `{ms_timestamp}_{id_hex}.h5` when path is omitted)
+/[0-9]*_[0-9a-f]*.h5
+
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
