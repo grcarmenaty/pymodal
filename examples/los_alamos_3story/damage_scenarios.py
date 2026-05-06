@@ -106,13 +106,22 @@ def scenario_meta(scenarios: Sequence[pm.Scenario],
 
     Returns
     -------
-    is_damaged : (n,) ndarray of int   - 0 if pristine, 1 otherwise
-    col_label  : (n,) ndarray of int   - column index 0..11 (or -1 if pristine)
-    sev_label  : (n,) ndarray of int   - severity level 0..len(levels)-1 (or -1)
+    is_damaged : (n,) ndarray of int     - 0 if pristine, 1 otherwise
+    col_label  : (n,) ndarray of int     - column index 0..11 (or -1 if pristine)
+    sev_label  : (n,) ndarray of int     - severity level 0..len(levels)-1 (or -1)
+    rig_loss   : (n,) ndarray of float   - loss of rigidity in [0, 1] for the
+                                            thinned column. ``factor`` is the
+                                            section-scale factor of the
+                                            damaged column; under uniform
+                                            thinning the lateral stiffness
+                                            scales as ``factor ** 4``, so the
+                                            loss is ``1 - factor ** 4``.
+                                            ``0.0`` for pristine.
     """
     is_dmg = np.zeros(len(scenarios), dtype=int)
     col = -np.ones(len(scenarios), dtype=int)
     sev = -np.ones(len(scenarios), dtype=int)
+    rig = np.zeros(len(scenarios), dtype=float)
     for i, sc in enumerate(scenarios):
         if sc.name == "pristine":
             continue
@@ -124,7 +133,8 @@ def scenario_meta(scenarios: Sequence[pm.Scenario],
         L = int(parts[2][3:])
         col[i] = _col_index(s, c)
         sev[i] = L
-    return is_dmg, col, sev
+        rig[i] = 1.0 - levels[L] ** 4
+    return is_dmg, col, sev, rig
 
 
 # ---------------------------------------------------------------------------
