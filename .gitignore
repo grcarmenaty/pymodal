@@ -1,6 +1,18 @@
 # Created by https://www.gitignore.io/api/python
 # Edit at https://www.gitignore.io/?templates=python
 
+# Generated example artefacts
+examples/**/los_alamos_dataset.h5
+examples/**/cantilever_dataset.h5
+examples/**/lanl_small.h5
+examples/**/cantilever_small.h5
+examples/**/cantilever_sweep_*.h5
+examples/**/*.pt
+examples/**/building.med
+examples/**/nodes.json
+examples/**/groups.json
+examples/**/__pycache__/
+
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
