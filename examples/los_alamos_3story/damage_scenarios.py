@@ -163,12 +163,12 @@ def default_variation() -> pm.ParameterVariation:
             "col_lx":           0.010,
             "col_ly":           0.010,
             "inter_storey_gap": 0.005,
-            "column_inset":     0.010,
+            "column_gap":       0.05,
             "young":            0.005,
             "density":          0.005,
             "damping":          0.10,
         },
-        floor_at={"damping": 1.0e-4},
+        floor_at={"damping": 1.0e-4, "column_gap": 1.0e-5},
     )
 
 
@@ -244,7 +244,7 @@ def column_intersection_outputs(geom: Optional[BuildingGeometry] = None,
     out = []
     for k in range(g.n_stories + 1):
         z = g.plate_z_centre(k)
-        for xc, yc in g.column_centres():
+        for xc, yc in g.column_attachment_points():
             for d in directions:
                 out.append(((xc, yc, z), d))
     return out
