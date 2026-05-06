@@ -36,14 +36,15 @@ N_ELEMENTS: int = 60         # FEM discretisation along the length
 E:   float = 210.0e9         # Pa
 NU:  float = 0.30            # not used by the Bernoulli model, kept for FEA
 RHO: float = 7800.0          # kg / m^3
-MODAL_DAMPING: float = 0.005 # uniform modal damping ratio
+MODAL_DAMPING: float = 0.010 # uniform modal damping ratio (broader peaks
+                             # so finite-resolution shifts are resolvable)
 
 # ---------------------------------------------------------------------------
 # Default analysis
 # ---------------------------------------------------------------------------
 F_MIN:  float = 1.0          # Hz
-F_MAX:  float = 500.0
-F_STEP: float = 1.0          # 500 freq points; modes 1-3 in band, mode 4 just above
+F_MAX:  float = 700.0        # captures the first four bending modes
+F_STEP: float = 0.5          # 1399 freq points; resolves sub-Hz peak shifts
 
 # ---------------------------------------------------------------------------
 # Excitation / sensor layout
