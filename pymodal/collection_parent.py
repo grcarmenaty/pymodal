@@ -544,6 +544,86 @@ class _collection:
             except FileNotFoundError:
                 pass
 
+    # ── attached files (trained models, configs, ...) ─────────────────────────
+
+    def attach_file(self, path, role: str = "model"):
+        """Associate an external file with this collection.
+
+        The path is stored as a string attribute under ``/attached/{role}``
+        in the HDF5 file; the file itself is **not** copied or moved. Use
+        roles to keep multiple attached files side-by-side ("detection",
+        "localisation", "severity"; or "config" for a JSON, etc.). The
+        file is reopened automatically if it has been closed (e.g. by
+        :meth:`torch_dataset`).
+        """
+        from pathlib import Path
+        self.open()
+        path = Path(path).resolve()
+        grp = self.file.require_group("attached")
+        grp.attrs[role] = str(path)
+        self.file.flush()
+        return path
+
+    def attached_path(self, role: str = "model"):
+        """Return the ``Path`` of the file attached to this collection under ``role``."""
+        from pathlib import Path
+        self.open()
+        if "attached" not in self.file:
+            raise KeyError(f"no attached files on collection {self.path}")
+        grp = self.file["attached"]
+        if role not in grp.attrs:
+            raise KeyError(
+                f"no attached file with role={role!r}; "
+                f"available roles: {list(grp.attrs.keys())}"
+            )
+        return Path(str(grp.attrs[role]))
+
+    def attached_roles(self):
+        """List of roles currently attached to this collection."""
+        self.open()
+        if "attached" not in self.file:
+            return []
+        return list(self.file["attached"].attrs.keys())
+
+    def save_model(self, model, path=None, role: str = "model"):
+        """Persist a PyTorch model and link it as ``role`` on this collection.
+
+        ``model.state_dict()`` is saved with :func:`torch.save`. If ``path``
+        is omitted the file is placed next to the HDF5 as
+        ``<collection_stem>.<role>.pt``. The path string is stored under
+        ``/attached/{role}`` so subsequent :meth:`load_model` calls can
+        recover the file without the user having to remember its location.
+
+        Returns the absolute :class:`pathlib.Path` of the written file.
+        """
+        import torch
+        from pathlib import Path
+        if path is None:
+            stem = Path(self.path).stem
+            path = Path(self.path).parent / f"{stem}.{role}.pt"
+        path = Path(path).resolve()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        torch.save(model.state_dict(), path)
+        self.attach_file(path, role=role)
+        return path
+
+    def load_model(self, model_class, role: str = "model",
+                    map_location=None, **init_kwargs):
+        """Reconstruct a PyTorch model from the attached state dict.
+
+        Instantiates ``model_class(**init_kwargs)``, loads the state dict
+        from the file attached under ``role`` and returns the model in
+        eval mode. The collection's HDF5 file is reopened automatically
+        if it has been closed.
+        """
+        import torch
+        path = self.attached_path(role)
+        model = model_class(**init_kwargs)
+        state = torch.load(path, map_location=map_location)
+        model.load_state_dict(state)
+        model.eval()
+        return model
+
     # ── utility ───────────────────────────────────────────────────────────────
 
     def channel_shape(self) -> tuple:
