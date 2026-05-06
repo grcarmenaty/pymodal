@@ -217,5 +217,36 @@ https://www.sciencedirect.com/science/article/abs/pii/S0888327018306551?via%3Dih
     
 
 
+MCP server
+============
+
+Pymodal ships an `MCP <https://modelcontextprotocol.io>`_ server that exposes
+collection construction, signal processing, FRF computation, SHM-indicator
+math and PyTorch-dataset hand-off as tools an LLM agent can call directly.
+
+Install the optional dependency:
+
+.. code-block:: bash
+
+    pip install -e .[mcp]
+
+Run the server (stdio transport):
+
+.. code-block:: bash
+
+    python -m pymodal.mcp
+    # or, after install:
+    pymodal-mcp
+
+Configure your MCP client (Claude Desktop, Claude Code, …) to launch
+``python -m pymodal.mcp`` as a server. Every tool takes file paths in and
+writes file paths out, so a typical agent flow is
+
+``create_timeseries_collection`` → ``add_gaussian_noise`` →
+``timeseries_to_frf`` → ``compute_indicator`` → ``split_collection`` →
+``torch_dataset_summary``.
+
+Use ``list_indicators`` and ``list_collection_classes`` for in-tool discovery.
+
 ANSYS
 ============

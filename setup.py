@@ -40,6 +40,14 @@ setuptools.setup(
             "flake8>=3.7.9",
             "black>=23.1.0"
         ],
+        "mcp": [
+            "mcp>=1.0",
+        ],
+    },
+    entry_points={
+        "console_scripts": [
+            "pymodal-mcp=pymodal.mcp.server:main",
+        ],
     },
     python_requires='>=3.9',
 )
