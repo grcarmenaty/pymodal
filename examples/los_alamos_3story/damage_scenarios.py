@@ -109,18 +109,27 @@ def scenario_meta(scenarios: Sequence[pm.Scenario],
     is_damaged : (n,) ndarray of int     - 0 if pristine, 1 otherwise
     col_label  : (n,) ndarray of int     - column index 0..11 (or -1 if pristine)
     sev_label  : (n,) ndarray of int     - severity level 0..len(levels)-1 (or -1)
-    rig_loss   : (n,) ndarray of float   - loss of rigidity in [0, 1] for the
-                                            thinned column. ``factor`` is the
-                                            section-scale factor of the
-                                            damaged column; under uniform
-                                            thinning the lateral stiffness
-                                            scales as ``factor ** 4``, so the
-                                            loss is ``1 - factor ** 4``.
-                                            ``0.0`` for pristine.
+    factor     : (n,) ndarray of float   - section-scale factor of the
+                                            thinned column ``∈ [0, 1]``.
+                                            Pristine = 1.0. This is the
+                                            *recommended regression target*
+                                            because the four LANL damage
+                                            levels (0.75, 0.50, 0.25, 0.10)
+                                            are evenly spread, so a regressor
+                                            trained on it does not collapse
+                                            the way one trained directly on
+                                            ``loss = 1 - factor**4`` would
+                                            (three of those four loss values
+                                            sit near 1).
+    rig_loss   : (n,) ndarray of float   - convenience: ``1 - factor**4``,
+                                            the loss of rigidity in [0, 1].
+                                            Reported at evaluation time; not
+                                            recommended as a training target.
     """
     is_dmg = np.zeros(len(scenarios), dtype=int)
     col = -np.ones(len(scenarios), dtype=int)
     sev = -np.ones(len(scenarios), dtype=int)
+    factor = np.ones(len(scenarios), dtype=float)
     rig = np.zeros(len(scenarios), dtype=float)
     for i, sc in enumerate(scenarios):
         if sc.name == "pristine":
@@ -133,8 +142,9 @@ def scenario_meta(scenarios: Sequence[pm.Scenario],
         L = int(parts[2][3:])
         col[i] = _col_index(s, c)
         sev[i] = L
+        factor[i] = levels[L]
         rig[i] = 1.0 - levels[L] ** 4
-    return is_dmg, col, sev, rig
+    return is_dmg, col, sev, factor, rig
 
 
 # ---------------------------------------------------------------------------
