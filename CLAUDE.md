@@ -195,6 +195,52 @@ Tests pass on Python 3.9+. The CI workflow tests Python 3.9 and 3.10 on ubuntu, 
 - `HDF5_USE_FILE_LOCKING=FALSE` is set as an environment variable in `collection_parent.py` to prevent HDF5 file locking issues on some filesystems.
 - The legacy `signal_parent`, `signal_collection_parent`, `frf_collection`, `timeseries_collection`, and `indicator_collection` modules have been removed. `frf_collection` and `timeseries_collection` no longer exist as separate classes — `frf` and `timeseries` accept either a single ndarray (1-item) or a list of ndarrays (multi-item).
 
+## Releasing to PyPI
+
+Releases are published to PyPI by the **Publish to PyPI** GitHub Actions workflow
+(`.github/workflows/publish-pypi.yml`). It builds the sdist + wheel and uploads
+them via **PyPI Trusted Publishing (OIDC)** — there are no API tokens or secrets
+in the repo. The trusted publisher is configured once on PyPI (project `pymodal`
+→ *Publishing*) and points at owner `grcarmenaty`, repo `pymodal`, workflow
+`publish-pypi.yml`, environment `pypi`.
+
+### Single source of truth for the version
+
+The package version lives in **one place**: `__version__` in `pymodal/__init__.py`.
+`setup.py` reads it from there at build time (and derives `download_url` from it),
+so the two can never drift. **Never** hardcode a version in `setup.py`.
+
+### Release steps
+
+1. **Bump the version.** Edit `__version__` in `pymodal/__init__.py` (semantic
+   versioning: patch for fixes, minor for features, major for breaking changes).
+   It must be **higher** than the latest version on PyPI — PyPI permanently
+   rejects re-uploads of an existing version, even after deletion. Sanity-check
+   with `python setup.py --version`.
+2. **Commit and merge to `master`.** Commit the bump (authored by the repo owner,
+   see below) and get it onto `master` — release-triggered workflows only run
+   from the default branch.
+3. **Fire the publish** by any one of these (all trigger the same workflow):
+   - Push a version tag matching `N.N.N` (bare number, matching the existing tag
+     convention — e.g. `0.0.4`, **not** `v0.0.4`):
+     `git tag 0.2.0 && git push origin 0.2.0`
+   - Publish a GitHub **Release** with that tag (also creates a release page).
+   - **Actions** tab → *Publish to PyPI* → **Run workflow** (manual
+     `workflow_dispatch`).
+4. **Verify.** Watch the run under the Actions tab; on success the new version
+   appears at https://pypi.org/project/pymodal/.
+
+### Doing this from the Claude Code web sandbox
+
+The remote sandbox can push **branches** but the git proxy **blocks tag pushes**
+(HTTP 403), and the GitHub integration lacks `actions: write`, so it **cannot**
+push a tag, dispatch the workflow, or create a Release itself. From the sandbox,
+go as far as: bump the version, commit, and merge to `master` (open a PR and
+merge it via the GitHub MCP tools). Then hand the **final trigger** (tag push,
+Release, or manual dispatch) to the repo owner, who runs it locally or from the
+GitHub UI. After they trigger it, the sandbox *can* monitor the run and read job
+logs via the GitHub Actions MCP tools to confirm success or diagnose failures.
+
 ## Git and Authorship
 
 **NEVER appear as the commit author.** Every commit must be authored by the repository owner (Guillermo Reyes Carmenaty `<grcarmenaty@gmail.com>`). Before making any commit, verify that the git user identity is set to the owner's name and email — not to Claude, Anthropic, or any AI identity. If the local `user.name` / `user.email` config does not match the owner's identity, set it explicitly with:
