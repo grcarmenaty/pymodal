@@ -1,17 +1,29 @@
+import re
+from pathlib import Path
+
 import setuptools
 
 with open("README.rst", "r") as fh:
     long_description = fh.read()
 
+# Single source of truth for the version: pymodal/__init__.py
+_init = Path(__file__).parent / "pymodal" / "__init__.py"
+version = re.search(
+    r'^__version__\s*=\s*["\']([^"\']+)["\']',
+    _init.read_text(encoding="utf-8"),
+    re.MULTILINE,
+).group(1)
+
 setuptools.setup(
     name="pymodal",
-    version="0.0.4",
+    version=version,
     author="Guillermo Reyes Carmenaty",
     author_email="grcarmenaty@gmail.com",
     description="Modal analysis data management, simulation and storage tool",
     long_description=long_description,
+    long_description_content_type="text/x-rst",
     url="https://github.com/grcarmenaty/pymodal",
-    download_url="https://github.com/grcarmenaty/pymodal/archive/0.0.4.tar.gz",
+    download_url="https://github.com/grcarmenaty/pymodal/archive/{}.tar.gz".format(version),
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
