@@ -1,10 +1,14 @@
 name: Publish to PyPI
 
-# Publishes the package to PyPI when a GitHub Release is published.
+# Publishes the package to PyPI when a version tag (e.g. 0.2.0) is pushed, or
+# when a GitHub Release is published.
 # Uses PyPI Trusted Publishing (OIDC) — no API tokens or secrets required.
 # One-time setup on PyPI: add a trusted publisher for this project pointing at
 #   owner: grcarmenaty, repo: pymodal, workflow: publish-pypi.yml, environment: pypi
 on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
   release:
     types: [published]
 
