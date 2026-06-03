@@ -126,7 +126,7 @@ Use slice to only plot specific FRFs.
     plt.show()
 
 Post-processing FRFs
-============
+====================
 
 
 **Change resolution**  
@@ -158,7 +158,7 @@ Post-processing FRFs
 **Transmissibility matrix**  
 
 Frequency-based damage indicators
-============
+=================================
 Currently, the pymodal library holds the following damage indicators:
 
 **Frequency Response Function RMS [FRFRMS]:**
