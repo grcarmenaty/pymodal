@@ -21,7 +21,7 @@ from pymodal.collection_1d import _collection_1d
 
 
 def _as_matrix(arr: np.ndarray) -> np.ndarray:
-    return arr.reshape(arr.shape[0], -1).T  # (n_dof, n_freq)
+    return arr.reshape(arr.shape[0], -1)  # (n_freq, n_dof)
 
 
 def _pair_indices(reference, damaged) -> list[int]:

@@ -24,8 +24,8 @@ from pymodal.collection_0d import _collection_0d
 # ── Internal helpers ─────────────────────────────────────────────────────────
 
 def _as_matrix(arr: np.ndarray) -> np.ndarray:
-    """Reshape a 3-D ``(n_freq, n_outputs, n_inputs)`` FRF into ``(n_dof, n_freq)``."""
-    return arr.reshape(arr.shape[0], -1).T
+    """Reshape a 3-D ``(n_freq, n_outputs, n_inputs)`` FRF into ``(n_freq, n_dof)``."""
+    return arr.reshape(arr.shape[0], -1)  # (n_freq, n_dof)
 
 
 def _pair_indices(reference, damaged) -> list[int]:

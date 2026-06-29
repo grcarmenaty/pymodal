@@ -168,13 +168,13 @@ class frf(_collection_1d):
     # ── helpers for SHM indicator math ────────────────────────────────────────
 
     def _as_matrix(self, i: int = 0) -> np.ndarray:
-        """Return item *i* as a ``(n_dof, n_freq)`` complex matrix.
+        """Return item *i* as a ``(n_freq, n_dof)`` complex matrix.
 
         Reshapes to match the convention used by the SHM-indicator pure
         functions in :mod:`pymodal.metrics`.
         """
         data = self.measurements[i][()]  # (n_freq, n_outputs, n_inputs)
-        return data.reshape(data.shape[0], -1).T  # (n_dof, n_freq)
+        return data.reshape(data.shape[0], -1)  # (n_freq, n_dof)
 
     # ── plotting ──────────────────────────────────────────────────────────────
 

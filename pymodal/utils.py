@@ -532,14 +532,30 @@ def load_array(path: str):
                         f" only recognizes .npy, .npz and .mat")
 
 
-def value_CFDAC(ref: np.ndarray, frf: np.ndarray):
+def value_CFDAC(ref: np.ndarray, frf: np.ndarray, normalize: bool = False):
+    """Complex Frequency Domain Assurance Criterion.
 
+    ``ref`` and ``frf`` are FRFs shaped ``(n_lines, n_points)``; the CFDAC is
+    formed by contracting over the trailing (point) axis, giving an
+    ``(n_lines, n_lines)`` matrix.
+
+    Parameters
+    ----------
+    normalize : bool, optional
+        If ``False`` (default, legacy behaviour) the squared *complex* inner
+        product is returned. If ``True`` the result is the real, bounded
+        ``[0, 1]`` magnitude form ``|inner|**2 / |denom|`` -- identical to the
+        row-normalised CFDAC used in the Los Alamos 3-storey building study and
+        in the SHM literature (a squared cosine similarity between frequency
+        lines). Use ``normalize=True`` for plotting and SHM indicators.
+    """
+    inner = frf @ ref.conj().transpose()
+    denom = (np.diag(frf @ frf.conj().transpose()).reshape(-1, 1)
+             @ (np.diag(ref @ ref.conj().transpose()).reshape(-1, 1)).conj().transpose())
+    if normalize:
+        return np.nan_to_num(np.abs(inner) ** 2 / np.abs(denom))
     # The following line is the formula of the CFDAC matrix.
-    CFDAC_value = np.nan_to_num(
-        ((frf @ ref.conj().transpose()) ** 2) * (1/(np.diag(frf @
-        frf.conj().transpose()).reshape(-1,1) @ (np.diag(ref @
-        ref.conj().transpose()).reshape(-1,1)).conj().transpose()))
-    )
+    CFDAC_value = np.nan_to_num((inner ** 2) * (1 / denom))
     return CFDAC_value
 
 
@@ -685,7 +701,7 @@ def M2L(CFDAC):
         y = int(m - x - 1)
         M2L_value[x] = CFDAC [x, x]
         M2L_value[y] = CFDAC [y, y]
-        for i in range (1, x + 1):
+        for i in range(1, min(x, m - 1 - x) + 1):  # guarda de borde (CFDAC par)
             pos_value_inf = (CFDAC [x - i, x] + CFDAC [x - i, x + i] +
                 CFDAC [x, x + i])
             pos_value_sup = (CFDAC [y - i, y] + CFDAC [y - i, y + i] +

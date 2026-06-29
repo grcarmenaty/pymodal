@@ -54,13 +54,13 @@ def test_cfdac_collection_shape_and_refs(tmp_path):
     try:
         assert isinstance(out, pymodal.cfdac_collection)
         assert out._n_domain_axes == 2
-        # 4 outputs × 1 input = 4 DOFs flattened
-        assert out.measurements[0].shape == (4, 4, 1, 1)
+        # CFDAC is n_freq × n_freq (contracts over the DOF axis)
+        assert out.measurements[0].shape == (8, 8, 1, 1)
         assert "reference" in out.reference_roles()
         assert "damaged" in out.reference_roles()
         # numerical equivalence against utils
-        ref_H = ref.measurements[0][()].reshape(8, -1).T
-        dmg_H = dmg.measurements[0][()].reshape(8, -1).T
+        ref_H = ref.measurements[0][()].reshape(8, -1)
+        dmg_H = dmg.measurements[0][()].reshape(8, -1)
         expected = utils.value_CFDAC(ref_H, dmg_H)
         actual = out.measurements[0][()][:, :, 0, 0]
         assert np.allclose(actual, expected)
@@ -77,7 +77,7 @@ def test_fdac_collection_returns_real(tmp_path):
         assert isinstance(out, pymodal.fdac_collection)
         arr = out.measurements[0][()]
         assert arr.dtype.kind == "f"     # real float
-        assert arr.shape == (4, 4, 1, 1)
+        assert arr.shape == (8, 8, 1, 1)
     finally:
         out.close()
         ref.close()
@@ -92,10 +92,10 @@ def test_rvac_collection_shape(tmp_path):
     try:
         assert isinstance(out, pymodal.rvac_collection)
         assert out._n_domain_axes == 1
-        assert out.measurements[0].shape == (4, 1, 1)
+        assert out.measurements[0].shape == (8, 1, 1)
         # numerical equivalence
-        ref_H = ref.measurements[0][()].reshape(8, -1).T
-        dmg_H = dmg.measurements[0][()].reshape(8, -1).T
+        ref_H = ref.measurements[0][()].reshape(8, -1)
+        dmg_H = dmg.measurements[0][()].reshape(8, -1)
         expected = utils.value_RVAC(ref_H, dmg_H)
         actual = out.measurements[0][()][:, 0, 0]
         assert np.allclose(actual, expected)
@@ -110,7 +110,7 @@ def test_gac_collection(tmp_path):
     gac = dmg.gac(ref, path=tmp_path / "gac.h5")
     try:
         assert isinstance(gac, pymodal.gac_collection)
-        assert gac.measurements[0].shape == (4, 1, 1)
+        assert gac.measurements[0].shape == (8, 1, 1)
     finally:
         gac.close()
         ref.close()

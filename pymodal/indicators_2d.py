@@ -5,8 +5,8 @@ that pairs a reference :class:`pymodal.frf.frf` with a damaged ``frf``, applies
 the matching pure function from :mod:`pymodal.utils`, and stores the resulting
 matrix with two domain axes.
 
-Item shape is ``(n_dof, n_dof, 1, 1)``. The two domain axes are
-``("reference DOF", "damaged DOF")`` indices inherited from the source FRFs.
+Item shape is ``(n_freq, n_freq, 1, 1)``. The two domain axes are
+frequency-line indices inherited from the source FRFs.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ from pymodal.collection_2d import _collection_2d
 
 
 def _as_matrix(arr: np.ndarray) -> np.ndarray:
-    return arr.reshape(arr.shape[0], -1).T  # (n_dof, n_freq)
+    return arr.reshape(arr.shape[0], -1)  # (n_freq, n_dof)
 
 
 def _pair_indices(reference, damaged) -> list[int]:
@@ -70,7 +70,7 @@ class _MatrixIndicatorCollection(_collection_2d):
                 np.arange(n_dof_ref, dtype=float),
                 np.arange(n_dof_dmg, dtype=float),
             ],
-            domain_units=["dof_index", "dof_index"],
+            domain_units=["freq_index", "freq_index"],
             method="SIMO",
             measurements_units="",
             names=list(damaged.name),
